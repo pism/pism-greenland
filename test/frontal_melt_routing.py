@@ -46,8 +46,16 @@ inputs = PISM.FrontalMeltInputs()
 cell_area = grid.dx() * grid.dy()
 water_density = config.get_double("constants.fresh_water.density")
 
-hydrology = PISM.RoutingHydrology(grid)
+Wtill = PISM.IceModelVec2S(grid, "tillwat", PISM.WITHOUT_GHOSTS)
+Wtill.set_attrs("model_state", "effective thickness of subglacial water stored in till", "m", "")
+Wtill.set(0.0)
 
-frontalmeltmodel = PISM.FrontalMeltDischargeRouting(grid)
-frontalmeltmodel.init(geometry)
-# model.update(inputs, 0, 0.1)
+P = PISM.IceModelVec2S(grid, "overburden_pressure", PISM.WITHOUT_GHOSTS);
+P.set_attrs("internal", "overburden pressure", "Pa", "");
+P.set(0.0);
+
+hydrology = PISM.RoutingHydrology(grid)
+hydrology.initialize(Wtill, Wtill, P)
+
+fmelt = PISM.FrontalMeltDischargeRouting(grid)
+fmelt.init(geometry)
