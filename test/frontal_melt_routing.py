@@ -17,7 +17,7 @@ def geometry(grid, input_file):
 
     return geometry
 
-def create_potential_temperature(grid, file_name, theta=273.15):
+def create_potential_temperature(grid, file_name, theta=274.15):
 
     PISM.util.prepare_output(file_name)
 
