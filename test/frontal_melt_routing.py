@@ -63,6 +63,7 @@ frontal melt corresponding to provided surface water input rates."""
     parser.add_argument("--routing_file", dest="routing_file", help="routing file",
                         default="JIB_DMI-HIRHAM5_GL2_ERAI_1980_2014_MRROS_YMM_EPSG3413_3600m_0.nc")
     parser.add_argument("--th_file", dest="th_file", help="Thermal forcing file", default=None)
+    parser.add_argument("--theta", dest="theta", help="Thermal forcing Default=274.15K", type=float, default=274.15)
     parser.add_argument("-o", dest="output_file", help="output file name",
                         default="frontal_melt.nc")
 
@@ -71,14 +72,15 @@ frontal melt corresponding to provided surface water input rates."""
     routing_file = options.routing_file
     th_file = options.th_file
     output_file = options.output_file
-
+    theta = options.theta
+    
     # create the grid
     registration = PISM.CELL_CORNER
     grid = PISM.IceGrid.FromFile(ctx, input_file, ("bed", "thickness"), registration)
 
     if th_file is None:
         th_file = "th_file.nc"
-        create_potential_temperature(grid, th_file)
+        create_potential_temperature(grid, th_file, theta=theta)
 
     # initialize ice geometry
     geometry = geometry(grid, input_file)
