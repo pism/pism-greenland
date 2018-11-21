@@ -130,10 +130,18 @@ frontal melt corresponding to provided surface water input rates."""
     frontal_melt_inputs.geometry = geometry
     frontal_melt_inputs.subglacial_discharge_at_grounding_line = discharge
 
-    output = PISM.util.prepare_output(output_file, append_time=False)
     time_name = config.get_string("time.dimension_name")
+    output = PISM.PIO(ctx.com(), config.get_string("output.format"),
+                      output_file, PISM.PISM_READWRITE_MOVE)
+    PISM.define_time(output, time_name, time.calendar(), time.units_string(), ctx.unit_system())
+    output.put_att_text(time_name, "bounds", "time_bounds")
+
+    bounds = PISM.TimeBoundsMetadata("time_bounds", time_name, ctx.unit_system())
+    bounds.set_string("units", time.units_string())
 
     # run models, stepping through time one record of forcing at at time
+    output_record = 0
+
     while time.current() < time.end():
         t = time.current()
         dt = water_input_rate.max_timestep(t).value()
@@ -156,6 +164,9 @@ frontal melt corresponding to provided surface water input rates."""
         time.step(dt)
 
         PISM.append_time(output, time_name, time.current())
+        PISM.write_time_bounds(output, bounds, output_record, [t, t + dt], PISM.PISM_DOUBLE)
+        output_record += 1
+
         frontal_melt.frontal_melt_rate().write(output)
         hydrology.subglacial_water_thickness().write(output)
         hydrology.total_input_rate().write(output)
