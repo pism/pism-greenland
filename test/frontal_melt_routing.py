@@ -47,6 +47,30 @@ def hydrology(grid):
 
     return hydrology
 
+def prepare_output(file_name, time, mapping_info):
+    """Prepare the output file. Uses the time from the argument, unlike
+    PISM.util.prepare_output().
+
+    """
+    time_name = config.get_string("time.dimension_name")
+
+    output = PISM.PIO(ctx.com(), config.get_string("output.format"),
+                      file_name, PISM.PISM_READWRITE_MOVE)
+
+    PISM.define_time(output, time_name, time.calendar(), time.units_string(), ctx.unit_system())
+
+    output.put_att_text(time_name, "bounds", "time_bounds")
+
+    if mapping_info.mapping.has_attributes():
+        output.def_var(mapping_info.mapping.get_name(), PISM.PISM_DOUBLE, [])
+
+        PISM.write_attributes(output, mapping_info.mapping, PISM.PISM_DOUBLE)
+
+        if len(mapping_info.proj4) > 0:
+            output.put_att_text("PISM_GLOBAL", "proj4", mapping_info.proj4)
+
+    return output
+
 def frontal_melt(grid):
     "Allocate and initialize the frontal melt model."
     fmelt = PISM.FrontalMeltDischargeRouting(grid)
@@ -78,6 +102,13 @@ frontal melt corresponding to provided surface water input rates."""
     registration = PISM.CELL_CORNER
     grid = PISM.IceGrid.FromFile(ctx, input_file, ("bed", "thickness"), registration)
 
+    # get projection info
+    f = PISM.PIO(ctx.com(), "netcdf3", input_file, PISM.PISM_READONLY)
+    mapping_info = PISM.get_projection_info(f, "mapping", ctx.unit_system())
+    grid.set_mapping_info(mapping_info)
+    f.close()
+
+    # create dummy potential temperature (if not provided by the user)
     if th_file is None:
         th_file = "th_file.nc"
         create_potential_temperature(grid, th_file, theta=theta)
@@ -130,13 +161,11 @@ frontal melt corresponding to provided surface water input rates."""
     frontal_melt_inputs.geometry = geometry
     frontal_melt_inputs.subglacial_discharge_at_grounding_line = discharge
 
-    time_name = config.get_string("time.dimension_name")
-    output = PISM.PIO(ctx.com(), config.get_string("output.format"),
-                      output_file, PISM.PISM_READWRITE_MOVE)
-    PISM.define_time(output, time_name, time.calendar(), time.units_string(), ctx.unit_system())
-    output.put_att_text(time_name, "bounds", "time_bounds")
+    output = prepare_output(output_file, time, mapping_info)
 
-    bounds = PISM.TimeBoundsMetadata("time_bounds", time_name, ctx.unit_system())
+    bounds = PISM.TimeBoundsMetadata("time_bounds",
+                                     config.get_string("time.dimension_name"),
+                                     ctx.unit_system())
     bounds.set_string("units", time.units_string())
 
     # run models, stepping through time one record of forcing at at time
@@ -163,7 +192,8 @@ frontal melt corresponding to provided surface water input rates."""
 
         time.step(dt)
 
-        PISM.append_time(output, time_name, time.current())
+        PISM.append_time(output, config.get_string("time.dimension_name"),
+                         time.current())
         PISM.write_time_bounds(output, bounds, output_record, [t, t + dt], PISM.PISM_DOUBLE)
         output_record += 1
 
