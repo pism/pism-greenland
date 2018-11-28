@@ -1,5 +1,6 @@
 import PISM
 from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
+import numpy as np
 
 context = PISM.Context()
 ctx = context.ctx
@@ -90,6 +91,11 @@ frontal melt corresponding to provided surface water input rates."""
     parser.add_argument("--theta", dest="theta", help="Thermal forcing Default=274.15K", type=float, default=274.15)
     parser.add_argument("-o", dest="output_file", help="output file name",
                         default="frontal_melt.nc")
+    parser.add_argument("-d", "--duration", dest="duration", help="duration of the run in years", type=int,
+                        default=1)
+    parser.add_argument("-r", "--reporting_interval", dest="reporting_interval", help="reporting interval",
+                        default="daily")
+    
 
     options = parser.parse_args()
     input_file = options.BOOTSTRAP_FILE[0]
@@ -97,6 +103,8 @@ frontal melt corresponding to provided surface water input rates."""
     th_file = options.th_file
     output_file = options.output_file
     theta = options.theta
+    duration = options.duration
+    reporting_interval = options.reporting_interval
     
     # create the grid
     registration = PISM.CELL_CORNER
@@ -137,10 +145,10 @@ frontal melt corresponding to provided surface water input rates."""
     f.close()
     water_input_rate.set_attrs("climate", "water input rate", "m s-1", "")
 
-    # not periodic
-    period = 0
-    # reference time is irrelevant
-    reference_time = 0
+    # periodicity with 1 years
+    period = 1
+    # reference time is start time
+    reference_time = time.start()
     water_input_rate.init(routing_file, period, reference_time)
 
     basal_melt_rate = PISM.IceModelVec2S(grid, "basal_melt_rate", PISM.WITHOUT_GHOSTS)
@@ -170,9 +178,11 @@ frontal melt corresponding to provided surface water input rates."""
     # run models, stepping through time one record of forcing at at time
     output_record = 0
 
-    while time.current() < time.end():
+    time_end = time.increment_date(time.start(), duration)
+    dt = np.diff(time.parse_times(reporting_interval)[0:2])[0]
+
+    while time.current() < time_end:
         t = time.current()
-        dt = water_input_rate.max_timestep(t).value()
 
         water_input_rate.update(t, dt)
         water_input_rate.average(t, dt)
