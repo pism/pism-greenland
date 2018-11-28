@@ -146,9 +146,11 @@ frontal melt corresponding to provided surface water input rates."""
     basal_melt_rate = PISM.IceModelVec2S(grid, "basal_melt_rate", PISM.WITHOUT_GHOSTS)
     basal_melt_rate.set(0.0)
 
-    discharge = PISM.IceModelVec2S(grid, "discharge", PISM.WITHOUT_GHOSTS)
-    discharge.set_attrs("internal", "discharge", "kg", "")
-    discharge.set(0.0)
+    water_speed = PISM.IceModelVec2S(grid, "water_speed", PISM.WITHOUT_GHOSTS)
+    water_speed.set_attrs("internal", "water_speed", "m s-1", "")
+
+    water_velocity = PISM.IceModelVec2V(grid, "water_velocity", PISM.WITHOUT_GHOSTS)
+    water_velocity.set_attrs("internal", "water_velocity", "m s-1", "")
 
     hydro_inputs                    = PISM.HydrologyInputs()
     hydro_inputs.cell_type          = geometry.cell_type
@@ -159,7 +161,7 @@ frontal melt corresponding to provided surface water input rates."""
 
     frontal_melt_inputs = PISM.FrontalMeltInputs()
     frontal_melt_inputs.geometry = geometry
-    frontal_melt_inputs.subglacial_discharge_at_grounding_line = discharge
+    frontal_melt_inputs.subglacial_water_speed = water_speed
 
     output = prepare_output(output_file, time, mapping_info)
 
@@ -182,11 +184,8 @@ frontal melt corresponding to provided surface water input rates."""
 
         hydrology.update(t, dt, hydro_inputs)
 
-        # convert mass change at the grounding line (positive
-        # corresponds to mass gain) to discharge (positive corresponds
-        # to mass loss)
-        discharge.copy_from(hydrology.mass_change_at_grounding_line())
-        discharge.scale(-1.0)
+        hydrology.velocity_staggered().staggered_to_regular(water_velocity)
+        water_speed.set_to_magnitude(water_velocity)
 
         frontal_melt.update(frontal_melt_inputs, t, dt)
 
