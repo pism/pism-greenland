@@ -149,11 +149,6 @@ frontal melt corresponding to provided surface water input rates."""
     water_speed = PISM.IceModelVec2S(grid, "water_speed", PISM.WITHOUT_GHOSTS)
     water_speed.set_attrs("internal", "water_speed", "m s-1", "")
 
-    water_velocity_staggered = PISM.IceModelVec2Stag(grid, "water_velocity", PISM.WITH_GHOSTS)
-
-    water_velocity = PISM.IceModelVec2V(grid, "water_velocity", PISM.WITHOUT_GHOSTS)
-    water_velocity.set_attrs("internal", "water_velocity", "m s-1", "")
-
     hydro_inputs                    = PISM.HydrologyInputs()
     hydro_inputs.cell_type          = geometry.cell_type
     hydro_inputs.ice_thickness      = geometry.ice_thickness
@@ -186,9 +181,7 @@ frontal melt corresponding to provided surface water input rates."""
 
         hydrology.update(t, dt, hydro_inputs)
 
-        water_velocity_staggered.copy_from(hydrology.velocity_staggered())
-        water_velocity_staggered.staggered_to_regular(water_velocity)
-        water_speed.set_to_magnitude(water_velocity)
+        water_speed.set_to_magnitude(hydrology.velocity())
 
         frontal_melt.update(frontal_melt_inputs, t, dt)
 
