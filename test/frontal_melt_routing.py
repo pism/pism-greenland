@@ -1,5 +1,6 @@
 import PISM
 from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
+import numpy as np
 
 context = PISM.Context()
 ctx = context.ctx
@@ -47,6 +48,30 @@ def hydrology(grid):
 
     return hydrology
 
+def prepare_output(file_name, time, mapping_info):
+    """Prepare the output file. Uses the time from the argument, unlike
+    PISM.util.prepare_output().
+
+    """
+    time_name = config.get_string("time.dimension_name")
+
+    output = PISM.PIO(ctx.com(), config.get_string("output.format"),
+                      file_name, PISM.PISM_READWRITE_MOVE)
+
+    PISM.define_time(output, time_name, time.calendar(), time.units_string(), ctx.unit_system())
+
+    output.put_att_text(time_name, "bounds", "time_bounds")
+
+    if mapping_info.mapping.has_attributes():
+        output.def_var(mapping_info.mapping.get_name(), PISM.PISM_DOUBLE, [])
+
+        PISM.write_attributes(output, mapping_info.mapping, PISM.PISM_DOUBLE)
+
+        if len(mapping_info.proj4) > 0:
+            output.put_att_text("PISM_GLOBAL", "proj4", mapping_info.proj4)
+
+    return output
+
 def frontal_melt(grid):
     "Allocate and initialize the frontal melt model."
     fmelt = PISM.FrontalMeltDischargeRouting(grid)
@@ -66,6 +91,11 @@ frontal melt corresponding to provided surface water input rates."""
     parser.add_argument("--theta", dest="theta", help="Thermal forcing Default=274.15K", type=float, default=274.15)
     parser.add_argument("-o", dest="output_file", help="output file name",
                         default="frontal_melt.nc")
+    parser.add_argument("-d", "--duration", dest="duration", help="duration of the run in years", type=int,
+                        default=1)
+    parser.add_argument("-r", "--reporting_interval", dest="reporting_interval", help="reporting interval",
+                        default="daily")
+    
 
     options = parser.parse_args()
     input_file = options.BOOTSTRAP_FILE[0]
@@ -73,11 +103,20 @@ frontal melt corresponding to provided surface water input rates."""
     th_file = options.th_file
     output_file = options.output_file
     theta = options.theta
+    duration = options.duration
+    reporting_interval = options.reporting_interval
     
     # create the grid
     registration = PISM.CELL_CORNER
     grid = PISM.IceGrid.FromFile(ctx, input_file, ("bed", "thickness"), registration)
 
+    # get projection info
+    f = PISM.PIO(ctx.com(), "netcdf3", input_file, PISM.PISM_READONLY)
+    mapping_info = PISM.get_projection_info(f, "mapping", ctx.unit_system())
+    grid.set_mapping_info(mapping_info)
+    f.close()
+
+    # create dummy potential temperature (if not provided by the user)
     if th_file is None:
         th_file = "th_file.nc"
         create_potential_temperature(grid, th_file, theta=theta)
@@ -106,18 +145,17 @@ frontal melt corresponding to provided surface water input rates."""
     f.close()
     water_input_rate.set_attrs("climate", "water input rate", "m s-1", "")
 
-    # not periodic
-    period = 0
-    # reference time is irrelevant
-    reference_time = 0
+    # periodicity with 1 years
+    period = 1
+    # reference time is start time
+    reference_time = time.start()
     water_input_rate.init(routing_file, period, reference_time)
 
     basal_melt_rate = PISM.IceModelVec2S(grid, "basal_melt_rate", PISM.WITHOUT_GHOSTS)
     basal_melt_rate.set(0.0)
 
-    discharge = PISM.IceModelVec2S(grid, "discharge", PISM.WITHOUT_GHOSTS)
-    discharge.set_attrs("internal", "discharge", "kg", "")
-    discharge.set(0.0)
+    water_speed = PISM.IceModelVec2S(grid, "water_speed", PISM.WITHOUT_GHOSTS)
+    water_speed.set_attrs("internal", "water_speed", "m s-1", "")
 
     hydro_inputs                    = PISM.HydrologyInputs()
     hydro_inputs.cell_type          = geometry.cell_type
@@ -128,15 +166,23 @@ frontal melt corresponding to provided surface water input rates."""
 
     frontal_melt_inputs = PISM.FrontalMeltInputs()
     frontal_melt_inputs.geometry = geometry
-    frontal_melt_inputs.subglacial_discharge_at_grounding_line = discharge
+    frontal_melt_inputs.subglacial_water_speed = water_speed
 
-    output = PISM.util.prepare_output(output_file, append_time=False)
-    time_name = config.get_string("time.dimension_name")
+    output = prepare_output(output_file, time, mapping_info)
+
+    bounds = PISM.TimeBoundsMetadata("time_bounds",
+                                     config.get_string("time.dimension_name"),
+                                     ctx.unit_system())
+    bounds.set_string("units", time.units_string())
 
     # run models, stepping through time one record of forcing at at time
-    while time.current() < time.end():
+    output_record = 0
+
+    time_end = time.increment_date(time.start(), duration)
+    dt = np.diff(time.parse_times(reporting_interval)[0:2])[0]
+
+    while time.current() < time_end:
         t = time.current()
-        dt = water_input_rate.max_timestep(t).value()
 
         water_input_rate.update(t, dt)
         water_input_rate.average(t, dt)
@@ -145,17 +191,17 @@ frontal melt corresponding to provided surface water input rates."""
 
         hydrology.update(t, dt, hydro_inputs)
 
-        # convert mass change at the grounding line (positive
-        # corresponds to mass gain) to discharge (positive corresponds
-        # to mass loss)
-        discharge.copy_from(hydrology.mass_change_at_grounding_line())
-        discharge.scale(-1.0)
+        water_speed.set_to_magnitude(hydrology.velocity())
 
         frontal_melt.update(frontal_melt_inputs, t, dt)
 
         time.step(dt)
 
-        PISM.append_time(output, time_name, time.current())
+        PISM.append_time(output, config.get_string("time.dimension_name"),
+                         time.current())
+        PISM.write_time_bounds(output, bounds, output_record, [t, t + dt], PISM.PISM_DOUBLE)
+        output_record += 1
+
         frontal_melt.frontal_melt_rate().write(output)
         hydrology.subglacial_water_thickness().write(output)
         hydrology.total_input_rate().write(output)
