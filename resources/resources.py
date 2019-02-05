@@ -70,6 +70,7 @@ spatial_ts_vars["basic"] = [
     "dHdt",
     "hardav",
     "height_above_flotation",
+    "frontal_melt_rate",
     "ice_mass",
     "mask",
     "mass_fluxes",
@@ -430,8 +431,12 @@ def generate_hydrology(hydro, **kwargs):
         params_dict["hydrology_null_diffuse_till_water"] = ""
     elif hydro in ("routing"):
         params_dict["hydrology"] = "routing"
-        params_dict["basal_yield_stress.add_transportable_water"] = "true"
+    elif hydro in ("routing_coupled"):
+        params_dict["hydrology"] = "routing"
     elif hydro in ("distributed"):
+        params_dict["hydrology"] = "distributed"
+        params_dict["basal_yield_stress.add_transportable_water"] = "true"
+    elif hydro in ("distributed_coupled"):
         params_dict["hydrology"] = "distributed"
         params_dict["basal_yield_stress.add_transportable_water"] = "true"
     else:

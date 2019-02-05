@@ -57,9 +57,14 @@ parser.add_argument(
     "--calving", dest="calving", choices=["float_kill", "vonmises_calving"], help="calving", default="vonmises_calving"
 )
 parser.add_argument(
-    "-d", "--domain", dest="domain", choices=["gris", "gris_ext"], help="sets the modeling domain", default="gris"
+    "-d",
+    "--domain",
+    dest="domain",
+    choices=["gris", "gris_ext", "jib", "jakobshavn"],
+    help="sets the modeling domain",
+    default="gris",
 )
-parser.add_argument("--exstep", dest="exstep", help="Writing interval for spatial time series", default=10)
+parser.add_argument("--exstep", dest="exstep", help="Writing interval for spatial time series", default="daily")
 parser.add_argument(
     "-f",
     "--o_format",
@@ -100,9 +105,9 @@ parser.add_argument(
 parser.add_argument(
     "--hydrology",
     dest="hydrology",
-    choices=["null", "diffuse", "routing"],
+    choices=["routing", "distributed"],
     help="Basal hydrology model.",
-    default="diffuse",
+    default="routing",
 )
 parser.add_argument(
     "-p", "--params", dest="params_list", help="Comma-separated list with params for sensitivity", default=None
@@ -160,10 +165,9 @@ spatial_ts = options.spatial_ts
 
 bed_type = options.bed_type
 calving = options.calving
-climate = "warming"
+climate = "given"
 exstep = options.exstep
 float_kill_calve_near_grounding_line = options.float_kill_calve_near_grounding_line
-frontal_melt = True
 grid = options.grid
 hydrology = options.hydrology
 stress_balance = options.stress_balance
@@ -190,9 +194,7 @@ if domain.lower() in ("greenland_ext", "gris_ext"):
 else:
     pism_dataname = "$input_dir/data_sets/bed_dem/pism_Greenland_{}m_mcb_jpl_v{}_{}.nc".format(grid, version, bed_type)
 
-climate_file = "$input_dir/data_sets/climate_forcing/DMI-HIRHAM5_GL2_ERAI_2001_2014_YDM_BIL_EPSG3413_{}m.nc".format(
-    grid
-)
+climate_file = "$input_dir/data_sets/climate/DMI-HIRHAM5_GL2_ERAI_2008_2016_EPSG3413_4500M_DM.nc"
 
 regridvars = "litho_temp,enthalpy,age,tillwat,bmelt,ice_area_specific_volume,thk"
 
@@ -280,7 +282,7 @@ except:
     combinations = np.genfromtxt(ensemble_file, dtype=None, delimiter=",", skip_header=1)
 
 # FIXME: thickness calving
-tct_dict = {-1.0: "low", 0.0: "mid", 1.0: "high"}
+tct_dict = {-2.0: "off", -1.0: "low", 0.0: "mid", 1.0: "high"}
 
 tsstep = "yearly"
 
@@ -297,12 +299,12 @@ m_sb = None
 
 for n, combination in enumerate(combinations):
 
-    run_id, tct_v, vcm, ppq, sia_e = combination
-    tct = ocs_dict[tct_v]
+    run_id, fm_a, fm_b, fm_alpha, fm_beta, tct_v, vcm, ppq, sia_e = combination
+    tct = tct_dict[tct_v]
 
     ttphi = "{},{},{},{}".format(phi_min, phi_max, topg_min, topg_max)
 
-    name_options = {"rcp": rcp}
+    name_options = {}
     try:
         name_options["id"] = "{:03d}".format(int(run_id))
     except:
@@ -322,8 +324,8 @@ for n, combination in enumerate(combinations):
             [
                 vversion,
                 "_".join(["_".join([k, str(v)]) for k, v in list(name_options.items())]),
-                "{}".format(start),
-                "{}".format(end),
+                "{}".format(start_date),
+                "{}".format(end_date),
             ]
         )
 
@@ -335,10 +337,6 @@ for n, combination in enumerate(combinations):
                 os.remove(filename)
             except OSError:
                 pass
-
-        if start == simulation_start_year:
-            f_combined.write(batch_header)
-            f_combined.write(run_header)
 
         with open(script, "w") as f:
 
@@ -354,21 +352,17 @@ for n, combination in enumerate(combinations):
             general_params_dict = {
                 "profile": join(dirs["performance"], "profile_${job_id}.py".format(**batch_system)),
                 "time_file": pism_timefile,
-                "calendar": "365_day",
-                "climate_forcing_buffer_size": 365,
+                "climate_forcing_buffer_size": 366,
                 "o": join(dirs["state"], outfile),
                 "o_format": oformat,
                 "config_override": "$config",
             }
 
-            if start == simulation_start_year:
-                general_params_dict["bootstrap"] = ""
-                general_params_dict["i"] = pism_dataname
-                general_params_dict["regrid_file"] = input_file
-                general_params_dict["regrid_vars"] = regridvars
-                general_params_dict["regrid_special"] = ""
-            else:
-                general_params_dict["i"] = regridfile
+            general_params_dict["bootstrap"] = ""
+            general_params_dict["i"] = pism_dataname
+            general_params_dict["regrid_file"] = input_file
+            general_params_dict["regrid_vars"] = regridvars
+            general_params_dict["regrid_special"] = ""
 
             if osize != "custom":
                 general_params_dict["o_size"] = osize
@@ -390,22 +384,32 @@ for n, combination in enumerate(combinations):
 
             stress_balance_params_dict = generate_stress_balance(stress_balance, sb_params_dict)
 
-            ice_density = 910.0
             climate_parameters = {"surface_given_file": climate_file, "surface_given_period": 1}
 
             climate_params_dict = generate_climate(climate, **climate_parameters)
 
+            hydro_params_dict = generate_hydrology(hydrology)
+
+            ocean_params_dict = {}
+
+            frontalmelt_parameters = {
+                "frontal_melt": "routing",
+                "frontal_melt_routing_file": "$input_dir/data_sets/frontal_melt/THETA_2008_2016_EPSG3413_4500m_DM.nc",
+                "frontal_melt.parameter_a": fm_a,
+                "frontal_melt.parameter_b": fm_b,
+                "frontal_melt.power_alpha": fm_alpha,
+                "frontal_melt.power_beta": fm_beta,
+                "hydrology.surface_input_file": "$input_dir/data_sets/runoff/DMI-HIRHAM5_GL2_ERAI_2008_2016_MRROS_EPSG3413_4500m_DM.nc",
+            }
+
             calving_thresholds = {
-                "low": "$input_dir/data_sets/ocean_forcing/tct_forcing_400myr_74n_50myr_76n.nc",
-                "mid": "$input_dir/data_sets/ocean_forcing/tct_forcing_500myr_74n_100myr_76n.nc",
-                "high": "$input_dir/data_sets/ocean_forcing/tct_forcing_600myr_74n_150myr_76n.nc",
+                "off": "$input_dir/data_sets/calving_forcing/tct_forcing_off.nc",
+                "low": "$input_dir/data_sets/calving_forcing/tct_forcing_400myr_74n_50myr_76n.nc",
+                "mid": "$input_dir/data_sets/calving_forcing/tct_forcing_500myr_74n_100myr_76n.nc",
+                "high": "$input_dir/data_sets/calving_forcing/tct_forcing_600myr_74n_150myr_76n.nc",
             }
 
             tct_file = calving_thresholds[tct]
-
-            hydro_params_dict = generate_hydrology(hydrology)
-
-            frontalmelt_parameters = {}
 
             calving_parameters = {
                 "thickness_calving_threshold_file": tct_file,
@@ -440,26 +444,18 @@ for n, combination in enumerate(combinations):
             all_params = " \\\n  ".join(["-{} {}".format(k, v) for k, v in list(all_params_dict.items())])
 
             if system == "debug":
-                redirect = " 2>&1 | tee {jobs}/job_{job_no}.${job_id}"
+                redirect = " 2>&1 | tee {jobs}/job.${job_id}"
             else:
-                redirect = " > {jobs}/job_{job_no}.${job_id} 2>&1"
+                redirect = " > {jobs}/job.${job_id} 2>&1"
 
             template = "{mpido} {pism} {params}" + redirect
 
-            context = merge_dicts(batch_system, dirs, {"job_no": job_no, "pism": pism, "params": all_params})
+            context = merge_dicts(batch_system, dirs, {"pism": pism, "params": all_params})
             cmd = template.format(**context)
 
             f.write(cmd)
             f.write("\n")
             f.write(batch_system.get("footer", ""))
-
-            f_combined.write(cmd)
-            f_combined.write("\n\n")
-
-            regridfile = join(dirs["state"], outfile)
-            outfiles.append(outfile)
-
-        f.write(batch_system.get("footer", ""))
 
     scripts.append(script)
 
