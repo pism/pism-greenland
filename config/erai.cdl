@@ -2,6 +2,12 @@ netcdf pism_overrides {
     variables:
     byte pism_overrides;
 
+    pism_overrides:energy.minimum_allowed_temperature = 0.0;
+    pism_overrides:energy.minimum_allowed_temperature_doc = "Minimum allowed ice temperature";
+    pism_overrides:energy.minimum_allowed_temperature_option = "low_temp";
+    pism_overrides:energy.minimum_allowed_temperature_type = "scalar";
+    pism_overrides:energy.minimum_allowed_temperature_units = "Kelvin";
+
     pism_overrides:stress_balance.sia.max_diffusivity = 100000.0;
     pism_overrides:stress_balance.sia.max_diffusivity_doc = "Maximum allowed diffusivity of the SIA flow. PISM stops with an error message if the SIA diffusivity exceeds this limit.";
     pism_overrides:stress_balance.sia.max_diffusivity_type = "scalar";
@@ -37,7 +43,7 @@ netcdf pism_overrides {
     pism_overrides:ocean.sub_shelf_heat_flux_into_ice = 50.0;
     pism_overrides:ocean.sub_shelf_heat_flux_into_ice_doc = "W m-2; = J m-2 s-1; naively chosen default value for heat from ocean; see comments in @ref pism::POConstant::shelf_base_mass_flux().";
 
-    pism_overrides:climate_forcing.buffer_size = 13;
+    pism_overrides:climate_forcing.buffer_size = 30;
     pism_overrides:climate_forcing.buffer_size_doc = "; number of 2D climate forcing records to keep in memory; = 5 years of monthly records";
 
     pism_overrides:geometry.ice_free_thickness_standard_units = "meters";

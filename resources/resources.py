@@ -52,6 +52,14 @@ def generate_domain(domain):
         pism_exec = """pismr -regional -x_range {x_min},{x_max} -y_range {y_min},{y_max}  -bootstrap -regional.zero_gradient true -regional.no_model_strip 4.5""".format(
             x_min=x_min, x_max=x_max, y_min=y_min, y_max=y_max
         )
+    elif domain.lower() in ("nw"):
+        x_min = -400000.0
+        x_max = 320000.0
+        y_min = -2022000.0
+        y_max = -1500000.0
+        pism_exec = """pismr -regional -x_range {x_min},{x_max} -y_range {y_min},{y_max}  -bootstrap -regional.zero_gradient true -regional.no_model_strip 4.5""".format(
+            x_min=x_min, x_max=x_max, y_min=y_min, y_max=y_max
+        )
     else:
         print(("Domain {} not recognized, exiting".format(domain)))
         import sys
@@ -64,25 +72,21 @@ def generate_domain(domain):
 spatial_ts_vars = {}
 
 spatial_ts_vars["basic"] = [
-    "basal_melt_rate_grounded",
     "beta",
-    "dbdt",
     "dHdt",
-    "hardav",
     "height_above_flotation",
     "frontal_melt_rate",
+    "frontal_melt_retreat_rate",
     "ice_mass",
     "mask",
     "mass_fluxes",
     "sftgif",
-    "temppabase",
-    "tempsurf",
     "thk",
     "topg",
     "usurf",
     "velbase_mag",
-    "velsurf",
     "velsurf_mag",
+    "vonmises_calving_rate",
 ]
 
 spatial_ts_vars["hydro"] = [
@@ -92,12 +96,12 @@ spatial_ts_vars["hydro"] = [
     "bwatvel",
     "beta",
     "dHdt",
+    "frontal_melt_rate",
+    "frontal_melt_retreat_rate",
     "hydraulic_potential",
     "ice_mass",
     "mask",
     "mass_fluxes",
-    "lat",
-    "lon",
     "sftgif",
     "temppabase",
     "tillwat",
@@ -106,6 +110,7 @@ spatial_ts_vars["hydro"] = [
     "usurf",
     "velbase_mag",
     "velsurf_mag",
+    "vonmises_calving_rate",
 ]
 
 
@@ -145,7 +150,7 @@ def generate_spatial_ts(outfile, exvars, step, start=None, end=None, split=None,
     return params_dict
 
 
-def generate_scalar_ts(outfile, step, start=None, end=None, odir=None):
+def generate_scalar_ts(outfile, step, odir=None):
     """
     Return dict to create scalar time series
 
@@ -160,9 +165,6 @@ def generate_scalar_ts(outfile, step, start=None, end=None, odir=None):
 
     if step is None:
         step = "yearly"
-
-    if start is not None and end is not None:
-        times = "{start}:{step}:{end}".format(start=start, step=step, end=end)
     else:
         times = step
     params_dict["ts_times"] = times
@@ -257,24 +259,39 @@ def generate_grid_description(grid_resolution, domain, restart=False):
 
         resolution_max = 150
 
-        accepted_resolutions = (
-            150,
-            300,
-            450,
-            600,
-            900,
-            1200,
-            1500,
-            1800,
-            2400,
-            3000,
-            3600,
-            4500,
-            6000,
-            9000,
-            18000,
-            36000,
-        )
+        accepted_resolutions = (150, 300, 450, 600, 900, 1200, 1500, 1800, 2400, 3000, 3600, 4500)
+
+        try:
+            grid_resolution in accepted_resolutions
+            pass
+        except:
+            print(("grid resolution {}m not recognized".format(grid_resolution)))
+
+        if grid_resolution < 1200:
+            skip_max = 200
+            mz = 201
+            mzb = 21
+        elif (grid_resolution >= 1200) and (grid_resolution < 4500):
+            skip_max = 100
+            mz = 201
+            mzb = 21
+        elif (grid_resolution >= 4500) and (grid_resolution < 18000):
+            skip_max = 50
+            mz = 201
+            mzb = 21
+        else:
+            skip_max = 20
+            mz = 101
+            mzb = 11
+
+    elif domain.lower() in ("nw"):
+
+        mx_max = 4000
+        my_max = 2600
+
+        resolution_max = 150
+
+        accepted_resolutions = (150, 300, 450, 600, 900, 1200, 1500, 1800, 2400, 3000, 3600, 4500)
 
         try:
             grid_resolution in accepted_resolutions
@@ -328,11 +345,7 @@ def generate_grid_description(grid_resolution, domain, restart=False):
     horizontal_grid["My"] = my
 
     vertical_grid = OrderedDict()
-    # This sould be a temporary hack to restart from an older simulation
-    if domain.lower() in ("gris", "og", "jib", "jakobshavn"):
-        vertical_grid["Lz"] = 4000
-    else:
-        vertical_grid["Lz"] = 5000
+    vertical_grid["Lz"] = 4000
     vertical_grid["Lbz"] = 2000
     vertical_grid["z_spacing"] = "equal"
     vertical_grid["Mz"] = mz
@@ -617,7 +630,7 @@ def list_bed_types():
     Return a list of supported bed types.
     """
 
-    list = ["ctrl", "cresis", "cresisp", "minus", "plus", "ba01_bed", "970mW_hs", "jak_1985", "no_bath"]
+    list = ["ctrl", "cresis", "cresisp", "minus", "plus", "ba01_bed", "970mW_hs", "jak_1985", "no_bath", "wc"]
 
     return list
 
@@ -632,7 +645,7 @@ systems["chinook"] = {
     "submit": "sbatch",
     "work_dir": "SLURM_SUBMIT_DIR",
     "job_id": "SLURM_JOBID",
-    "queue": {"t1standard": 24, "t1small": 24, "t2standard": 24, "t2small": 24, "debug": 24},
+    "queue": {"t1standard": 24, "t1small": 24, "t2standard": 24, "t2small": 24, "debug": 24, "analysis": 24},
 }
 
 systems["pleiades"] = {
