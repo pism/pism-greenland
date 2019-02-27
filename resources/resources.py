@@ -72,7 +72,7 @@ def generate_domain(domain):
 spatial_ts_vars = {}
 
 spatial_ts_vars["basic"] = [
-    "beta",
+    "bwat",
     "dHdt",
     "height_above_flotation",
     "frontal_melt_rate",
@@ -81,6 +81,7 @@ spatial_ts_vars["basic"] = [
     "mask",
     "mass_fluxes",
     "sftgif",
+    "subglacial_water_flux_mag",
     "thk",
     "topg",
     "usurf",

@@ -297,7 +297,7 @@ post_header = make_batch_post_header(system)
 
 for n, combination in enumerate(combinations):
 
-    run_id, frontal_melt_file, fm_a, fm_b, fm_alpha, fm_beta, tct_v, vcm, ppq, sia_e = combination
+    run_id, fm_a, fm_b, fm_alpha, fm_beta, tct_v, vcm, ppq, sia_e = combination
     tct = tct_dict[tct_v]
 
     ttphi = "{},{},{},{}".format(phi_min, phi_max, topg_min, topg_max)
@@ -401,10 +401,9 @@ for n, combination in enumerate(combinations):
 
         ocean_params_dict = {}
 
-        # "frontal_melt.routing.file": "$input_dir/data_sets/frontal_melt/THETA_1980_2016_EPSG3413_4500M_DM.nc",
         frontalmelt_parameters = {
             "frontal_melt": "routing",
-            "frontal_melt.routing.file": "$input_dir/data_sets/ismip6/{}".format(frontal_melt_file),
+            "frontal_melt.routing.file": "$input_dir/data_sets/frontal_melt/THETA_1980_2016_EPSG3413_4500M_DM.nc",
             "frontal_melt.include_floating_ice": True,
             "frontal_melt.routing.parameter_a": fm_a,
             "frontal_melt.routing.parameter_b": fm_b,

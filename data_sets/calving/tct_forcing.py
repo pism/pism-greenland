@@ -223,5 +223,4 @@ for t in range(nt):
     tct_var[t, ::] = tct
     nc.sync()
 
-
 nc.close()
