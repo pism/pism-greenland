@@ -88,6 +88,7 @@ spatial_ts_vars["basic"] = [
     "velbase_mag",
     "velsurf_mag",
     "vonmises_calving_rate",
+    "vonmises_stress",
 ]
 
 spatial_ts_vars["hydro"] = [
