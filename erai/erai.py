@@ -410,6 +410,7 @@ for n, combination in enumerate(combinations):
             "frontal_melt.routing.parameter_b": fm_b,
             "frontal_melt.routing.power_alpha": fm_alpha,
             "frontal_melt.routing.power_beta": fm_beta,
+            "hydrology.routing.add_water_input_to_till_storage": True,
         }
 
         frontalmelt_params_dict = frontalmelt_parameters
@@ -427,6 +428,8 @@ for n, combination in enumerate(combinations):
             "thickness_calving_threshold_file": tct_file,
             "float_kill_calve_near_grounding_line": float_kill_calve_near_grounding_line,
             "calving.vonmises_calving.sigma_max": vcm * 1e6,
+            "calving.vonmises_calving.use_own_Glen_exponent": True,
+            "calving.vonmises_calving.Glen_exponent": 3.0,
         }
 
         calving_params_dict = generate_calving(calving, **calving_parameters)
