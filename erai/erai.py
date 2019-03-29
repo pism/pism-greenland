@@ -375,28 +375,31 @@ for n, combination in enumerate(combinations):
         climate_parameters = {"climate_forcing.buffer_size": 367, "surface_given_file": climate_file}
 
         # FIXME
-        ice_density = 910.0
-        fice = 8
-        fsnow = 3
-        std_dev = 4.23
-        lapse_rate = 6
-        rfr = 0.47
-        climate = "pdd"
-        climate_parameters = {
-            "climate_forcing.buffer_size": 367,
-            "surface.pdd.factor_ice": fice / ice_density,
-            "surface.pdd.factor_snow": fsnow / ice_density,
-            "surface.pdd.refreeze": rfr,
-            "surface.pdd.std_dev": std_dev,
-            "atmosphere_given_file": climate_file,
-        }
+        # ice_density = 910.0
+        # fice = 8
+        # fsnow = 3
+        # std_dev = 4.23
+        # lapse_rate = 6
+        # rfr = 0.47
+        climate = "given"
+        climate_parameters = {"climate_forcing.buffer_size": 367, "surface_given_file": climate_file}
+        # climate_parameters = {
+        #     "climate_forcing.buffer_size": 367,
+        #     "surface.pdd.factor_ice": fice / ice_density,
+        #     "surface.pdd.factor_snow": fsnow / ice_density,
+        #     "surface.pdd.refreeze": rfr,
+        #     "surface.pdd.std_dev": std_dev,
+        #     "atmosphere_given_file": climate_file,
+        # }
 
         climate_params_dict = generate_climate(climate, **climate_parameters)
 
         hydrology_parameters = {
             "hydrology.routing.include_floating_ice": True,
             "hydrology.surface_input_file": "$input_dir/data_sets/runoff/{}".format(runoff_file),
+            "hydrology.routing.add_water_input_to_till_storage": False,
         }
+
         hydro_params_dict = generate_hydrology(hydrology, **hydrology_parameters)
 
         ocean_params_dict = {}
@@ -410,7 +413,6 @@ for n, combination in enumerate(combinations):
             "frontal_melt.routing.parameter_b": fm_b,
             "frontal_melt.routing.power_alpha": fm_alpha,
             "frontal_melt.routing.power_beta": fm_beta,
-            "hydrology.routing.add_water_input_to_till_storage": True,
         }
 
         frontalmelt_params_dict = frontalmelt_parameters
@@ -428,7 +430,7 @@ for n, combination in enumerate(combinations):
             "thickness_calving_threshold_file": tct_file,
             "float_kill_calve_near_grounding_line": float_kill_calve_near_grounding_line,
             "calving.vonmises_calving.sigma_max": vcm * 1e6,
-            "calving.vonmises_calving.use_own_Glen_exponent": True,
+            "calving.vonmises_calving.use_custom_flow_law": True,
             "calving.vonmises_calving.Glen_exponent": 3.0,
         }
 

@@ -72,13 +72,9 @@ def generate_domain(domain):
 spatial_ts_vars = {}
 
 spatial_ts_vars["basic"] = [
-<<<<<<< Updated upstream
-    "bwat",
-=======
     "basal_melt_rate_grounded",
     "beta",
-    "bwat" "dbdt",
->>>>>>> Stashed changes
+    "bwat",
     "dHdt",
     "height_above_flotation",
     "frontal_melt_rate",
