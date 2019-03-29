@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 # Copyright (C) 2019 Andy Aschwanden
 
+# Historical run for ISMIP6
+
 import itertools
 from collections import OrderedDict
 import numpy as np
@@ -137,7 +139,7 @@ parser.add_argument(
     default="upstream",
 )
 parser.add_argument("--start", help="Simulation start year", default="2008-1-1")
-parser.add_argument("--end", help="Simulation end year", default="2012-1-1")
+parser.add_argument("--end", help="Simulation end year", default="2015-1-1")
 parser.add_argument(
     "-e",
     "--ensemble_file",
@@ -255,7 +257,6 @@ done
     dirs=" ".join(list(dirs.values())),
 )
 
-# FIXME: put into right directory
 pism_timefile = join(time_dir, "timefile_{start}_{end}.nc".format(start=start_date, end=end_date))
 try:
     os.remove(pism_timefile)
@@ -374,23 +375,7 @@ for n, combination in enumerate(combinations):
 
         climate_parameters = {"climate_forcing.buffer_size": 367, "surface_given_file": climate_file}
 
-        # FIXME
-        # ice_density = 910.0
-        # fice = 8
-        # fsnow = 3
-        # std_dev = 4.23
-        # lapse_rate = 6
-        # rfr = 0.47
         climate = "given"
-        climate_parameters = {"climate_forcing.buffer_size": 367, "surface_given_file": climate_file}
-        # climate_parameters = {
-        #     "climate_forcing.buffer_size": 367,
-        #     "surface.pdd.factor_ice": fice / ice_density,
-        #     "surface.pdd.factor_snow": fsnow / ice_density,
-        #     "surface.pdd.refreeze": rfr,
-        #     "surface.pdd.std_dev": std_dev,
-        #     "atmosphere_given_file": climate_file,
-        # }
 
         climate_params_dict = generate_climate(climate, **climate_parameters)
 

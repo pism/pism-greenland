@@ -1,6 +1,11 @@
 #!/usr/bin/env python
 # Copyright (C) 2019 Andy Aschwanden
 
+# Initialization for ISMIP6
+#
+# - ctrl run
+# - asmb run
+
 import itertools
 from collections import OrderedDict
 import numpy as np
@@ -137,7 +142,7 @@ parser.add_argument(
     default="upstream",
 )
 parser.add_argument("--start", help="Simulation start year", default="2008-1-1")
-parser.add_argument("--end", help="Simulation end year", default="2012-1-1")
+parser.add_argument("--end", help="Simulation end year", default="2108-1-1")
 parser.add_argument(
     "-e",
     "--ensemble_file",
