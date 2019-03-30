@@ -71,6 +71,44 @@ def generate_domain(domain):
 
 spatial_ts_vars = {}
 
+
+spatial_ts_vars["ismip6"] = [
+    "basal_mass_flux_floating",
+    "basal_mass_flux_grounded",
+    "basal_melt_rate_grounded",
+    "beta",
+    "bmelt",
+    "climatic_mass_balance",  # acabf
+    "dbdt",
+    "dHdt",
+    "diffusivity",
+    "hfgeoubed",  # hfgeoubed
+    "mask",
+    "mass_fluxes",
+    "nuH",
+    "sftgrf",
+    "sftflf",
+    "sftgif",
+    "taub_mag",
+    "tauc",
+    "taud_mag",
+    "tempicethk_basal",
+    "tempbase",
+    "temppabase",
+    "tempsurf",
+    "thk",  # lithk
+    "topg",  # topg
+    "usurf",  # orog
+    "velbar",
+    "velbase",
+    "velbase_mag",
+    "velsurf",
+    "velsurf_mag",
+    "wvelbase",
+    "wvelsurf",
+]
+
+
 spatial_ts_vars["basic"] = [
     "basal_melt_rate_grounded",
     "beta",
@@ -549,6 +587,8 @@ def generate_climate(climate, **kwargs):
         params_dict["surface"] = "pdd"
     elif climate in ("const"):
         params_dict["surface"] = "given"
+    elif climate in ("anomaly"):
+        params_dict["surface"] = "given,anomaly"
     elif climate in ("relax", "given"):
         params_dict["surface"] = "given"
     elif climate in ("flux"):
