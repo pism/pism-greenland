@@ -56,9 +56,6 @@ parser.add_argument(
     "-q", "--queue", dest="queue", choices=list_queues(), help="""queue. default=long.""", default="long"
 )
 parser.add_argument(
-    "--calving", dest="calving", choices=["float_kill", "vonmises_calving"], help="calving", default="vonmises_calving"
-)
-parser.add_argument(
     "-d",
     "--domain",
     dest="domain",
@@ -166,7 +163,6 @@ system = options.system
 spatial_ts = options.spatial_ts
 
 bed_type = options.bed_type
-calving = options.calving
 climate = "given"
 exstep = options.exstep
 float_kill_calve_near_grounding_line = options.float_kill_calve_near_grounding_line
@@ -298,7 +294,7 @@ post_header = make_batch_post_header(system)
 
 for n, combination in enumerate(combinations):
 
-    run_id, runoff_file, frontal_melt_file, fm_a, fm_b, fm_alpha, fm_beta, tct_v, vcm, ppq, sia_e = combination
+    run_id, runoff_file, frontal_melt_file, fm_a, fm_b, fm_alpha, fm_beta, tct_v, vcm, ppq, sia_e, ok = combination
     tct = tct_dict[tct_v]
 
     ttphi = "{},{},{},{}".format(phi_min, phi_max, topg_min, topg_max)
@@ -411,13 +407,25 @@ for n, combination in enumerate(combinations):
 
         tct_file = calving_thresholds[tct]
 
-        calving_parameters = {
-            "thickness_calving_threshold_file": tct_file,
-            "float_kill_calve_near_grounding_line": float_kill_calve_near_grounding_line,
-            "calving.vonmises_calving.sigma_max": vcm * 1e6,
-            "calving.vonmises_calving.use_custom_flow_law": True,
-            "calving.vonmises_calving.Glen_exponent": 3.0,
-        }
+        if ok == 0:
+            calving = "vonmises_calving"
+            calving_parameters = {
+                "thickness_calving_threshold_file": tct_file,
+                "float_kill_calve_near_grounding_line": float_kill_calve_near_grounding_line,
+                "calving.vonmises_calving.sigma_max": vcm * 1e6,
+                "calving.vonmises_calving.use_custom_flow_law": True,
+                "calving.vonmises_calving.Glen_exponent": 3.0,
+            }
+        else:
+            calving = "vonmises_calving,ocean_kill"
+            calving_parameters = {
+                "ocean_kill_file": pism_dataname,
+                "thickness_calving_threshold_file": tct_file,
+                "float_kill_calve_near_grounding_line": float_kill_calve_near_grounding_line,
+                "calving.vonmises_calving.sigma_max": vcm * 1e6,
+                "calving.vonmises_calving.use_custom_flow_law": True,
+                "calving.vonmises_calving.Glen_exponent": 3.0,
+            }
 
         calving_params_dict = generate_calving(calving, **calving_parameters)
 
