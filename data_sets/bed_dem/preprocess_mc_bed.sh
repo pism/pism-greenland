@@ -88,6 +88,103 @@ ibcaofile=IBCAO_V3_500m_RR
 wget -nc http://www.ngdc.noaa.gov/mgg/bathymetry/arctic/grids/version3_0/${ibcaofile}_tif.zip
 #unzip -o ${ibcaofile}_tif.zip
 
+ismip6_grid() {
+
+# no buffer here
+buffer_x=0
+buffer_y=0
+xmin=$((-720000 - $buffer_x))
+ymin=$((-3450000 - $buffer_y))
+xmax=$((960000 + $buffer_x))
+ymax=$((-570000 + $buffer_y))
+
+
+for GRID in 1000; do
+    outfile_prefix=pism_Greenland_ismip6_${GRID}m_mcb_jpl_v${ver}
+    outfile=${outfile_prefix}.nc
+    outfile_ctrl=${outfile_prefix}_ctrl.nc
+    outfile_nb=${outfile_prefix}_wc.nc
+    outfile_sm_prefix=pism_Greenland_${GRID}m_mcb_jpl_v${ver}
+    outfile_sm_ctrl=${outfile_sm_prefix}_ctrl.nc
+    outfile_sm_nb=${outfile_sm_prefix}_wc.nc
+    
+    for var in "bed"; do
+        rm -f g${GRID}m_${var}_v${ver}.tif g${GRID}m_${var}_v${ver}.nc
+        gdalwarp $CUT -overwrite  -r average -s_srs EPSG:3413 -t_srs EPSG:3413 -te $xmin $ymin $xmax $ymax -tr $GRID $GRID -of GTiff NETCDF:$infile:$var g${GRID}m_${var}_v${ver}.tif
+        gdal_translate -co "FORMAT=NC4" -of netCDF g${GRID}m_${var}_v${ver}.tif g${GRID}m_${var}_v${ver}.nc 
+        ncatted -a nx,global,d,, -a ny,global,d,, -a xmin,global,d,, -a ymax,global,d,, -a spacing,global,d,, g${GRID}m_${var}_v${ver}.nc
+        
+    done
+    for var in "surface" "thickness"; do
+        rm -f g${GRID}m_${var}_v${ver}.tif g${GRID}m_${var}_v${ver}.nc
+        gdalwarp -overwrite -r average -te $xmin $ymin $xmax $ymax -tr $GRID $GRID -of GTiff NETCDF:$infile:$var g${GRID}m_${var}_v${ver}.tif
+        gdal_translate -co "FORMAT=NC4" -of netCDF g${GRID}m_${var}_v${ver}.tif g${GRID}m_${var}_v${ver}.nc
+        ncatted -a _FillValue,$var,d,, g${GRID}m_${var}_v${ver}.nc
+        ncap2 -O -s "where(${var}<=0) ${var}=0.;" g${GRID}m_${var}_v${ver}.nc g${GRID}m_${var}_v${ver}.nc
+    done
+    for var in "mask"; do
+        rm -f g${GRID}m_${var}_v${ver}.tif g${GRID}m_${var}_v${ver}.nc
+        gdalwarp -overwrite -r near -te $xmin $ymin $xmax $ymax -tr $GRID $GRID -of GTiff NETCDF:$infile:$var g${GRID}m_${var}_v${ver}.tif
+        gdal_translate -co "FORMAT=NC4" -of netCDF g${GRID}m_${var}_v${ver}.tif g${GRID}m_${var}_v${ver}.nc 
+    done
+    
+    ncks -O g${GRID}m_bed_v${ver}.nc $outfile
+    ncatted -a _FillValue,bed,d,, $outfile
+    for var in "surface" "thickness" "mask"; do
+        ncks -A g${GRID}m_${var}_v${ver}.nc $outfile
+    done
+        
+    # This is not needed, but it can be used by PISM to calculate correct cell volumes, and for remapping scripts"
+    ncatted -a proj4,global,o,c,"+init=epsg:3413" $outfile
+
+    # Add IBCAO bathymetry for the outer part of the domain
+    gdalwarp $CUT -overwrite -r average -t_srs EPSG:3413 -te $xmin $ymin $xmax $ymax -tr $GRID $GRID -of GTiff ${ibcaofile}_tif/${ibcaofile}.tif ${ibcaofile}_epsg3413_g${GRID}m.tif
+    gdal_translate -co "FORMAT=NC4" -of netCDF  ${ibcaofile}_epsg3413_g${GRID}m.tif  ${ibcaofile}_epsg3413_g${GRID}m.nc
+    ncks -A -v Band1 ${ibcaofile}_epsg3413_g${GRID}m.nc $outfile
+    ncap2 -O -s "where(bed==-9999) {bed=Band1;}; where(Band1<=-9990) {bed=-9999;};" $outfile $outfile
+    ncks -O -v Band1,topg -x $outfile $outfile
+
+    # Remap SeaRISE fields
+    ncks -4 -O g${GRID}m_${var}_v${ver}.nc griddes_${GRID}m.nc
+    nc2cdo.py --srs "+init=epsg:3413" griddes_${GRID}m.nc
+    if [[ $N == 1 ]] ; then
+        cdo -f nc4 remapbil,griddes_${GRID}m.nc ${PISMVERSION} v${ver}_tmp_${GRID}m_searise.nc
+    else
+        cdo -P $N -f nc4 remapbil,griddes_${GRID}m.nc ${PISMVERSION} v${ver}_tmp_${GRID}m_searise.nc
+    fi
+
+    # Extrapolate climate and other BC fields onto PISM domain
+    run_with_mpi $NN fill_missing_petsc.py -v precipitation,ice_surface_temp,bheatflx,climatic_mass_balance v${ver}_tmp_${GRID}m_searise.nc v${ver}_tmp2_${GRID}m.nc
+    ncap2 -O -s "polar_stereographic=char(polar_stereographic);"  v${ver}_tmp2_${GRID}m.nc  v${ver}_tmp2_${GRID}m.nc
+    ncks -4 -A -v precipitation,ice_surface_temp,bheatflx,climatic_mass_balance v${ver}_tmp2_${GRID}m.nc $outfile
+    ncatted -a _FillValue,,d,, -a missing_value,,d,, $outfile
+    
+    # remove regridding artifacts, give precedence to mask: we set thickness and
+    # surface to 0 where mask has ocean
+    # Make FTT mask: 1 where there is no floating (3) or grounded (2) ice
+    ncap2 -O -s "where(thickness<0) thickness=0; ftt_mask[\$y,\$x]=0b; where(mask==0) {thickness=0.; surface=0.;}; where(mask!=2) ftt_mask=1; where(mask!=3) ftt_mask=1;" $outfile $outfile
+
+    ncks -h -O $outfile $outfile_ctrl
+    ncks -h -O $outfile $outfile_nb
+
+    # Here we cut out the topography of the Canadian Archipelago
+    var=thickness
+    gdalwarp -overwrite -dstnodata 0 -cutline  ../shape_files/gris-domain-ismip6.shp NETCDF:$outfile_nb:$var g${GRID}m_nb_${var}_v${ver}.tif
+    gdal_translate -of netCDF -co "FORMAT=NC4" g${GRID}m_nb_${var}_v${ver}.tif g${GRID}m_nb_${var}_v${ver}.nc
+    ncks -A -v $var g${GRID}m_nb_${var}_v${ver}.nc $outfile_nb
+    var=bed
+    gdalwarp -overwrite -dstnodata -9999 -cutline  ../shape_files/gris-domain-ismip6.shp NETCDF:$outfile_nb:$var g${GRID}m_nb_${var}_v${ver}.tif
+    gdal_translate -of netCDF -co "FORMAT=NC4" g${GRID}m_nb_${var}_v${ver}.tif g${GRID}m_nb_${var}_v${ver}.nc
+    ncks -A -v $var g${GRID}m_nb_${var}_v${ver}.nc $outfile_nb
+    ncatted -a _FillValue,bed,d,, -a _FillValue,thickness,d,, $outfile_nb
+    ncap2 -O -s "where(bed==-9999) {mask=0; surface=0; thickness=0;};"  $outfile_nb  $outfile_nb
+
+done
+
+}
+
+default_grid() {
+
 # Create a buffer that is a multiple of the grid resolution
 # and works for grid resolutions up to 36km.
 buffer_x=148650
@@ -201,3 +298,8 @@ for GRID in 18000 9000 6000 4500 3600 3000 2400 1800 1500 1200 900 600 450 300; 
     ncks -O -d x,$e0.,$e1. -d y,$n0.,$n1.  $outfile_nb  $outfile_sm_nb
 
 done
+
+}
+
+ismip6_grid
+# default_grid
