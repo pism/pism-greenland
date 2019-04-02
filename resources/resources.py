@@ -32,7 +32,7 @@ def generate_domain(domain):
     Returns: string
     """
 
-    if domain.lower() in ("greenland", "gris", "gris_ext"):
+    if domain.lower() in ("greenland", "gris", "gris_ext", "ismip6"):
         pism_exec = "pismr"
     elif domain.lower() in ("og"):
         pism_exec = "pismr -no_model_strip 0 -calving_wrap_around"
@@ -294,6 +294,25 @@ def generate_grid_description(grid_resolution, domain, restart=False):
             skip_max = 20
             mz = 101
             mzb = 11
+
+    elif domain.lower() in ("ismip6"):
+
+        mx_max = 1681
+        my_max = 2881
+
+        resolution_max = 1000
+
+        accepted_resolutions = 1000
+
+        try:
+            grid_resolution in accepted_resolutions
+            pass
+        except:
+            print(("grid resolution {}m not recognized".format(grid_resolution)))
+
+        skip_max = 200
+        mz = 201
+        mzb = 21
 
     elif domain.lower() in ("jakobshavn", "jib"):
 
