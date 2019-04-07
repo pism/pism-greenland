@@ -90,9 +90,9 @@ wget -nc http://www.ngdc.noaa.gov/mgg/bathymetry/arctic/grids/version3_0/${ibcao
 
 ismip6_grid() {
 
-# no buffer here
-buffer_x=0
-buffer_y=0
+# buffer = grid spacing / 2
+buffer_x=500
+buffer_y=500
 xmin=$((-720000 - $buffer_x))
 ymin=$((-3450000 - $buffer_y))
 xmax=$((960000 + $buffer_x))
