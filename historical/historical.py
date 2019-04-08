@@ -192,8 +192,6 @@ if domain.lower() in ("greenland_ext", "gris_ext"):
 else:
     pism_dataname = "$input_dir/data_sets/bed_dem/pism_Greenland_{}m_mcb_jpl_v{}_{}.nc".format(grid, version, bed_type)
 
-climate_file = "$input_dir/data_sets/climate/DMI-HIRHAM5_GL2_ERAI_1980_2016_EPSG3413_4500M_DM.nc"
-
 regridvars = "litho_temp,enthalpy,age,tillwat,bmelt,ice_area_specific_volume,thk"
 
 dirs = {"output": "$output_dir", "spatial_tmp": "$spatial_tmp_dir"}
@@ -294,7 +292,7 @@ post_header = make_batch_post_header(system)
 
 for n, combination in enumerate(combinations):
 
-    run_id, runoff_file, frontal_melt_file, fm_a, fm_b, fm_alpha, fm_beta, tct_v, vcm, ppq, sia_e, ok = combination
+    run_id, climate_file, runoff_file, frontal_melt_file, fm_a, fm_b, fm_alpha, fm_beta, tct_v, vcm, ppq, sia_e, ok = combination
     tct = tct_dict[tct_v]
 
     ttphi = "{},{},{},{}".format(phi_min, phi_max, topg_min, topg_max)
@@ -369,7 +367,7 @@ for n, combination in enumerate(combinations):
 
         stress_balance_params_dict = generate_stress_balance(stress_balance, sb_params_dict)
 
-        climate_parameters = {"climate_forcing.buffer_size": 367, "surface_given_file": climate_file}
+        climate_parameters = {"climate_forcing.buffer_size": 367, "surface_given_file": "$input_dir/data_sets/ismip6/{}".format(climate_file)
 
         climate = "given"
 
@@ -377,7 +375,7 @@ for n, combination in enumerate(combinations):
 
         hydrology_parameters = {
             "hydrology.routing.include_floating_ice": True,
-            "hydrology.surface_input_file": "$input_dir/data_sets/runoff/{}".format(runoff_file),
+            "hydrology.surface_input_file": "$input_dir/data_sets/ismip6/{}".format(runoff_file),
             "hydrology.routing.add_water_input_to_till_storage": False,
         }
 
@@ -385,7 +383,6 @@ for n, combination in enumerate(combinations):
 
         ocean_params_dict = {}
 
-        # "frontal_melt.routing.file": "$input_dir/data_sets/frontal_melt/THETA_1980_2016_EPSG3413_4500M_DM.nc",
         frontalmelt_parameters = {
             "frontal_melt": "routing",
             "frontal_melt.routing.file": "$input_dir/data_sets/ismip6/{}".format(frontal_melt_file),
