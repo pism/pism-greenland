@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # Copyright (C) 2019 Andy Aschwanden
 
-# Historical simulations for ISMIP6
+# Prognostic simulations for ISMIP6
 
 import itertools
 from collections import OrderedDict
@@ -40,7 +40,7 @@ def map_dict(val, mdict):
         return val
 
 
-grid_choices = [18000, 9000, 6000, 4500, 3600, 3000, 2400, 1800, 1500, 1200, 900, 600, 450, 300, 150]
+grid_choices = [18000, 9000, 6000, 4500, 3600, 3000, 2400, 1800, 1500, 1200, 1000, 900, 600, 450, 300, 150]
 
 # set up the option parser
 parser = ArgumentParser(formatter_class=ArgumentDefaultsHelpFormatter)
@@ -59,11 +59,11 @@ parser.add_argument(
     "-d",
     "--domain",
     dest="domain",
-    choices=["gris", "gris_ext", "jib", "jakobshavn", "nw"],
+    choices=["gris", "gris_ext", "jib", "jakobshavn", "nw", "ismip6"],
     help="sets the modeling domain",
-    default="gris",
+    default="ismip6",
 )
-parser.add_argument("--exstep", dest="exstep", help="Writing interval for spatial time series", default="daily")
+parser.add_argument("--exstep", dest="exstep", help="Writing interval for spatial time series", default="yearly")
 parser.add_argument(
     "-f",
     "--o_format",
@@ -73,7 +73,7 @@ parser.add_argument(
     default="netcdf4_parallel",
 )
 parser.add_argument(
-    "-g", "--grid", dest="grid", type=int, choices=grid_choices, help="horizontal grid resolution", default=9000
+    "-g", "--grid", dest="grid", type=int, choices=grid_choices, help="horizontal grid resolution", default=1000
 )
 parser.add_argument("--i_dir", dest="input_dir", help="input directory", default=abspath(join(script_directory, "..")))
 parser.add_argument("--o_dir", dest="output_dir", help="output directory", default="test_dir")
@@ -140,7 +140,7 @@ parser.add_argument(
     default="upstream",
 )
 parser.add_argument("--start", help="Simulation start year", default="2008-1-1")
-parser.add_argument("--end", help="Simulation end year", default="2015-1-1")
+parser.add_argument("--end", help="Simulation end year", default="2100-1-1")
 parser.add_argument(
     "-e",
     "--ensemble_file",
@@ -193,6 +193,10 @@ if domain.lower() in ("greenland_ext", "gris_ext"):
     pism_dataname = "$input_dir/data_sets/bed_dem/pism_Greenland_ext_{}m_mcb_jpl_v{}_{}.nc".format(
         grid, version, bed_type
     )
+if domain.lower() in ("ismip6"):
+    pism_dataname = "$input_dir/data_sets/bed_dem/pism_Greenland_ismip6_{}m_mcb_jpl_v{}_{}.nc".format(
+        grid, version, bed_type
+    )
 else:
     pism_dataname = "$input_dir/data_sets/bed_dem/pism_Greenland_{}m_mcb_jpl_v{}_{}.nc".format(grid, version, bed_type)
 
@@ -218,7 +222,7 @@ if not os.path.isdir(time_dir):
     os.makedirs(time_dir)
 
 # generate the config file *after* creating the output directory
-pism_config = "erai"
+pism_config = "ismip6"
 pism_config_nc = join(output_dir, pism_config + ".nc")
 
 cmd = "ncgen -o {output} {input_dir}/config/{config}.cdl".format(
