@@ -29,7 +29,7 @@ for gcm in MIROC5-rcp26 MIROC5-rcp85 NorESM1-rcp85; do
     for var in aSMB dSMBdz aST dSTdz; do
         eval "cdo -O -f nc4 -z zip_3 mergetime ${atmosphereforcingdir}/${gcm}/${var}/${var}_${rcm}-yearly-${gcm}-{"${start_year}..${end_year}"}.nc ${rcm}_${gcm}-${var}_${start_year}-${end_year}_${climate_version}.nc"
     done
-    eval "cdo -O -f nc4 -z zip_3 merge ${rcm}_${gcm}-{aSMB,dSMBdz,aST,dSTdz}_${start_year}-${end_year}_${climate_version}.nc" ${rcm}_${gcm}-climate_${start_year}-${end_year}_${climate_version}.nc""
+    eval "cdo -O -f nc4 -z zip_3 chname,aSMB,climatic_mass_balance_anomaly,dSMBdz,climatic_mass_balance_gradient,aST,ice_surface_temp_anomaly,dSTdz,ice_surface_temp_gradient -merge ${rcm}_${gcm}-{aSMB,dSMBdz,aST,dSTdz}_${start_year}-${end_year}_${climate_version}.nc" ${rcm}_${gcm}-climate_${start_year}-${end_year}_${climate_version}.nc""
     adjust_timeline.py -p yearly -a ${start_year}-1-1 -d ${start_year}-1-1  ${rcm}_${gcm}-climate_${start_year}-${end_year}_${climate_version}.nc
     eval "rm ${rcm}_${gcm}-{aSMB,dSMBdz,aST,dSTdz}_${start_year}-${end_year}_${climate_version}.nc"
 done
