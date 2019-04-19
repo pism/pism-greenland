@@ -36,41 +36,13 @@ end_year=2100
 
 # Ocean Forcing
 
-rcmdir=access1-3_rcp8.5
-rcmbasename=Textrap_ACCESS_RCP85
+declare -a rcmdirs=("csiro-mk3.6_rcp8.5" "hadgem2-es_rcp8.5" "ipsl-cm5-mr_rcp8.5" "miroc-esm-chem_rcp2.6" "miroc-esm-chem_rcp8.5" "noresm1-m_rcp8.5")
+declare -a rcmbasenames=("MAR3.9_CSIRO-Mk3.6_rcp85" "MAR3.9_HadGEM2-ES_rcp85" "MAR3.9_IPSL-CM5-MR_rcp85" "MAR3.9_MIROC-ESM-CHEM_rcp26" "MAR3.9_MIROC-ESM-CHEM_rcp85" "MAR3.9_NorESM1-M_rcp85")
+n=${#rcmdirs[@]}
 
-rcmdir=csiro-mk3.6_rcp8.5
-rcmbasename=MAR3.9_CSIRO-Mk3.6_rcp85
-
-cdo -O -f nc4  -z zip_3 merge -chname,basin_runoff,water_input_rate  -selyear,${start_year}/${end_year} ${oceanforcingdir}/${rcmdir}/${rcmbasename}_basinRunoff_${ocean_version}.nc -chname,thermal_forcing,theta_ocean -selyear,${start_year}/${end_year} ${oceanforcingdir}/${rcmdir}/${rcmbasename}_oceanThermalForcing_${ocean_version}.nc ${rcmbasename}_ocean_${start_year}-${end_year}_${ocean_version}.nc
-adjust_timeline.py -p yearly -a ${start_year}-1-1 -d ${start_year}-1-1  ${rcmbasename}_ocean_${start_year}-${end_year}_${ocean_version}.nc
-
-rcmdir=hadgem2-es_rcp8.5
-rcmbasename=MAR3.9_HadGEM2-ES_rcp85
-
-cdo -O -f nc4  -z zip_3 merge -chname,basin_runoff,water_input_rate -setmisstoc,0 -setmissval,nan -selyear,${start_year}/${end_year} ${oceanforcingdir}/${rcmdir}/${rcmbasename}_basinRunoff_${ocean_version}.nc -chname,thermal_forcing,theta_ocean -setmisstoc,0 -setmissval,nan -selyear,${start_year}/${end_year} ${oceanforcingdir}/${rcmdir}/${rcmbasename}_oceanThermalForcing_${ocean_version}.nc ${rcmbasename}_ocean_${start_year}-${end_year}_${ocean_version}.nc
-adjust_timeline.py -p yearly -a ${start_year}-1-1 -d ${start_year}-1-1  ${rcmbasename}_ocean_${start_year}-${end_year}_${ocean_version}.nc
-
-rcmdir=ipsl-cm5-mr_rcp8.5
-rcmbasename=MAR3.9_IPSL-CM5-MR_rcp85
-
-cdo -O -f nc4  -z zip_3 merge -chname,basin_runoff,water_input_rate -setmisstoc,0 -setmissval,nan -selyear,${start_year}/${end_year} ${oceanforcingdir}/${rcmdir}/${rcmbasename}_basinRunoff_${ocean_version}.nc -chname,thermal_forcing,theta_ocean -setmisstoc,0 -setmissval,nan -selyear,${start_year}/${end_year} ${oceanforcingdir}/${rcmdir}/${rcmbasename}_oceanThermalForcing_${ocean_version}.nc ${rcmbasename}_ocean_${start_year}-${end_year}_${ocean_version}.nc
-adjust_timeline.py -p yearly -a ${start_year}-1-1 -d ${start_year}-1-1  ${rcmbasename}_ocean_${start_year}-${end_year}_${ocean_version}.nc
-
-rcmdir=miroc-esm-chem_rcp2.6 
-rcmbasename=MAR3.9_MIROC-ESM-CHEM_rcp26
-
-cdo -O -f nc4  -z zip_3 merge -chname,basin_runoff,water_input_rate -setmisstoc,0 -setmissval,nan -selyear,${start_year}/${end_year} ${oceanforcingdir}/${rcmdir}/${rcmbasename}_basinRunoff_${ocean_version}.nc -chname,thermal_forcing,theta_ocean -setmisstoc,0 -setmissval,nan -selyear,${start_year}/${end_year} ${oceanforcingdir}/${rcmdir}/${rcmbasename}_oceanThermalForcing_${ocean_version}.nc ${rcmbasename}_ocean_${start_year}-${end_year}_${ocean_version}.nc
-adjust_timeline.py -p yearly -a ${start_year}-1-1 -d ${start_year}-1-1  ${rcmbasename}_ocean_${start_year}-${end_year}_${ocean_version}.nc
-
-rcmdir=miroc-esm-chem_rcp8.5
-rcmbasename=MAR3.9_MIROC-ESM-CHEM_rcp85
-
-cdo -O -f nc4  -z zip_3 merge -chname,basin_runoff,water_input_rate -setmisstoc,0 -setmissval,nan -selyear,${start_year}/${end_year} ${oceanforcingdir}/${rcmdir}/${rcmbasename}_basinRunoff_${ocean_version}.nc -chname,thermal_forcing,theta_ocean -setmisstoc,0 -setmissval,nan -selyear,${start_year}/${end_year} ${oceanforcingdir}/${rcmdir}/${rcmbasename}_oceanThermalForcing_${ocean_version}.nc ${rcmbasename}_ocean_${start_year}-${end_year}_${ocean_version}.nc
-adjust_timeline.py -p yearly -a ${start_year}-1-1 -d ${start_year}-1-1  ${rcmbasename}_ocean_${start_year}-${end_year}_${ocean_version}.nc
-
-rcmdir=noresm1-m_rcp8.5
-rcmbasename=MAR3.9_NorESM1-M_rcp85
-
-cdo -O -f nc4  -z zip_3 merge -chname,basin_runoff,water_input_rate -setmisstoc,0 -setmissval,nan -selyear,${start_year}/${end_year} ${oceanforcingdir}/${rcmdir}/${rcmbasename}_basinRunoff_${ocean_version}.nc -chname,thermal_forcing,theta_ocean -setmisstoc,0 -setmissval,nan -selyear,${start_year}/${end_year} ${oceanforcingdir}/${rcmdir}/${rcmbasename}_oceanThermalForcing_${ocean_version}.nc ${rcmbasename}_ocean_${start_year}-${end_year}_${ocean_version}.nc
-adjust_timeline.py -p yearly -a ${start_year}-1-1 -d ${start_year}-1-1 ${rcmbasename}_ocean_${start_year}-${end_year}_${ocean_version}.nc
+for (( i=1; i<${n}+1; i++ )); do
+    rcmdir=${rcmdirs[$i-1]}
+    rcmbasename=${rcmbasenames[$i-1]}
+    cdo -O -f nc4  -z zip_3 merge -chname,basin_runoff,water_input_rate -setmisstoc,0 -setmissval,nan -selyear,${start_year}/${end_year} ${oceanforcingdir}/${rcmdir}/${rcmbasename}_basinRunoff_${ocean_version}.nc -chname,thermal_forcing,theta_ocean -setmisstoc,0 -setmissval,nan -selyear,${start_year}/${end_year} ${oceanforcingdir}/${rcmdir}/${rcmbasename}_oceanThermalForcing_${ocean_version}.nc ${rcmbasename}_ocean_${start_year}-${end_year}_${ocean_version}.nc
+    adjust_timeline.py -p yearly -a ${start_year}-1-1 -d ${start_year}-1-1  ${rcmbasename}_ocean_${start_year}-${end_year}_${ocean_version}.nc
+done
