@@ -56,7 +56,7 @@ netcdf pism_overrides {
     pism_overrides:geometry.ice_free_thickness_standard = 10.0;
     pism_overrides:geometry.ice_free_thickness_standard_doc = "If ice is thinner than this standard then the mask is set to MASK_ICE_FREE_BEDROCK or MASK_ICE_FREE_OCEAN.";
 
-    pism_overrides:output.ISMIP6 = "true";
+    pism_overrides:output.ISMIP6 = "false";
     pism_overrides:output.ISMIP6_type = "boolean";
     pism_overrides:output.ISMIP6_doc = "Follow ISMIP6 conventions (units, variable names, \"standard names\") when writing output variables.";
 
