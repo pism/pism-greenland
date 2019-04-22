@@ -72,41 +72,7 @@ def generate_domain(domain):
 spatial_ts_vars = {}
 
 
-spatial_ts_vars["ismip6"] = [
-    "basal_mass_flux_floating",
-    "basal_mass_flux_grounded",
-    "basal_melt_rate_grounded",
-    "beta",
-    "bmelt",
-    "climatic_mass_balance",  # acabf
-    "dbdt",
-    "dHdt",
-    "diffusivity",
-    "hfgeoubed",  # hfgeoubed
-    "mask",
-    "mass_fluxes",
-    "nuH",
-    "sftgrf",
-    "sftflf",
-    "sftgif",
-    "taub_mag",
-    "tauc",
-    "taud_mag",
-    "tempicethk_basal",
-    "tempbase",
-    "temppabase",
-    "tempsurf",
-    "thk",  # lithk
-    "topg",  # topg
-    "usurf",  # orog
-    "velbar",
-    "velbase",
-    "velbase_mag",
-    "velsurf",
-    "velsurf_mag",
-    "wvelbase",
-    "wvelsurf",
-]
+spatial_ts_vars["ismip6"] = ["ismip6"]
 
 
 spatial_ts_vars["basic"] = [
@@ -306,7 +272,7 @@ def generate_grid_description(grid_resolution, domain, restart=False):
 
         resolution_max = 1000
 
-        accepted_resolutions = 1000
+        accepted_resolutions = (1000, 2000)
 
         try:
             grid_resolution in accepted_resolutions

@@ -1,8 +1,17 @@
 #!/bin/bash
+#SBATCH --partition=analysis
+#SBATCH --ntasks=7
+#SBATCH --tasks-per-node=7
+#SBATCH --time=48:00:00
+#SBATCH --output=pism.%j
+#SBATCH --mem=214G
 
-grid=900
-model=HH5-MIROC85-YM
-for d in jib nw; do
-cdo -f nc4 -z zip_3 yearmean 2019_04_hindcast_tmp/ex_${d}_g${grid}m_v3a_id_${model}_2008-1-1_2017-1-1.nc  2019_04_hindcast/spatial/ex_${d}_g${grid}m_v3a_id_${model}_2008-1-1_2017-1-1_YM.nc
-extract_interface.py -t ice_ocean -o 2019_04_hindcast/ice_ocean/io_${d}_g${grid}m_v3a_id_${model}_2008-1-1_2017-1-1_YM.nc 2019_04_hindcast/spatial/ex_${d}_g${grid}m_v3a_id_${model}_2008-1-1_2017-1-1_YM.nc
-done
+cd $SLURM_SUBMIT_DIR
+
+odir=$1
+exp=$2
+
+
+
+ncks -O -4 -L 3 ${odir}_tmp/ex_ismip6_g1000m_v3a_id_${exp}_2008-1-1_2015-1-1.nc ../${odir}/spatial/ex_ismip6_g1000m_v3a_id_${exp}_2008-1-1_2015-1-1.nc
+extract_interface.py -t ice_ocean -o ${odir}/io/ex_ismip6_g1000m_v3a_id_${exp}_2008-1-1_2015-1-1.shp ../${odir}/spatial/ex_ismip6_g1000m_v3a_id_${exp}_2008-1-1_2015-1-1.nc
