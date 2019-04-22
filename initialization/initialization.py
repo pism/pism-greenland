@@ -368,11 +368,8 @@ with open(script, "w") as f:
 
     ocean_params_dict = {}
 
-    calving = "ocean_kill"
-    ocean_kill_file = pism_dataname
-    calving_parameters = {"ocean_kill_file": ocean_kill_file}
-
-    calving_params_dict = generate_calving(calving, **calving_parameters)
+    front_retreat_file = pism_dataname
+    front_retreat_params_dict = {"front_retreat_file": front_retreat_file}
 
     scalar_ts_dict = generate_scalar_ts(outfile, tsstep, odir=dirs["scalar"])
 
@@ -383,7 +380,7 @@ with open(script, "w") as f:
         climate_params_dict,
         ocean_params_dict,
         hydro_params_dict,
-        calving_params_dict,
+        front_retreat_params_dict,
         scalar_ts_dict,
     )
 

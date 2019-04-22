@@ -300,7 +300,7 @@ post_header = make_batch_post_header(system)
 
 for n, combination in enumerate(combinations):
 
-    run_id, climate_file, runoff_file, frontal_melt_file, fm_a, fm_b, fm_alpha, fm_beta, tct_v, vcm, ppq, sia_e, ok = (
+    run_id, climate_file, runoff_file, frontal_melt_file, fm_a, fm_b, fm_alpha, fm_beta, tct_v, vcm, ppq, sia_e = (
         combination
     )
     tct = tct_dict[tct_v]
@@ -415,19 +415,17 @@ for n, combination in enumerate(combinations):
 
         tct_file = calving_thresholds[tct]
 
-        if ok == 0:
-            calving = "vonmises_calving"
+        calving = "vonmises_calving"
+        if isinstance(vcm, str):
             calving_parameters = {
                 "thickness_calving_threshold_file": tct_file,
                 "float_kill_calve_near_grounding_line": float_kill_calve_near_grounding_line,
-                "calving.vonmises_calving.sigma_max": vcm * 1e6,
+                "calving.vonmises_calving.threshold_file": "$input_dir/data_sets/calving/{}".format(vcm),
                 "calving.vonmises_calving.use_custom_flow_law": True,
                 "calving.vonmises_calving.Glen_exponent": 3.0,
             }
         else:
-            calving = "vonmises_calving,ocean_kill"
             calving_parameters = {
-                "ocean_kill_file": pism_dataname,
                 "thickness_calving_threshold_file": tct_file,
                 "float_kill_calve_near_grounding_line": float_kill_calve_near_grounding_line,
                 "calving.vonmises_calving.sigma_max": vcm * 1e6,
