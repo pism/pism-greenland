@@ -501,9 +501,7 @@ def generate_calving(calving, **kwargs):
     """
 
     params_dict = OrderedDict()
-    if calving in ("ocean_kill"):
-        params_dict["calving"] = calving
-    elif calving in ("thickness_calving"):
+    if calving in ("thickness_calving"):
         params_dict["calving"] = calving
     elif calving in ("eigen_calving", "vonmises_calving"):
         params_dict["calving"] = "{},thickness_calving".format(calving)
@@ -631,6 +629,8 @@ def generate_ocean(ocean, **kwargs):
         params_dict["ocean"] = "given,delta_MBP"
     elif ocean == "const":
         params_dict["ocean"] = "constant"
+    elif ocean == "th":
+        params_dict["ocean"] = "th"
     else:
         print(("ocean {} not recognized, exiting".format(ocean)))
         import sys

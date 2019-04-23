@@ -284,9 +284,6 @@ try:
 except:
     combinations = np.genfromtxt(ensemble_file, dtype=None, delimiter=",", skip_header=1)
 
-# FIXME: thickness calving
-tct_dict = {-2.0: "off", -1.0: "low", 0.0: "mid", 1.0: "high"}
-
 tsstep = "yearly"
 
 scripts = []
@@ -300,9 +297,7 @@ post_header = make_batch_post_header(system)
 
 for n, combination in enumerate(combinations):
 
-    run_id, climate_file, runoff_file, frontal_melt_file, fm_a, fm_b, fm_alpha, fm_beta, tct_v, vcm, ppq, sia_e = (
-        combination
-    )
+    run_id, climate_file, runoff_file, frontal_melt_file, fm_a, fm_b, fm_alpha, fm_beta, vcm, ppq, sia_e = combination
     tct = tct_dict[tct_v]
 
     ttphi = "{},{},{},{}".format(phi_min, phi_max, topg_min, topg_max)
@@ -392,7 +387,8 @@ for n, combination in enumerate(combinations):
 
         hydro_params_dict = generate_hydrology(hydrology, **hydrology_parameters)
 
-        ocean_params_dict = {}
+        ocean_parameters = {"ocean.th.file": "$input_dir/data_sets/ismip6/{}".format(frontal_melt_file)}
+        ocean_params_dict = generate_ocean{"th", **ocean_parameters}
 
         frontalmelt_parameters = {
             "frontal_melt": "routing",
@@ -406,19 +402,9 @@ for n, combination in enumerate(combinations):
 
         frontalmelt_params_dict = frontalmelt_parameters
 
-        calving_thresholds = {
-            "off": "$input_dir/data_sets/calving/tct_forcing_off.nc",
-            "low": "$input_dir/data_sets/calving/tct_forcing_400myr_74n_50myr_76n.nc",
-            "mid": "$input_dir/data_sets/calving/tct_forcing_500myr_74n_100myr_76n.nc",
-            "high": "$input_dir/data_sets/calving/tct_forcing_600myr_74n_150myr_76n.nc",
-        }
-
-        tct_file = calving_thresholds[tct]
-
         calving = "vonmises_calving"
         if isinstance(vcm, str):
             calving_parameters = {
-                "thickness_calving_threshold_file": tct_file,
                 "float_kill_calve_near_grounding_line": float_kill_calve_near_grounding_line,
                 "calving.vonmises_calving.threshold_file": "$input_dir/data_sets/calving/{}".format(vcm),
                 "calving.vonmises_calving.use_custom_flow_law": True,
@@ -426,7 +412,6 @@ for n, combination in enumerate(combinations):
             }
         else:
             calving_parameters = {
-                "thickness_calving_threshold_file": tct_file,
                 "float_kill_calve_near_grounding_line": float_kill_calve_near_grounding_line,
                 "calving.vonmises_calving.sigma_max": vcm * 1e6,
                 "calving.vonmises_calving.use_custom_flow_law": True,

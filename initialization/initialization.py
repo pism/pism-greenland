@@ -369,7 +369,7 @@ with open(script, "w") as f:
     ocean_params_dict = {}
 
     front_retreat_file = pism_dataname
-    front_retreat_params_dict = {"front_retreat_file": front_retreat_file}
+    front_retreat_params_dict = {"front_retreat_file": pism_dataname}
 
     scalar_ts_dict = generate_scalar_ts(outfile, tsstep, odir=dirs["scalar"])
 
