@@ -298,7 +298,6 @@ post_header = make_batch_post_header(system)
 for n, combination in enumerate(combinations):
 
     run_id, climate_file, runoff_file, frontal_melt_file, fm_a, fm_b, fm_alpha, fm_beta, vcm, ppq, sia_e = combination
-    tct = tct_dict[tct_v]
 
     ttphi = "{},{},{},{}".format(phi_min, phi_max, topg_min, topg_max)
 
@@ -387,8 +386,10 @@ for n, combination in enumerate(combinations):
 
         hydro_params_dict = generate_hydrology(hydrology, **hydrology_parameters)
 
+        # Need to add salinity first
         ocean_parameters = {"ocean.th.file": "$input_dir/data_sets/ismip6/{}".format(frontal_melt_file)}
-        ocean_params_dict = generate_ocean{"th", **ocean_parameters}
+        ocean_params_dict = generate_ocean("th", **ocean_parameters)
+        ocean_params_dict = {}
 
         frontalmelt_parameters = {
             "frontal_melt": "routing",
