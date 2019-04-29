@@ -404,21 +404,21 @@ for n, combination in enumerate(combinations):
         frontalmelt_params_dict = frontalmelt_parameters
 
         calving = "vonmises_calving"
-        if isinstance(vcm, str):
-            calving_parameters = {
-                "float_kill_calve_near_grounding_line": float_kill_calve_near_grounding_line,
-                "calving.vonmises_calving.threshold_file": "$input_dir/data_sets/calving/{}".format(vcm),
-                "calving.vonmises_calving.use_custom_flow_law": True,
-                "calving.vonmises_calving.Glen_exponent": 3.0,
-            }
-        else:
+        try:
+            vcm = float(vcm)
             calving_parameters = {
                 "float_kill_calve_near_grounding_line": float_kill_calve_near_grounding_line,
                 "calving.vonmises_calving.sigma_max": vcm * 1e6,
                 "calving.vonmises_calving.use_custom_flow_law": True,
                 "calving.vonmises_calving.Glen_exponent": 3.0,
             }
-
+        except:
+            calving_parameters = {
+                "float_kill_calve_near_grounding_line": float_kill_calve_near_grounding_line,
+                "calving.vonmises_calving.threshold_file": "$input_dir/data_sets/calving/{}".format(vcm),
+                "calving.vonmises_calving.use_custom_flow_law": True,
+                "calving.vonmises_calving.Glen_exponent": 3.0,
+            }
         calving_params_dict = generate_calving(calving, **calving_parameters)
 
         scalar_ts_dict = generate_scalar_ts(outfile, tsstep, odir=dirs["scalar"])
