@@ -78,9 +78,9 @@ parser.add_argument("--o_dir", dest="output_dir", help="output directory", defau
 parser.add_argument(
     "--o_size",
     dest="osize",
-    choices=["small", "medium", "big", "big_2d", "custom"],
+    choices=["small", "medium", "big", "big_2d", "custom", "none"],
     help="output size type",
-    default="custom",
+    default="none",
 )
 parser.add_argument(
     "-s",
