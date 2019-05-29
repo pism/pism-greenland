@@ -409,9 +409,9 @@ for n, combination in enumerate(combinations):
                 "float_kill_calve_near_grounding_line": float_kill_calve_near_grounding_line,
                 "calving.vonmises_calving.sigma_max": vcm * 1e6,
                 "calving.vonmises_calving.use_custom_flow_law": True,
-                "calving.vonmises_calving.Glenexponent": 3.0,
+                "calving.vonmises_calving.Glen_exponent": 3.0,
             }
-        except:
+        else:
             calving_parameters = {
                 "float_kill_calve_near_grounding_line": float_kill_calve_near_grounding_line,
                 "calving.vonmises_calving.threshold_file": "$input_dir/data_sets/calving/{}".format(vcm),
