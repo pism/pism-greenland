@@ -284,7 +284,10 @@ topg_max = 700
 try:
     combinations = np.loadtxt(ensemble_file, delimiter=",", skiprows=1)
 except:
-    combinations = np.genfromtxt(ensemble_file, dtype=None, encoding=None, delimiter=",", skip_header=1)
+    try:
+        combinations = np.genfromtxt(ensemble_file, dtype=None, encoding=None, delimiter=",", skip_header=1)
+    except:
+        combinations = np.genfromtxt(ensemble_file, dtype=None, delimiter=",", skip_header=1)
 
 tsstep = "yearly"
 
