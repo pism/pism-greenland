@@ -284,7 +284,7 @@ topg_max = 700
 try:
     combinations = np.loadtxt(ensemble_file, delimiter=",", skiprows=1)
 except:
-    combinations = np.genfromtxt(ensemble_file, dtype=None, delimiter=",", skip_header=1)
+    combinations = np.genfromtxt(ensemble_file, dtype=None, encoding=None, delimiter=",", skip_header=1)
 
 tsstep = "yearly"
 
@@ -404,7 +404,7 @@ for n, combination in enumerate(combinations):
 
         frontalmelt_params_dict = frontalmelt_parameters
 
-        if isinstance(vcm, str):
+        if not isinstance(vcm, str):
             calving_parameters = {
                 "float_kill_calve_near_grounding_line": float_kill_calve_near_grounding_line,
                 "calving.vonmises_calving.sigma_max": vcm * 1e6,
