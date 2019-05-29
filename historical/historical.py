@@ -103,17 +103,18 @@ parser.add_argument(
     default="basic",
 )
 parser.add_argument(
-    "--forcing_type", dest="forcing_type", choices=["ctrl", "e_age"], help="output size type", default="ctrl"
-)
-parser.add_argument(
     "--hydrology",
     dest="hydrology",
-    choices=["routing", "distributed"],
+    choices=["routing", "routing_steady"],
     help="Basal hydrology model.",
     default="routing",
 )
 parser.add_argument(
-    "-p", "--params", dest="params_list", help="Comma-separated list with params for sensitivity", default=None
+    "--calving",
+    dest="calving",
+    choices=["vonmises_calving", "hayhurst_calving"],
+    help="Choose calving law",
+    default="vonmises_calving",
 )
 parser.add_argument(
     "--stable_gl",
@@ -168,6 +169,7 @@ spatial_ts = options.spatial_ts
 
 bed_type = options.bed_type
 climate = "given"
+calving = options.calving
 exstep = options.exstep
 float_kill_calve_near_grounding_line = options.float_kill_calve_near_grounding_line
 grid = options.grid
@@ -203,7 +205,7 @@ else:
 regridvars = "litho_temp,enthalpy,age,tillwat,bmelt,ice_area_specific_volume,thk"
 
 dirs = {"output": "$output_dir", "spatial_tmp": "$spatial_tmp_dir"}
-for d in ["performance", "state", "scalar", "spatial", "jobs", "basins"]:
+for d in ["state", "scalar", "spatial", "jobs", "basins"]:
     dirs[d] = "$output_dir/{dir}".format(dir=d)
 
 if spatial_ts == "none":
@@ -282,7 +284,7 @@ topg_max = 700
 try:
     combinations = np.loadtxt(ensemble_file, delimiter=",", skiprows=1)
 except:
-    combinations = np.genfromtxt(ensemble_file, dtype=None, delimiter=",", skip_header=1)
+    combinations = np.genfromtxt(ensemble_file, dtype=None, encoding=None, delimiter=",", skip_header=1)
 
 tsstep = "yearly"
 
@@ -339,7 +341,6 @@ for n, combination in enumerate(combinations):
         pism = generate_prefix_str(pism_exec)
 
         general_params_dict = {
-            "profile": join(dirs["performance"], "profile_${job_id}.py".format(**batch_system)),
             "time_file": pism_timefile,
             "o": join(dirs["state"], outfile),
             "o_format": oformat,
@@ -403,13 +404,12 @@ for n, combination in enumerate(combinations):
 
         frontalmelt_params_dict = frontalmelt_parameters
 
-        calving = "vonmises_calving"
         if isinstance(vcm, str):
             calving_parameters = {
                 "float_kill_calve_near_grounding_line": float_kill_calve_near_grounding_line,
                 "calving.vonmises_calving.threshold_file": "$input_dir/data_sets/calving/{}".format(vcm),
                 "calving.vonmises_calving.use_custom_flow_law": True,
-                "calving.vonmises_calving.Glen_exponent": 3.0,
+                "calving.vonmises_calving.Glenexponent": 3.0,
             }
         else:
             calving_parameters = {
@@ -447,7 +447,7 @@ for n, combination in enumerate(combinations):
             redirect = " 2>&1 | tee {jobs}/job.${job_id}"
         else:
             redirect = " > {jobs}/job.${job_id} 2>&1"
-
+        redirect = ""
         template = "{mpido} {pism} {params}" + redirect
 
         context = merge_dicts(batch_system, dirs, {"pism": pism, "params": all_params})

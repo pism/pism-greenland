@@ -83,6 +83,7 @@ spatial_ts_vars["basic"] = [
     "height_above_flotation",
     "frontal_melt_rate",
     "frontal_melt_retreat_rate",
+    "hayhurst_calving_rate",
     "ice_mass",
     "mask",
     "mass_fluxes",
@@ -501,7 +502,7 @@ def generate_calving(calving, **kwargs):
     """
 
     params_dict = OrderedDict()
-    if calving in ("thickness_calving"):
+    if calving in ("thickness_calving", "hayhurst_calving"):
         params_dict["calving"] = calving
     elif calving in ("eigen_calving", "vonmises_calving"):
         params_dict["calving"] = "{},thickness_calving".format(calving)
