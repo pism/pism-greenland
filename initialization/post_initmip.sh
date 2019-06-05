@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Postprocessing iniMIP
+# Postprocessing initMIP
 #
 # This includes:
 # splitname: split files by variable

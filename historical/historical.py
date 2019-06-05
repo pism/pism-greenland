@@ -202,7 +202,8 @@ if domain.lower() in ("ismip6"):
 else:
     pism_dataname = "$input_dir/data_sets/bed_dem/pism_Greenland_{}m_mcb_jpl_v{}_{}.nc".format(grid, version, bed_type)
 
-regridvars = "litho_temp,enthalpy,age,tillwat,bmelt,ice_area_specific_volume,thk"
+# Removed "thk" from regrid vars
+regridvars = "litho_temp,enthalpy,age,tillwat,bmelt,ice_area_specific_volume"
 
 dirs = {"output": "$output_dir", "spatial_tmp": "$spatial_tmp_dir"}
 for d in ["state", "scalar", "spatial", "jobs", "basins"]:
@@ -224,7 +225,7 @@ if not os.path.isdir(time_dir):
     os.makedirs(time_dir)
 
 # generate the config file *after* creating the output directory
-pism_config = "pism"
+pism_config = "ismip6"
 pism_config_nc = join(output_dir, pism_config + ".nc")
 
 cmd = "ncgen -o {output} {input_dir}/config/{config}.cdl".format(
@@ -449,7 +450,7 @@ for n, combination in enumerate(combinations):
             redirect = " 2>&1 | tee {jobs}/job.${job_id}"
         else:
             redirect = " > {jobs}/job.${job_id} 2>&1"
-        redirect = ""
+
         template = "{mpido} {pism} {params}" + redirect
 
         context = merge_dicts(batch_system, dirs, {"pism": pism, "params": all_params})
