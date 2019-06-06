@@ -1,0 +1,34 @@
+# ISMIP6 name   , units, standard name, dimension, state
+lithk           , m, land_ice_thickness, 2, 0
+orog            , m, surface_altitude, 2, 0
+topg            , m, bedrock_altitude, 2, 0
+hfgeoubed       , W m-2, upward_geothermal_heat_flux_in_land_ice, 2, 1
+acabf           , kg m-2 s-1, land_ice_surface_specific_mass_balance_flux, 2, 1
+libmassbf       , kg m-2 s-1, land_ice_basal_specific_mass_balance_flux, 2, 1
+dlithkdt        , m s-1, tendency_of_land_ice_thickness, 2, 0
+xvelsurf        , m s-1, land_ice_surface_x_velocity, 2, 0
+yvelsurf        , m s-1, land_ice_surface_y_velocity, 2, 0
+zvelsurf        , m s-1, land_ice_surface_upward_velocity, 2, 0
+xvelbase        , m s-1, land_ice_basal_x_velocity, 2, 0
+yvelbase        , m s-1, land_ice_basal_y_velocity, 2, 0
+zvelbase        , m s-1, land_ice_basal_upward_velocity, 2, 0
+xvelmean        , m s-1, land_ice_vertical_mean_x_velocity, 2, 0
+zvelmean        , m s-1, land_ice_vertical_mean_y_velocity, 2, 0
+litemptop       , K, temperature_at_top_of_ice_sheet_model , 2, 0
+litempbotgr     , K, temperature_at_base_of_ice_sheet_model, 2, 0
+litempbotfl     , K, temperature_at_base_of_ice_sheet_model, 2, 0
+strbasemag      , Pa, land_ice_basal_drag, 2, 0
+licalvf         , kg m-2 s-1, land_ice_specific_mass_flux_due_to_calving, 2, 1
+lifmassbf       , kg m-2 s-1, land_ice_specific_mass_flux_due_to_calving_and_ice_front_melting, 2, 1
+sftgif          , 1, land_ice_area_fraction, 2, 0
+sftgrf          , 1, grounded_ice_sheet_area_fraction, 2, 0
+sftflf          , 1, floating_ice_sheet_area_fraction, 2, 0
+lim             , kg, land_ice_mass, 1, 0
+limnsw          , kg, land_ice_mass_not_displacing_sea_water, 1, 0
+iareagr         , m2, grounded_land_ice_area, 1, 0
+iareafl         , m2, floating_ice_shelf_area, 1, 0
+tendacabf       , kg s-1, tendency_of_land_ice_mass_due_to_surface_mass_balance, 1, 1
+tendlibmassbf   , kg s-1, tendency_of_land_ice_mass_due_to_basal_mass_balance, 1, 1
+tendlibmassbffl , kg s-1, tendency_of_land_ice_mass_due_to_basal_mass_balance, 1, 1
+tendlicalvf     , kg s-1, tendency_of_land_ice_mass_due_to_calving, 1, 1
+tendlifmassbf   , kg s-1, tendency_of_land_ice_mass_due_to_calving_and_ice_front_melting, 1, 1
