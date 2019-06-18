@@ -408,23 +408,20 @@ for n, combination in enumerate(combinations):
 
         frontalmelt_params_dict = frontalmelt_parameters
 
-        calving_thresholds = {
-            "off": "$input_dir/data_sets/calving/tct_forcing_off.nc",
-            "low": "$input_dir/data_sets/calving/tct_forcing_400myr_74n_50myr_76n.nc",
-            "mid": "$input_dir/data_sets/calving/tct_forcing_500myr_74n_100myr_76n.nc",
-            "high": "$input_dir/data_sets/calving/tct_forcing_600myr_74n_150myr_76n.nc",
-        }
-
-        tct_file = calving_thresholds[tct]
-
-        calving_parameters = {
-            "thickness_calving_threshold_file": tct_file,
-            "float_kill_calve_near_grounding_line": float_kill_calve_near_grounding_line,
-            "calving.vonmises_calving.sigma_max": vcm * 1e6,
-            "calving.vonmises_calving.use_custom_flow_law": True,
-            "calving.vonmises_calving.Glen_exponent": 3.0,
-        }
-
+        if not isinstance(vcm, str):
+            calving_parameters = {
+                "float_kill_calve_near_grounding_line": float_kill_calve_near_grounding_line,
+                "calving.vonmises_calving.sigma_max": vcm * 1e6,
+                "calving.vonmises_calving.use_custom_flow_law": True,
+                "calving.vonmises_calving.Glen_exponent": 3.0,
+            }
+        else:
+            calving_parameters = {
+                "float_kill_calve_near_grounding_line": float_kill_calve_near_grounding_line,
+                "calving.vonmises_calving.threshold_file": "$input_dir/data_sets/calving/{}".format(vcm),
+                "calving.vonmises_calving.use_custom_flow_law": True,
+                "calving.vonmises_calving.Glen_exponent": 3.0,
+            }
         calving_params_dict = generate_calving(calving, **calving_parameters)
 
         scalar_ts_dict = generate_scalar_ts(outfile, tsstep, odir=dirs["scalar"])
