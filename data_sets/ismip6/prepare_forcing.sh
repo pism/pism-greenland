@@ -24,15 +24,15 @@ rcm=MARv3.9
 start_year=1990
 end_year=2100
 
-# # Climate Forcing
-for gcm in MIROC5-rcp26 MIROC5-rcp85 NorESM1-rcp85; do
-    for var in aSMB dSMBdz aST dSTdz; do
-        eval "cdo -O -f nc4 -z zip_3 mergetime ${atmosphereforcingdir}/${gcm}/${var}/${var}_${rcm}-yearly-${gcm}-{"${start_year}..${end_year}"}.nc ${rcm}_${gcm}-${var}_${start_year}-${end_year}_${climate_version}.nc"
-    done
-    eval "cdo -O -f nc4 -z zip_3 chname,aSMB,climatic_mass_balance_anomaly,dSMBdz,climatic_mass_balance_gradient,aST,ice_surface_temp_anomaly,dSTdz,ice_surface_temp_gradient -merge ${rcm}_${gcm}-{aSMB,dSMBdz,aST,dSTdz}_${start_year}-${end_year}_${climate_version}.nc" ${rcm}_${gcm}_climate_${start_year}-${end_year}_${climate_version}.nc""
-    adjust_timeline.py -p yearly -a ${start_year}-1-1 -d ${start_year}-1-1  ${rcm}_${gcm}_climate_${start_year}-${end_year}_${climate_version}.nc
-    eval "rm ${rcm}_${gcm}-{aSMB,dSMBdz,aST,dSTdz}_${start_year}-${end_year}_${climate_version}.nc"
-done
+# # # Climate Forcing
+# for gcm in MIROC5-rcp26 MIROC5-rcp85 NorESM1-rcp85; do
+#     for var in aSMB dSMBdz aST dSTdz; do
+#         eval "cdo -O -f nc4 -z zip_3 mergetime ${atmosphereforcingdir}/${gcm}/${var}/${var}_${rcm}-yearly-${gcm}-{"${start_year}..${end_year}"}.nc ${rcm}_${gcm}-${var}_${start_year}-${end_year}_${climate_version}.nc"
+#     done
+#     eval "cdo -O -f nc4 -z zip_3 chname,aSMB,climatic_mass_balance_anomaly,dSMBdz,climatic_mass_balance_gradient,aST,ice_surface_temp_anomaly,dSTdz,ice_surface_temp_gradient -merge ${rcm}_${gcm}-{aSMB,dSMBdz,aST,dSTdz}_${start_year}-${end_year}_${climate_version}.nc" ${rcm}_${gcm}_climate_${start_year}-${end_year}_${climate_version}.nc""
+#     adjust_timeline.py -p yearly -a ${start_year}-1-1 -d ${start_year}-1-1  ${rcm}_${gcm}_climate_${start_year}-${end_year}_${climate_version}.nc
+#     eval "rm ${rcm}_${gcm}-{aSMB,dSMBdz,aST,dSTdz}_${start_year}-${end_year}_${climate_version}.nc"
+# done
 
 # Ocean Forcing
 
@@ -45,6 +45,6 @@ for (( i=1; i<${n}+1; i++ )); do
     rcmbasename=${rcmbasenames[$i-1]}
     nccopy ${oceanforcingdir}/${rcmdir}/${rcmbasename}_basinRunoff_${ocean_version}.nc ${rcmbasename}_basinRunoff_${ocean_version}.nc
     nccopy ${oceanforcingdir}/${rcmdir}/${rcmbasename}_oceanThermalForcing_${ocean_version}.nc ${rcmbasename}_oceanThermalForcing_${ocean_version}.nc
-    cdo -O -f nc4  -z zip_3 merge -chname,basin_runoff,water_input_rate -setmisstoc,0 -setmissval,nan -selyear,${start_year}/${end_year} ${rcmbasename}_basinRunoff_${ocean_version}.nc -chname,thermal_forcing,theta_ocean -setmisstoc,0 -setmissval,nan -selyear,${start_year}/${end_year} ${rcmbasename}_oceanThermalForcing_${ocean_version}.nc ${rcmbasename}_ocean_${start_year}-${end_year}_${ocean_version}.nc
+    cdo -O -f nc4  -z zip_3 merge -aexpr,"subglacial_discharge=water_input_rate" -chname,basin_runoff,water_input_rate -setmisstoc,0 -setmissval,nan -selyear,${start_year}/${end_year} ${rcmbasename}_basinRunoff_${ocean_version}.nc -chname,thermal_forcing,theta_ocean -setmisstoc,0 -setmissval,nan -selyear,${start_year}/${end_year} ${rcmbasename}_oceanThermalForcing_${ocean_version}.nc ${rcmbasename}_ocean_${start_year}-${end_year}_${ocean_version}.nc
     adjust_timeline.py -p yearly -a ${start_year}-1-1 -d ${start_year}-1-1  ${rcmbasename}_ocean_${start_year}-${end_year}_${ocean_version}.nc
 done

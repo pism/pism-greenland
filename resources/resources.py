@@ -83,7 +83,6 @@ spatial_ts_vars["basic"] = [
     "height_above_flotation",
     "frontal_melt_rate",
     "frontal_melt_retreat_rate",
-    "hayhurst_calving_rate",
     "ice_mass",
     "mask",
     "mass_fluxes",
@@ -164,7 +163,7 @@ def generate_spatial_ts(outfile, exvars, step, start=None, end=None, split=None,
     return params_dict
 
 
-def generate_scalar_ts(outfile, step, odir=None):
+def generate_scalar_ts(outfile, step, odir=None, **kwargs):
     """
     Return dict to create scalar time series
 

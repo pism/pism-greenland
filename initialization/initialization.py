@@ -371,7 +371,7 @@ with open(script, "w") as f:
     front_retreat_file = pism_dataname
     front_retreat_params_dict = {"front_retreat_file": input_file}
 
-    scalar_ts_dict = generate_scalar_ts(outfile, tsstep, odir=dirs["scalar"])
+    scalar_ts_dict = generate_scalar_ts(outfile, tsstep, odir=dirs["scalar"], ts_vars="ismip6")
 
     all_params_dict = merge_dicts(
         general_params_dict,
