@@ -105,9 +105,9 @@ parser.add_argument(
 parser.add_argument(
     "--hydrology",
     dest="hydrology",
-    choices=["routing", "routing_steady"],
+    choices=["routing", "routing_steady", "diffuse"],
     help="Basal hydrology model.",
-    default="routing",
+    default="diffuse",
 )
 parser.add_argument(
     "--calving",
@@ -359,7 +359,7 @@ for n, combination in enumerate(combinations):
         if osize != "custom":
             general_params_dict["o_size"] = osize
         else:
-            general_params_dict["output.sizes.medium"] = "sftgif,velsurf_mag"
+            general_params_dict["output.sizes.medium"] = "sftgif,velsurf_mag,mask"
 
         grid_params_dict = generate_grid_description(grid, domain)
 
@@ -396,26 +396,32 @@ for n, combination in enumerate(combinations):
         ocean_params_dict = generate_ocean("th", **ocean_parameters)
         ocean_params_dict = {}
 
+        # frontalmelt_parameters = {
+        #     "frontal_melt": "routing",
+        #     "frontal_melt.routing.file": "$input_dir/data_sets/ismip6/{}".format(frontal_melt_file),
+        #     "frontal_melt.include_floating_ice": True,
+        #     "frontal_melt.routing.parameter_a": fm_a,
+        #     "frontal_melt.routing.parameter_b": fm_b,
+        #     "frontal_melt.routing.power_alpha": fm_alpha,
+        #     "frontal_melt.routing.power_beta": fm_beta,
+        # }
+
         frontalmelt_parameters = {
-            "frontal_melt": "routing",
-            "frontal_melt.routing.file": "$input_dir/data_sets/ismip6/{}".format(frontal_melt_file),
-            "frontal_melt.include_floating_ice": True,
-            "frontal_melt.routing.parameter_a": fm_a,
-            "frontal_melt.routing.parameter_b": fm_b,
-            "frontal_melt.routing.power_alpha": fm_alpha,
-            "frontal_melt.routing.power_beta": fm_beta,
+            "frontal_melt": "discharge_given",
+            "frontal_melt.discharge_given.file": "$input_dir/data_sets/ismip6/{}".format(frontal_melt_file),
         }
 
         frontalmelt_params_dict = frontalmelt_parameters
 
-        if not isinstance(vcm, str):
+        try:
+            vcm = float(vcm)
             calving_parameters = {
                 "float_kill_calve_near_grounding_line": float_kill_calve_near_grounding_line,
                 "calving.vonmises_calving.sigma_max": vcm * 1e6,
                 "calving.vonmises_calving.use_custom_flow_law": True,
                 "calving.vonmises_calving.Glen_exponent": 3.0,
             }
-        else:
+        except:
             calving_parameters = {
                 "float_kill_calve_near_grounding_line": float_kill_calve_near_grounding_line,
                 "calving.vonmises_calving.threshold_file": "$input_dir/data_sets/calving/{}".format(vcm),
@@ -425,6 +431,16 @@ for n, combination in enumerate(combinations):
         calving_params_dict = generate_calving(calving, **calving_parameters)
 
         scalar_ts_dict = generate_scalar_ts(outfile, tsstep, odir=dirs["scalar"])
+
+        # solver_dict = {
+        #     "ssafd_ksp_type": "gmres",
+        #     "ssafd_ksp_norm_type": "unpreconditioned",
+        #     "ssafd_ksp_pc_side": "right",
+        #     "ssafd_pc_type": "asm",
+        #     "ssafd_sub_pc_type": "lu",
+        # }
+
+        solver_dict = {}
 
         all_params_dict = merge_dicts(
             general_params_dict,
@@ -436,6 +452,7 @@ for n, combination in enumerate(combinations):
             frontalmelt_params_dict,
             calving_params_dict,
             scalar_ts_dict,
+            solver_dict,
         )
 
         if not spatial_ts == "none":
