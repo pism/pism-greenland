@@ -359,7 +359,7 @@ for n, combination in enumerate(combinations):
         if osize != "custom":
             general_params_dict["o_size"] = osize
         else:
-            general_params_dict["output.sizes.medium"] = "sftgif,velsurf_mag,mask"
+            general_params_dict["output.sizes.medium"] = "sftgif,velsurf_mag,mask,usurf"
 
         grid_params_dict = generate_grid_description(grid, domain)
 

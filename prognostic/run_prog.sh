@@ -22,4 +22,4 @@ odir=2019_06_test
 n=24
 
 grid=1000
-for d in ismip6; do     python prognostic.py --spatial_ts ismip6 -b wc -d ${d} --o_dir ${odir} -q debug -s chinook -w 0:30:00 -n ${n} -g ${grid} -e ../uncertainty_qunatification/prognostic_discharge_given.csv ../historical/2019_06_calib/state/ismip6_g1000m_v3a_id_VCM-CALIB-G1000M_2008-1-1_2015-1-1.nc ; done
+for d in ismip6; do     python prognostic.py --spatial_ts ismip6 -b wc -d ${d} --o_dir ${odir} -q debug -s chinook -w 0:30:00 -n ${n} -g ${grid} -e ../uncertainty_qunatification/prognostic_discharge_given.csv ../historical/2019_06_calib/state/ismip6_g1000m_v3a_id_VCM-CALIB-G1000M_2008-1-1_2015-1-1_us.nc ; done
