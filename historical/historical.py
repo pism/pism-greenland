@@ -267,7 +267,7 @@ try:
     os.remove(pism_timefile)
 except OSError:
     pass
-cmd = ["create_timeline.py", "-a", start_date, "-e", end_date, "-d", "1980-01-01", pism_timefile]
+cmd = ["create_timeline.py", "-a", start_date, "-e", end_date, "-d", "2008-01-01", pism_timefile]
 sub.call(cmd)
 
 # ########################################################

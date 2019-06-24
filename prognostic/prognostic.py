@@ -105,16 +105,16 @@ parser.add_argument(
 parser.add_argument(
     "--hydrology",
     dest="hydrology",
-    choices=["routing", "distributed"],
+    choices=["routing", "routing_steady", "diffuse"],
     help="Basal hydrology model.",
-    default="routing",
+    default="diffuse",
 )
 parser.add_argument(
     "--calving",
     dest="calving",
-    choices=["vonmises_calving", "hayhurst_calving"]
+    choices=["vonmises_calving", "hayhurst_calving"],
     help="Choose calving law",
-    default='vonmises_calving',
+    default="vonmises_calving",
 )
 parser.add_argument(
     "--stable_gl",
@@ -140,7 +140,7 @@ parser.add_argument(
     help="How to approximate vertical velocities",
     default="upstream",
 )
-parser.add_argument("--start", help="Simulation start year", default="2008-1-1")
+parser.add_argument("--start", help="Simulation start year", default="2015-1-1")
 parser.add_argument("--end", help="Simulation end year", default="2100-1-1")
 parser.add_argument(
     "-e",
@@ -266,7 +266,7 @@ try:
     os.remove(pism_timefile)
 except OSError:
     pass
-cmd = ["create_timeline.py", "-a", start_date, "-e", end_date, "-d", "1980-01-01", pism_timefile]
+cmd = ["create_timeline.py", "-a", start_date, "-e", end_date, "-d", "2008-01-01", pism_timefile]
 sub.call(cmd)
 
 # ########################################################
@@ -286,9 +286,6 @@ try:
 except:
     combinations = np.genfromtxt(ensemble_file, dtype=None, delimiter=",", skip_header=1)
 
-# FIXME: thickness calving
-tct_dict = {-2.0: "off", -1.0: "low", 0.0: "mid", 1.0: "high"}
-
 tsstep = "yearly"
 
 scripts = []
@@ -302,10 +299,7 @@ post_header = make_batch_post_header(system)
 
 for n, combination in enumerate(combinations):
 
-    run_id, climate_file, runoff_file, frontal_melt_file, fm_a, fm_b, fm_alpha, fm_beta, tct_v, vcm, ppq, sia_e = (
-        combination
-    )
-    tct = tct_dict[tct_v]
+    run_id, climate_file, runoff_file, frontal_melt_file, fm_a, fm_b, fm_alpha, fm_beta, vcm, ppq, sia_e = combination
 
     ttphi = "{},{},{},{}".format(phi_min, phi_max, topg_min, topg_max)
 
@@ -327,7 +321,7 @@ for n, combination in enumerate(combinations):
             "{}".format(end_date),
         ]
     )
-
+    print(end_date, experiment)
     script = join(scripts_dir, "{}_g{}m_{}.sh".format(domain, grid, experiment))
     scripts.append(script)
 
@@ -379,12 +373,12 @@ for n, combination in enumerate(combinations):
 
         stress_balance_params_dict = generate_stress_balance(stress_balance, sb_params_dict)
 
-        climate_parameters = {
+        climate_params_dict = {
             "climate_forcing.buffer_size": 367,
-            "surface_given_file": "$input_dir/data_sets/ismip6/{}".format(climate_file),
+            "surface": "ismip6",
+            "surface_ismip6_file": "$input_dir/data_sets/ismip6/{}".format(climate_file),
+            "surface_ismip6_reference_file": input_file,
         }
-
-        climate_params_dict = generate_climate(climate, **climate_parameters)
 
         hydrology_parameters = {
             "hydrology.routing.include_floating_ice": True,
@@ -397,25 +391,21 @@ for n, combination in enumerate(combinations):
         ocean_params_dict = {}
 
         frontalmelt_parameters = {
-            "frontal_melt": "routing",
-            "frontal_melt.routing.file": "$input_dir/data_sets/ismip6/{}".format(frontal_melt_file),
-            "frontal_melt.include_floating_ice": True,
-            "frontal_melt.routing.parameter_a": fm_a,
-            "frontal_melt.routing.parameter_b": fm_b,
-            "frontal_melt.routing.power_alpha": fm_alpha,
-            "frontal_melt.routing.power_beta": fm_beta,
+            "frontal_melt": "discharge_given",
+            "frontal_melt.discharge_given.file": "$input_dir/data_sets/ismip6/{}".format(frontal_melt_file),
         }
 
         frontalmelt_params_dict = frontalmelt_parameters
 
-        if not isinstance(vcm, str):
+        try:
+            vcm = float(vcm)
             calving_parameters = {
                 "float_kill_calve_near_grounding_line": float_kill_calve_near_grounding_line,
                 "calving.vonmises_calving.sigma_max": vcm * 1e6,
                 "calving.vonmises_calving.use_custom_flow_law": True,
                 "calving.vonmises_calving.Glen_exponent": 3.0,
             }
-        else:
+        except:
             calving_parameters = {
                 "float_kill_calve_near_grounding_line": float_kill_calve_near_grounding_line,
                 "calving.vonmises_calving.threshold_file": "$input_dir/data_sets/calving/{}".format(vcm),
@@ -424,7 +414,7 @@ for n, combination in enumerate(combinations):
             }
         calving_params_dict = generate_calving(calving, **calving_parameters)
 
-        scalar_ts_dict = generate_scalar_ts(outfile, tsstep, odir=dirs["scalar"])
+        scalar_ts_dict = generate_scalar_ts(outfile, tsstep, odir=dirs["scalar"], **{"ts_vars": "ismip6"})
 
         all_params_dict = merge_dicts(
             general_params_dict,
