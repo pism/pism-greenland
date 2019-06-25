@@ -100,7 +100,7 @@ parser.add_argument(
     dest="spatial_ts",
     choices=["basic", "standard", "none", "ismip6"],
     help="output size type",
-    default="basic",
+    default="ismip6",
 )
 parser.add_argument(
     "--hydrology",
@@ -224,7 +224,7 @@ if not os.path.isdir(time_dir):
     os.makedirs(time_dir)
 
 # generate the config file *after* creating the output directory
-pism_config = "pism"
+pism_config = "ismip6"
 pism_config_nc = join(output_dir, pism_config + ".nc")
 
 cmd = "ncgen -o {output} {input_dir}/config/{config}.cdl".format(
@@ -321,7 +321,7 @@ for n, combination in enumerate(combinations):
             "{}".format(end_date),
         ]
     )
-    print(end_date, experiment)
+
     script = join(scripts_dir, "{}_g{}m_{}.sh".format(domain, grid, experiment))
     scripts.append(script)
 

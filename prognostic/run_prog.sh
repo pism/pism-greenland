@@ -19,7 +19,13 @@ for d in gris; do     python historical.py --calving hayhurst_calving -b no_bath
 # ISMIP 6 Runs
 
 odir=2019_06_test
-n=24
+n=96
 
 grid=1000
-for d in ismip6; do     python prognostic.py --spatial_ts ismip6 -b wc -d ${d} --o_dir ${odir} -q debug -s chinook -w 0:30:00 -n ${n} -g ${grid} -e ../uncertainty_qunatification/prognostic_discharge_given.csv ../historical/2019_06_calib/state/ismip6_g1000m_v3a_id_VCM-CALIB-G1000M_2008-1-1_2015-1-1_us.nc ; done
+for d in ismip6; do     python prognostic.py --spatial_ts ismip6 -b wc -d ${d} --o_dir ${odir} -q t2standard -s chinook -w 20:30:00 -n ${n} -g ${grid} -e ../uncertainty_qunatification/prognostic_discharge_given.csv ../historical/2019_06_calib/state/ismip6_g1000m_v3a_id_VCM-CALIB-G1000M_2008-1-1_2015-1-1_us.nc ; done
+
+odir=2019_06_test
+n=140
+
+grid=1000
+for d in ismip6; do     python prognostic.py --spatial_ts ismip6 -b wc -d ${d} --o_dir ${odir} -q long -s pleiades_broadwell -w 30:00:00 -n ${n} -g ${grid} -e ../uncertainty_qunatification/prognostic_discharge_given.csv ../historical/2019_06_calib/state/ismip6_g1000m_v3a_id_VCM-CALIB-G1000M_2008-1-1_2015-1-1_us.nc ; done
