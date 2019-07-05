@@ -162,7 +162,11 @@ for GRID in 1000; do
     # remove regridding artifacts, give precedence to mask: we set thickness and
     # surface to 0 where mask has ocean
     # Make FTT mask: 1 where there is no floating (3) or grounded (2) ice
+
+    # Instead of Ocean Kill we now use "land area fraction"
+
     ncap2 -O -s "where(thickness<0) thickness=0; ftt_mask[\$y,\$x]=0b; where(mask==0) {thickness=0.; surface=0.;}; where(mask!=2) ftt_mask=1; where(mask!=3) ftt_mask=1;" $outfile $outfile
+    ncap2 -O -s 'land_area_fraction_retreat = thickness; where(thickness > 0 || thickness + bed >= (1 - 910.0/1028.0) * thickness + 0) land_area_fraction_retreat = 1;land_area_fraction_retreat@units="1";land_area_fraction_retreat@long_name="maximum ice extent mask";land_area_fraction_retreat@standard_name="";' $outfile $outfile
 
     ncks -h -O $outfile $outfile_ctrl
     ncks -h -O $outfile $outfile_nb
@@ -258,7 +262,10 @@ for GRID in 18000 9000 6000 4500 3600 3000 2400 1800 1500 1200 900 600 450 300; 
     # remove regridding artifacts, give precedence to mask: we set thickness and
     # surface to 0 where mask has ocean
     # Make FTT mask: 1 where there is no floating (3) or grounded (2) ice
+
+    # Instead of Ocean Kill we now use "land area fraction"
     ncap2 -O -s "where(thickness<0) thickness=0; ftt_mask[\$y,\$x]=0b; where(mask==0) {thickness=0.; surface=0.;}; where(mask!=2) ftt_mask=1; where(mask!=3) ftt_mask=1;" $outfile $outfile
+    ncap2 -O -s 'land_area_fraction_retreat = thickness; where(thickness > 0 || thickness + bed >= (1 - 910.0/1028.0) * thickness + 0) land_area_fraction_retreat = 1;land_area_fraction_retreat@units="1";land_area_fraction_retreat@long_name="maximum ice extent mask";land_area_fraction_retreat@standard_name="";' $outfile $outfile
 
     ncks -h -O $outfile $outfile_ctrl
     ncks -h -O $outfile $outfile_nb
@@ -301,5 +308,5 @@ done
 
 }
 
-ismip6_grid
-# default_grid
+# ismip6_grid
+default_grid
