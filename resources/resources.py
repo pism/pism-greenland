@@ -126,6 +126,20 @@ spatial_ts_vars["hydro"] = [
     "vonmises_calving_rate",
 ]
 
+spatial_ts_vars["basic"] = [
+    "bwat",
+    "dHdt",
+    "ice_mass",
+    "mask",
+    "mass_fluxes",
+    "sftgif",
+    "thk",
+    "topg",
+    "usurf",
+    "velbase_mag",
+    "velsurf_mag",
+]
+
 
 def generate_spatial_ts(outfile, exvars, step, start=None, end=None, split=None, odir=None):
     """

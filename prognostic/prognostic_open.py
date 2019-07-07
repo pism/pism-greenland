@@ -397,6 +397,8 @@ for n, combination in enumerate(combinations):
 
         frontalmelt_params_dict = frontalmelt_parameters
 
+        front_retreat_params_dict = {"front_retreat_file": front_retreat_file}
+
         try:
             vcm = float(vcm)
             calving_parameters = {
@@ -424,6 +426,7 @@ for n, combination in enumerate(combinations):
             ocean_params_dict,
             hydro_params_dict,
             frontalmelt_params_dict,
+            front_retreat_params_dict,
             calving_params_dict,
             scalar_ts_dict,
         )
