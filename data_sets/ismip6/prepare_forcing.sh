@@ -50,3 +50,43 @@ for (( i=1; i<${n}+1; i++ )); do
     ncap2 -O -s "where(subglacial_discharge<0) subglacial_discharge=0; where(water_input_rate<0) water_input_rate=0;" ${rcmbasename}_ocean_${start_year}-${end_year}_${ocean_version}.nc ${rcmbasename}_ocean_${start_year}-${end_year}_${ocean_version}.nc
     adjust_timeline.py -p yearly -a ${start_year}-1-1 -d ${start_year}-1-1  ${rcmbasename}_ocean_${start_year}-${end_year}_${ocean_version}.nc
 done
+
+start_year=1960
+end_year=1989
+
+# Ocean Forcing
+
+declare -a rcmdirs=("csiro-mk3.6_rcp8.5" "hadgem2-es_rcp8.5" "ipsl-cm5-mr_rcp8.5" "miroc-esm-chem_rcp2.6" "miroc-esm-chem_rcp8.5" "noresm1-m_rcp8.5")
+declare -a rcmbasenames=("MAR3.9_CSIRO-Mk3.6_rcp85" "MAR3.9_HadGEM2-ES_rcp85" "MAR3.9_IPSL-CM5-MR_rcp85" "MAR3.9_MIROC-ESM-CHEM_rcp26" "MAR3.9_MIROC-ESM-CHEM_rcp85" "MAR3.9_NorESM1-M_rcp85")
+n=${#rcmdirs[@]}
+
+for (( i=1; i<${n}+1; i++ )); do
+    rcmdir=${rcmdirs[$i-1]}
+    rcmbasename=${rcmbasenames[$i-1]}
+    nccopy ${oceanforcingdir}/${rcmdir}/${rcmbasename}_basinRunoff_${ocean_version}.nc ${rcmbasename}_basinRunoff_${ocean_version}.nc
+    nccopy ${oceanforcingdir}/${rcmdir}/${rcmbasename}_oceanThermalForcing_${ocean_version}.nc ${rcmbasename}_oceanThermalForcing_${ocean_version}.nc
+    cdo -O -f nc4  -z zip_3 merge -aexpr,"subglacial_discharge=water_input_rate" -chname,basin_runoff,water_input_rate  -setmisstoc,0 -setmissval,nan -selyear,${start_year}/${end_year} ${rcmbasename}_basinRunoff_${ocean_version}.nc -chname,thermal_forcing,theta_ocean -setmisstoc,0 -setmissval,nan -selyear,${start_year}/${end_year} ${rcmbasename}_oceanThermalForcing_${ocean_version}.nc ${rcmbasename}_ocean_${start_year}-${end_year}_${ocean_version}.nc
+    # We need to get rid of runoff values < 0
+    ncap2 -O -s "where(subglacial_discharge<0) subglacial_discharge=0; where(water_input_rate<0) water_input_rate=0;" ${rcmbasename}_ocean_${start_year}-${end_year}_${ocean_version}.nc ${rcmbasename}_ocean_${start_year}-${end_year}_${ocean_version}.nc
+    adjust_timeline.py -p yearly -a ${start_year}-1-1 -d ${start_year}-1-1  ${rcmbasename}_ocean_${start_year}-${end_year}_${ocean_version}.nc
+done
+
+start_year=1980
+end_year=2009
+
+# Ocean Forcing
+
+declare -a rcmdirs=("csiro-mk3.6_rcp8.5" "hadgem2-es_rcp8.5" "ipsl-cm5-mr_rcp8.5" "miroc-esm-chem_rcp2.6" "miroc-esm-chem_rcp8.5" "noresm1-m_rcp8.5")
+declare -a rcmbasenames=("MAR3.9_CSIRO-Mk3.6_rcp85" "MAR3.9_HadGEM2-ES_rcp85" "MAR3.9_IPSL-CM5-MR_rcp85" "MAR3.9_MIROC-ESM-CHEM_rcp26" "MAR3.9_MIROC-ESM-CHEM_rcp85" "MAR3.9_NorESM1-M_rcp85")
+n=${#rcmdirs[@]}
+
+for (( i=1; i<${n}+1; i++ )); do
+    rcmdir=${rcmdirs[$i-1]}
+    rcmbasename=${rcmbasenames[$i-1]}
+    nccopy ${oceanforcingdir}/${rcmdir}/${rcmbasename}_basinRunoff_${ocean_version}.nc ${rcmbasename}_basinRunoff_${ocean_version}.nc
+    nccopy ${oceanforcingdir}/${rcmdir}/${rcmbasename}_oceanThermalForcing_${ocean_version}.nc ${rcmbasename}_oceanThermalForcing_${ocean_version}.nc
+    cdo -O -f nc4  -z zip_3 merge -aexpr,"subglacial_discharge=water_input_rate" -chname,basin_runoff,water_input_rate  -setmisstoc,0 -setmissval,nan -selyear,${start_year}/${end_year} ${rcmbasename}_basinRunoff_${ocean_version}.nc -chname,thermal_forcing,theta_ocean -setmisstoc,0 -setmissval,nan -selyear,${start_year}/${end_year} ${rcmbasename}_oceanThermalForcing_${ocean_version}.nc ${rcmbasename}_ocean_${start_year}-${end_year}_${ocean_version}.nc
+    # We need to get rid of runoff values < 0
+    ncap2 -O -s "where(subglacial_discharge<0) subglacial_discharge=0; where(water_input_rate<0) water_input_rate=0;" ${rcmbasename}_ocean_${start_year}-${end_year}_${ocean_version}.nc ${rcmbasename}_ocean_${start_year}-${end_year}_${ocean_version}.nc
+    adjust_timeline.py -p yearly -a ${start_year}-1-1 -d ${start_year}-1-1  ${rcmbasename}_ocean_${start_year}-${end_year}_${ocean_version}.nc
+done
