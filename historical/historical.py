@@ -396,16 +396,6 @@ for n, combination in enumerate(combinations):
         ocean_params_dict = generate_ocean("th", **ocean_parameters)
         ocean_params_dict = {}
 
-        # frontalmelt_parameters = {
-        #     "frontal_melt": "routing",
-        #     "frontal_melt.routing.file": "$input_dir/data_sets/ismip6/{}".format(frontal_melt_file),
-        #     "frontal_melt.include_floating_ice": True,
-        #     "frontal_melt.routing.parameter_a": fm_a,
-        #     "frontal_melt.routing.parameter_b": fm_b,
-        #     "frontal_melt.routing.power_alpha": fm_alpha,
-        #     "frontal_melt.routing.power_beta": fm_beta,
-        # }
-
         frontalmelt_parameters = {
             "frontal_melt": "discharge_given",
             "frontal_melt.discharge_given.file": "$input_dir/data_sets/ismip6/{}".format(frontal_melt_file),
@@ -431,14 +421,6 @@ for n, combination in enumerate(combinations):
         calving_params_dict = generate_calving(calving, **calving_parameters)
 
         scalar_ts_dict = generate_scalar_ts(outfile, tsstep, odir=dirs["scalar"])
-
-        # solver_dict = {
-        #     "ssafd_ksp_type": "gmres",
-        #     "ssafd_ksp_norm_type": "unpreconditioned",
-        #     "ssafd_ksp_pc_side": "right",
-        #     "ssafd_pc_type": "asm",
-        #     "ssafd_sub_pc_type": "lu",
-        # }
 
         solver_dict = {}
 

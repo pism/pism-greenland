@@ -87,11 +87,6 @@ spatial_ts_vars["basic"] = [
     "mask",
     "mass_fluxes",
     "sftgif",
-    "subglacial_water_flux_mag",
-    "tendency_of_subglacial_water_mass",
-    "tendency_of_subglacial_water_mass_at_domain_boundary",
-    "tendency_of_subglacial_water_mass_at_grounded_margins",
-    "tendency_of_subglacial_water_mass_at_grounding_line",
     "thk",
     "tillwat",
     "topg",
@@ -747,6 +742,8 @@ systems["chinook"][
 #SBATCH --output=pism.%j
 
 module list
+
+umask 007
 
 cd $SLURM_SUBMIT_DIR
 

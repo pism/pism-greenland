@@ -18,11 +18,11 @@ for d in gris; do     python historical.py --calving hayhurst_calving -b no_bath
 
 # ISMIP 6 Runs
 
-odir=2019_06_ismip6
-n=24
+odir=2019_07_ismip6
+n=120
 
 grid=1000
-for d in ismip6; do     python prognostic_core.py --spatial_ts ismip6 -b wc -d ${d} --o_dir ${odir} -q debug -s chinook -w 00:30:00 -n ${n} -g ${grid} -e ../uncertainty_qunatification/prognostic_core.csv ../historical/2019_06_calib/state/ismip6_g1000m_v3a_id_VCM-CALIB-G1000M_2008-1-1_2015-1-1.nc ; done
+for d in ismip6; do     python prognostic_core.py --spatial_ts ismip6 -b wc -d ${d} --o_dir ${odir} -q t2standard -s chinook -w 48:00:00 -n ${n} -g ${grid} -e ../uncertainty_qunatification/prognostic_core.csv ../historical/2019_06_calib/state/ismip6_g1000m_v3a_id_VCM-CALIB-G1000M_2008-1-1_2015-1-1.nc ; done
 
 odir=2019_06_dg_test
 n=140

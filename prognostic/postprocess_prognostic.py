@@ -141,11 +141,15 @@ def process_file(a_file, metadata):
 
         if ISMIP6[m_var]["type"] == "state":
             print("  Saving {}".format(o_file))
-            cdo.seltimestep("1/1000", input=a_file, output=o_file, options="-f nc4 -z zip_3")
+            cdo.seltimestep(
+                "1/1000", input="-setmissval,1.e20 {}".format(a_file), output=o_file, options="-f nc4 -z zip_3 -O -L"
+            )
             adjust_timeline(o_file, interval=5, interval_type="start", bounds=False)
         elif ISMIP6[m_var]["type"] == "flux":
             print("  Saving {}".format(o_file))
-            cdo.seltimestep("2/1000", input=a_file, output=o_file, options="-f nc4 -z zip_3")
+            cdo.seltimestep(
+                "2/1000", input="-setmissval,1.e20 {}".format(a_file), output=o_file, options="-f nc4 -z zip_3 -O -L"
+            )
             adjust_timeline(o_file, interval=5, interval_type="mid", bounds=True)
         else:
             print("how did I get here")
@@ -212,27 +216,3 @@ if __name__ == "__main__":
     pool = Pool(n_procs)
     pool.map(partial(process_file, metadata=metadata), files)
     pool.terminate()
-
-    # for a_file in files:
-    #     m_file = basename(a_file)
-    #     m_var = get_var(m_file)
-    #     if m_var is not None:
-
-    #         print("Processing {}".format(m_file))
-    #         if re.search("asmb", m_file) is not None:
-    #             EXP = "asmb"
-    #         if re.search("ctrl", m_file) is not None:
-    #             EXP = "ctrl"
-    #         project_dir = os.path.join(base_dir, GROUP, EXP)
-    #         o_file = join(project_dir, m_file)
-
-    #         if ISMIP6[m_var]["type"] == "state":
-    #             print("  Saving {}".format(o_file))
-    #             cdo.seltimestep("1/1000", input=a_file, output=o_file, options="-f nc4 -z zip_3")
-    #             adjust_timeline(o_file, interval=5, interval_type="start", bounds=False)
-    #         elif ISMIP6[m_var]["type"] == "flux":
-    #             print("  Saving {}".format(o_file))
-    #             cdo.seltimestep("2/1000", input=a_file, output=o_file, options="-f nc4 -z zip_3")
-    #             adjust_timeline(o_file, interval=5, interval_type="mid", bounds=True)
-    #         else:
-    #             print("how did I get here")
