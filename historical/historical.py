@@ -225,7 +225,7 @@ if not os.path.isdir(time_dir):
     os.makedirs(time_dir)
 
 # generate the config file *after* creating the output directory
-pism_config = "ismip6"
+pism_config = "pism"
 pism_config_nc = join(output_dir, pism_config + ".nc")
 
 cmd = "ncgen -o {output} {input_dir}/config/{config}.cdl".format(
