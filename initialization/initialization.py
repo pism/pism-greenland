@@ -97,12 +97,6 @@ parser.add_argument(
     "--spatial_ts", dest="spatial_ts", choices=["ismip6", "none"], help="output size type", default="ismip6"
 )
 parser.add_argument(
-    "--forcing_type", dest="forcing_type", choices=["ctrl", "e_age"], help="output size type", default="ctrl"
-)
-parser.add_argument(
-    "-p", "--params", dest="params_list", help="Comma-separated list with params for sensitivity", default=None
-)
-parser.add_argument(
     "--stable_gl",
     dest="float_kill_calve_near_grounding_line",
     action="store_false",
@@ -250,7 +244,7 @@ try:
     os.remove(pism_timefile)
 except OSError:
     pass
-cmd = ["create_timeline.py", "-a", start_date, "-e", end_date, "-d", "1980-01-01", pism_timefile]
+cmd = ["create_timeline.py", "-a", start_date, "-e", end_date, "-d", "2008-01-01", pism_timefile]
 sub.call(cmd)
 
 # ########################################################
@@ -369,7 +363,7 @@ with open(script, "w") as f:
     ocean_params_dict = {}
 
     front_retreat_file = pism_dataname
-    front_retreat_params_dict = {"front_retreat_file": input_file}
+    front_retreat_params_dict = {"front_retreat_file": front_retreat_file}
 
     scalar_ts_dict = generate_scalar_ts(outfile, tsstep, odir=dirs["scalar"], ts_vars="ismip6")
 

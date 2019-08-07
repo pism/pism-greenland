@@ -136,20 +136,20 @@ def process_file(a_file, metadata):
     if m_var is not None:
 
         print("Processing {}".format(m_file))
-        if re.search("asmb", m_file) is not None:
-            EXP = "asmb"
-        if re.search("ctrl", m_file) is not None:
-            EXP = "ctrl"
-        project_dir = os.path.join(base_dir, GROUP, EXP)
+        project_dir = os.path.join(base_dir, GROUP, EXP_RES)
         o_file = join(project_dir, m_file)
 
         if ISMIP6[m_var]["type"] == "state":
             print("  Saving {}".format(o_file))
-            cdo.seltimestep("1/1000", input=a_file, output=o_file, options="-f nc4 -z zip_3")
+            cdo.seltimestep(
+                "1/1000", input="-setmissval,1.e20 {}".format(a_file), output=o_file, options="-f nc4 -z zip_3 -O -L"
+            )
             adjust_timeline(o_file, interval=5, interval_type="start", bounds=False)
         elif ISMIP6[m_var]["type"] == "flux":
             print("  Saving {}".format(o_file))
-            cdo.seltimestep("2/1000", input=a_file, output=o_file, options="-f nc4 -z zip_3")
+            cdo.seltimestep(
+                "2/1000", input="-setmissval,1.e20 {}".format(a_file), output=o_file, options="-f nc4 -z zip_3 -O -L"
+            )
             adjust_timeline(o_file, interval=5, interval_type="mid", bounds=True)
         else:
             print("how did I get here")
@@ -162,6 +162,7 @@ parser = ArgumentParser()
 parser.description = "Script to make ISMIP6-conforming time series."
 parser.add_argument("INDIR", nargs=1)
 parser.add_argument("--id", dest="id", type=str, help="""Experiment ID""", default="1")
+parser.add_argument("--grid", dest="grid", type=str, help="""Grid resolution""", default="1000")
 parser.add_argument("-o", dest="base_dir", type=str, help="""Basedirectory for output""", default=".")
 parser.add_argument(
     "--resource_dir", dest="resource_dir", type=str, help="""Directory with ISMIP6 resources""", default="."
@@ -181,6 +182,7 @@ IS = "GIS"
 GROUP = "UAF"
 MODEL = "PISM"
 project = "{IS}_{GROUP}_{MODEL}".format(IS=IS, GROUP=GROUP, MODEL=MODEL)
+EXP_RES = options.id + "_" + options.grid
 
 try:
     ismip6resources = np.genfromtxt(
@@ -202,10 +204,9 @@ if __name__ == "__main__":
     print("indir: {}".format(in_dir))
     print("basedir: {}".format(base_dir))
 
-    for EXP in ["asmb", "ctrl"]:
-        project_dir = os.path.join(base_dir, GROUP, EXP)
-        if not os.path.exists(project_dir):
-            os.makedirs(project_dir)
+    project_dir = os.path.join(base_dir, GROUP, EXP_RES)
+    if not os.path.exists(project_dir):
+        os.makedirs(project_dir)
 
     files = []
     files.extend(glob.glob(join(scalar_dir, "*.nc")))
@@ -215,27 +216,3 @@ if __name__ == "__main__":
     pool = Pool(n_procs)
     pool.map(partial(process_file, metadata=metadata), files)
     pool.terminate()
-
-    # for a_file in files:
-    #     m_file = basename(a_file)
-    #     m_var = get_var(m_file)
-    #     if m_var is not None:
-
-    #         print("Processing {}".format(m_file))
-    #         if re.search("asmb", m_file) is not None:
-    #             EXP = "asmb"
-    #         if re.search("ctrl", m_file) is not None:
-    #             EXP = "ctrl"
-    #         project_dir = os.path.join(base_dir, GROUP, EXP)
-    #         o_file = join(project_dir, m_file)
-
-    #         if ISMIP6[m_var]["type"] == "state":
-    #             print("  Saving {}".format(o_file))
-    #             cdo.seltimestep("1/1000", input=a_file, output=o_file, options="-f nc4 -z zip_3")
-    #             adjust_timeline(o_file, interval=5, interval_type="start", bounds=False)
-    #         elif ISMIP6[m_var]["type"] == "flux":
-    #             print("  Saving {}".format(o_file))
-    #             cdo.seltimestep("2/1000", input=a_file, output=o_file, options="-f nc4 -z zip_3")
-    #             adjust_timeline(o_file, interval=5, interval_type="mid", bounds=True)
-    #         else:
-    #             print("how did I get here")

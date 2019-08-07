@@ -87,11 +87,6 @@ spatial_ts_vars["basic"] = [
     "mask",
     "mass_fluxes",
     "sftgif",
-    "subglacial_water_flux_mag",
-    "tendency_of_subglacial_water_mass",
-    "tendency_of_subglacial_water_mass_at_domain_boundary",
-    "tendency_of_subglacial_water_mass_at_grounded_margins",
-    "tendency_of_subglacial_water_mass_at_grounding_line",
     "thk",
     "tillwat",
     "topg",
@@ -124,6 +119,20 @@ spatial_ts_vars["hydro"] = [
     "velbase_mag",
     "velsurf_mag",
     "vonmises_calving_rate",
+]
+
+spatial_ts_vars["basic"] = [
+    "bwat",
+    "dHdt",
+    "ice_mass",
+    "mask",
+    "mass_fluxes",
+    "sftgif",
+    "thk",
+    "topg",
+    "usurf",
+    "velbase_mag",
+    "velsurf_mag",
 ]
 
 
@@ -733,6 +742,8 @@ systems["chinook"][
 #SBATCH --output=pism.%j
 
 module list
+
+umask 007
 
 cd $SLURM_SUBMIT_DIR
 

@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # Copyright (C) 2019 Andy Aschwanden
 
-# Historical simulations for ISMIP6
+# Prognostic simulations for ISMIP6
 
 import itertools
 from collections import OrderedDict
@@ -40,7 +40,7 @@ def map_dict(val, mdict):
         return val
 
 
-grid_choices = [18000, 9000, 6000, 4500, 3600, 3000, 2400, 1800, 1500, 1200, 900, 600, 450, 300, 150, 1000]
+grid_choices = [18000, 9000, 6000, 4500, 3600, 3000, 2400, 1800, 1500, 1200, 1000, 900, 600, 450, 300, 150]
 
 # set up the option parser
 parser = ArgumentParser(formatter_class=ArgumentDefaultsHelpFormatter)
@@ -73,7 +73,7 @@ parser.add_argument(
     default="netcdf4_parallel",
 )
 parser.add_argument(
-    "-g", "--grid", dest="grid", type=int, choices=grid_choices, help="horizontal grid resolution", default=9000
+    "-g", "--grid", dest="grid", type=int, choices=grid_choices, help="horizontal grid resolution", default=1000
 )
 parser.add_argument("--i_dir", dest="input_dir", help="input directory", default=abspath(join(script_directory, "..")))
 parser.add_argument("--o_dir", dest="output_dir", help="output directory", default="test_dir")
@@ -100,7 +100,7 @@ parser.add_argument(
     dest="spatial_ts",
     choices=["basic", "standard", "none", "ismip6"],
     help="output size type",
-    default="basic",
+    default="ismip6",
 )
 parser.add_argument(
     "--hydrology",
@@ -140,8 +140,8 @@ parser.add_argument(
     help="How to approximate vertical velocities",
     default="upstream",
 )
-parser.add_argument("--start", help="Simulation start year", default="2008-1-1")
-parser.add_argument("--end", help="Simulation end year", default="2015-1-1")
+parser.add_argument("--start", help="Simulation start year", default="2015-1-1")
+parser.add_argument("--end", help="Simulation end year", default="2100-1-1")
 parser.add_argument(
     "-e",
     "--ensemble_file",
@@ -202,11 +202,10 @@ if domain.lower() in ("ismip6"):
 else:
     pism_dataname = "$input_dir/data_sets/bed_dem/pism_Greenland_{}m_mcb_jpl_v{}_{}.nc".format(grid, version, bed_type)
 
-# Removed "thk" from regrid vars
-regridvars = "litho_temp,enthalpy,age,tillwat,bmelt,ice_area_specific_volume"
+regridvars = "litho_temp,enthalpy,age,tillwat,bmelt,ice_area_specific_volume,thk"
 
 dirs = {"output": "$output_dir", "spatial_tmp": "$spatial_tmp_dir"}
-for d in ["state", "scalar", "spatial", "jobs", "basins"]:
+for d in ["performance", "state", "scalar", "spatial", "jobs", "basins"]:
     dirs[d] = "$output_dir/{dir}".format(dir=d)
 
 if spatial_ts == "none":
@@ -225,7 +224,7 @@ if not os.path.isdir(time_dir):
     os.makedirs(time_dir)
 
 # generate the config file *after* creating the output directory
-pism_config = "pism"
+pism_config = "ismip6"
 pism_config_nc = join(output_dir, pism_config + ".nc")
 
 cmd = "ncgen -o {output} {input_dir}/config/{config}.cdl".format(
@@ -285,10 +284,7 @@ topg_max = 700
 try:
     combinations = np.loadtxt(ensemble_file, delimiter=",", skiprows=1)
 except:
-    try:
-        combinations = np.genfromtxt(ensemble_file, dtype=None, encoding=None, delimiter=",", skip_header=1)
-    except:
-        combinations = np.genfromtxt(ensemble_file, dtype=None, delimiter=",", skip_header=1)
+    combinations = np.genfromtxt(ensemble_file, dtype=None, delimiter=",", skip_header=1)
 
 tsstep = "yearly"
 
@@ -303,7 +299,7 @@ post_header = make_batch_post_header(system)
 
 for n, combination in enumerate(combinations):
 
-    run_id, climate_file, runoff_file, frontal_melt_file, fm_a, fm_b, fm_alpha, fm_beta, vcm, ppq, sia_e = combination
+    run_id, climate_file, ppq, sia_e, front_retreat_file = combination
 
     ttphi = "{},{},{},{}".format(phi_min, phi_max, topg_min, topg_max)
 
@@ -345,6 +341,7 @@ for n, combination in enumerate(combinations):
         pism = generate_prefix_str(pism_exec)
 
         general_params_dict = {
+            "profile": join(dirs["performance"], "profile_${job_id}.py".format(**batch_system)),
             "time_file": pism_timefile,
             "o": join(dirs["state"], outfile),
             "o_format": oformat,
@@ -359,7 +356,7 @@ for n, combination in enumerate(combinations):
         if osize != "custom":
             general_params_dict["o_size"] = osize
         else:
-            general_params_dict["output.sizes.medium"] = "sftgif,velsurf_mag,mask,usurf"
+            general_params_dict["output.sizes.medium"] = "sftgif,velsurf_mag"
 
         grid_params_dict = generate_grid_description(grid, domain)
 
@@ -376,65 +373,29 @@ for n, combination in enumerate(combinations):
 
         stress_balance_params_dict = generate_stress_balance(stress_balance, sb_params_dict)
 
-        climate_parameters = {
+        climate_params_dict = {
             "climate_forcing.buffer_size": 367,
-            "surface_given_file": "$input_dir/data_sets/ismip6/{}".format(climate_file),
+            "surface": "ismip6",
+            "surface_ismip6_file": "$input_dir/data_sets/ismip6/{}".format(climate_file),
+            "surface_ismip6_reference_file": input_file,
         }
 
-        climate_params_dict = generate_climate(climate, **climate_parameters)
+        hydro_params_dict = generate_hydrology(hydrology)
 
-        hydrology_parameters = {
-            "hydrology.routing.include_floating_ice": True,
-            "hydrology.surface_input_file": "$input_dir/data_sets/ismip6/{}".format(runoff_file),
-            "hydrology.routing.add_water_input_to_till_storage": False,
+        front_retreat_params_dict = {
+            "front_retreat_file": "$input_dir/data_sets/front_retreat/{}".format(front_retreat_file)
         }
 
-        hydro_params_dict = generate_hydrology(hydrology, **hydrology_parameters)
-
-        # Need to add salinity first
-        ocean_parameters = {"ocean.th.file": "$input_dir/data_sets/ismip6/{}".format(frontal_melt_file)}
-        ocean_params_dict = generate_ocean("th", **ocean_parameters)
-        ocean_params_dict = {}
-
-        frontalmelt_parameters = {
-            "frontal_melt": "discharge_given",
-            "frontal_melt.discharge_given.file": "$input_dir/data_sets/ismip6/{}".format(frontal_melt_file),
-        }
-
-        frontalmelt_params_dict = frontalmelt_parameters
-
-        try:
-            vcm = float(vcm)
-            calving_parameters = {
-                "float_kill_calve_near_grounding_line": float_kill_calve_near_grounding_line,
-                "calving.vonmises_calving.sigma_max": vcm * 1e6,
-                "calving.vonmises_calving.use_custom_flow_law": True,
-                "calving.vonmises_calving.Glen_exponent": 3.0,
-            }
-        except:
-            calving_parameters = {
-                "float_kill_calve_near_grounding_line": float_kill_calve_near_grounding_line,
-                "calving.vonmises_calving.threshold_file": "$input_dir/data_sets/calving/{}".format(vcm),
-                "calving.vonmises_calving.use_custom_flow_law": True,
-                "calving.vonmises_calving.Glen_exponent": 3.0,
-            }
-        calving_params_dict = generate_calving(calving, **calving_parameters)
-
-        scalar_ts_dict = generate_scalar_ts(outfile, tsstep, odir=dirs["scalar"])
-
-        solver_dict = {}
+        scalar_ts_dict = generate_scalar_ts(outfile, tsstep, odir=dirs["scalar"], **{"ts_vars": "ismip6"})
 
         all_params_dict = merge_dicts(
             general_params_dict,
             grid_params_dict,
             stress_balance_params_dict,
             climate_params_dict,
-            ocean_params_dict,
             hydro_params_dict,
-            frontalmelt_params_dict,
-            calving_params_dict,
+            front_retreat_params_dict,
             scalar_ts_dict,
-            solver_dict,
         )
 
         if not spatial_ts == "none":

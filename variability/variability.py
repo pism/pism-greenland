@@ -89,12 +89,12 @@ parser.add_argument(
     default="pleiades_broadwell",
 )
 parser.add_argument(
-    "-b", "--bed_type", dest="bed_type", choices=list_bed_types(), help="output size type", default="no_bath"
+    "-b", "--bed_type", dest="bed_type", choices=list_bed_types(), help="output size type", default="wc"
 )
 parser.add_argument(
     "--spatial_ts",
     dest="spatial_ts",
-    choices=["basic", "standard", "none", "svs", "divq"],
+    choices=["basic", "standard", "none", "svs", "divq", "variability"],
     help="output size type",
     default="basic",
 )
@@ -209,7 +209,7 @@ if not os.path.isdir(scripts_dir):
     os.makedirs(scripts_dir)
 
 # generate the config file *after* creating the output directory
-pism_config = "init_config"
+pism_config = "pism"
 pism_config_nc = join(output_dir, pism_config + ".nc")
 
 cmd = "ncgen -o {output} {input_dir}/config/{config}.cdl".format(
@@ -300,7 +300,6 @@ for n, combination in enumerate(combinations):
 
     ttphi = "{},{},{},{}".format(phi_min, phi_max, topg_min, topg_max)
 
-    print(run_id)
     name_options = {}
     name_options["id"] = "{}".format(run_id)
 
