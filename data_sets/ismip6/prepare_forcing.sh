@@ -51,4 +51,5 @@ for (( i=1; i<${n}+1; i++ )); do
     # We need to get rid of runoff values < 0
     ncap2 -O -s "where(subglacial_discharge<0) subglacial_discharge=0; where(water_input_rate<0) water_input_rate=0;" ${rcmbasename}_ocean_${start_year}-${end_year}_${ocean_version}.nc ${rcmbasename}_ocean_${start_year}-${end_year}_${ocean_version}.nc
     adjust_timeline.py -p yearly -a ${start_year}-1-1 -d ${start_year}-1-1  ${rcmbasename}_ocean_${start_year}-${end_year}_${ocean_version}.nc
+    rm ${rcmbasename}_basinRunoff_${ocean_version}.nc  ${rcmbasename}_oceanThermalForcing_${ocean_version}.nc
 done

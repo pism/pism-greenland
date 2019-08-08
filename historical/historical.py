@@ -457,6 +457,16 @@ for n, combination in enumerate(combinations):
 
         f.write(cmd)
         f.write("\n")
+        f.write("\n")
+        f.write("ncks -O -4 -L 3 {ofile} {ofile}\n".format(ofile=join(dirs["state"], outfile)))
+        f.write("\n")
+        if not spatial_ts == "none":
+            f.write(
+                "ncks -O -4 -L 3 {tmpfile} {ofile}\n".format(
+                    tmpfile=spatial_ts_dict["extra_file"], ofile=join(dirs["spatial"], "ex_" + outfile)
+                )
+            )
+        f.write("\n")
         f.write(batch_system.get("footer", ""))
 
     scripts.append(script)
