@@ -80,9 +80,9 @@ parser.add_argument("--o_dir", dest="output_dir", help="output directory", defau
 parser.add_argument(
     "--o_size",
     dest="osize",
-    choices=["small", "medium", "big", "big_2d", "custom"],
+    choices=["small", "medium", "big", "big_2d", "custom", "none"],
     help="output size type",
-    default="custom",
+    default="none",
 )
 parser.add_argument(
     "-s",
@@ -417,6 +417,16 @@ for n, combination in enumerate(combinations):
         cmd = template.format(**context)
 
         f.write(cmd)
+        f.write("\n")
+        f.write("\n")
+        if not o_size == "none":
+        f.write("ncks -O -4 -L 3 {ofile} {ofile}\n".format(ofile=join(dirs["state"], outfile)))
+        f.write("\n")
+            f.write(
+                "ncks -O -4 -L 3 {tmpfile} {tmpfile}\n".format(
+                    tmpfile=spatial_ts_dict["extra_file"]))
+                )
+            )
         f.write("\n")
         f.write(batch_system.get("footer", ""))
 

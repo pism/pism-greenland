@@ -11,16 +11,18 @@ for dir in "$gz_dir"; do
     mkdir -p $dir
 done
 
-# # Download precipitation and 2-m air temperature
-# for var in PR TAS; do
-#     for file in DMI-HIRHAM5_GL2_ERAI_1980_2014_${var}_DM.nc DMI-HIRHAM5_GL2_ERAI_2015_2016_${var}_DM.nc; do 
-#         wget -nc ${prefix}/${file}.gz -P ${gz_dir}/
-#         gunzip -c ${gz_dir}/${file}.gz > ${extracted_dir}/${file}
-#     done
-#     # remove vertical levels and merge files
-#     cdo --reduce_dim sellevel,0 -mergetime ${extracted_dir}/DMI-HIRHAM5_GL2_ERAI_1980_2014_${var}_DM.nc ${extracted_dir}/DMI-HIRHAM5_GL2_ERAI_2015_2016_${var}_DM.nc ${extracted_dir}/DMI-HIRHAM5_GL2_ERAI_1980_2016_${var}_DM.nc
-# done
-
+# Download precipitation and 2-m air temperature
+for var in PR TAS; do
+    for file in DMI-HIRHAM5_GL2_ERAI_1980_2014_${var}_DM.nc DMI-HIRHAM5_GL2_ERAI_2015_2016_${var}_DM.nc; do 
+        wget -nc ${prefix}/${file}.gz -P ${gz_dir}/
+        gunzip -c ${gz_dir}/${file}.gz > ${extracted_dir}/${file}
+    done
+    # remove vertical levels and merge files
+    # adjust_timeline.py -p daily -a 1980-1-1 -d 1980-1-1 ${extracted_dir}/DMI-HIRHAM5_GL2_ERAI_1980_2014_${var}_DM.nc
+    # adjust_timeline.py -p daily -a 2015-1-1 -d 1980-1-1 ${extracted_dir}/DMI-HIRHAM5_GL2_ERAI_20150_2016_${var}_DM.nc    
+    # cdo --reduce_dim sellevel,0 -mergetime ${extracted_dir}/DMI-HIRHAM5_GL2_ERAI_1980_2014_${var}_DM.nc ${extracted_dir}/DMI-HIRHAM5_GL2_ERAI_2015_2016_${var}_DM.nc ${extracted_dir}/DMI-HIRHAM5_GL2_ERAI_1980_2016_${var}_DM.nc
+done
+exit
 # # Download climatic mass balance
 # file=DMI-HIRHAM5_GL2_ERAI_1980_2016_gld_DM.nc
 # wget -nc http://prudence.dmi.dk/data/temp/RUM/HIRHAM/GREENLAND/ERAI/DAILY/${file}.gz -P ${gz_dir}/

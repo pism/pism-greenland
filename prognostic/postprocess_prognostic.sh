@@ -5,6 +5,7 @@
 # This includes:
 # splitname: split files by variable
 # run python postprocessing script
+
 indir=$1
 IS=GIS
 GROUP=UAF
