@@ -341,7 +341,6 @@ for n, combination in enumerate(combinations):
         pism = generate_prefix_str(pism_exec)
 
         general_params_dict = {
-            "profile": join(dirs["performance"], "profile_${job_id}.py".format(**batch_system)),
             "time_file": pism_timefile,
             "o": join(dirs["state"], outfile),
             "o_format": oformat,
@@ -381,9 +380,9 @@ for n, combination in enumerate(combinations):
         }
 
         hydrology_parameters = {
-            "hydrology.routing.include_floating_ice": True,
-            "hydrology.surface_input_file": "$input_dir/data_sets/ismip6/{}".format(runoff_file),
-            "hydrology.routing.add_water_input_to_till_storage": False,
+            # "hydrology.routing.include_floating_ice": True,
+            # "hydrology.surface_input_file": "$input_dir/data_sets/ismip6/{}".format(runoff_file),
+            # "hydrology.routing.add_water_input_to_till_storage": False,
         }
 
         hydro_params_dict = generate_hydrology(hydrology, **hydrology_parameters)
@@ -394,10 +393,6 @@ for n, combination in enumerate(combinations):
             "frontal_melt": "discharge_given",
             "frontal_melt.discharge_given.file": "$input_dir/data_sets/ismip6/{}".format(frontal_melt_file),
         }
-
-        frontalmelt_params_dict = frontalmelt_parameters
-
-        front_retreat_params_dict = {"front_retreat_file": front_retreat_file}
 
         try:
             vcm = float(vcm)
@@ -450,6 +445,16 @@ for n, combination in enumerate(combinations):
         cmd = template.format(**context)
 
         f.write(cmd)
+        f.write("\n")
+        f.write("\n")
+        if not o_size == "none":
+        f.write("ncks -O -4 -L 3 {ofile} {ofile}\n".format(ofile=join(dirs["state"], outfile)))
+        f.write("\n")
+            f.write(
+                "ncks -O -4 -L 3 {tmpfile} {tmpfile}\n".format(
+                    tmpfile=spatial_ts_dict["extra_file"]))
+                )
+            )
         f.write("\n")
         f.write(batch_system.get("footer", ""))
 
