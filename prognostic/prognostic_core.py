@@ -421,11 +421,7 @@ for n, combination in enumerate(combinations):
         if not o_size == "none":
             f.write("ncks -O -4 -L 3 {ofile} {ofile}\n".format(ofile=join(dirs["state"], outfile)))
         f.write("\n")
-            f.write(
-                "ncks -O -4 -L 3 {tmpfile} {tmpfile}\n".format(
-                    tmpfile=spatial_ts_dict["extra_file"]))
-                )
-            )
+        f.write("ncks -O -4 -L 3 {tmpfile} {tmpfile}\n".format(tmpfile=spatial_ts_dict["extra_file"]))
         f.write("\n")
         f.write(batch_system.get("footer", ""))
 
