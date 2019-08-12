@@ -393,6 +393,7 @@ for n, combination in enumerate(combinations):
             "frontal_melt": "discharge_given",
             "frontal_melt.discharge_given.file": "$input_dir/data_sets/ismip6/{}".format(frontal_melt_file),
         }
+        frontalmelt_params_dict = frontalmelt_parameters
 
         try:
             vcm = float(vcm)
@@ -421,7 +422,6 @@ for n, combination in enumerate(combinations):
             ocean_params_dict,
             hydro_params_dict,
             frontalmelt_params_dict,
-            front_retreat_params_dict,
             calving_params_dict,
             scalar_ts_dict,
         )
