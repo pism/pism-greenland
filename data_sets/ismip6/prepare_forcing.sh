@@ -21,7 +21,7 @@ oceanforcingdir=${basedir}/${grisdir}/${oceandir}
 
 rcm=MARv3.9
 
-start_year=1990
+start_year=2008
 end_year=2100
 
 # ####################################################
@@ -37,6 +37,11 @@ for gcm in ACCESS1.3-rcp85 CNRM-CM6-ssp126 CNRM-CM6-ssp585 CSIRO-Mk3.6-rcp85 Had
     eval "rm ${rcm}_${gcm}-{aSMB,dSMBdz,aST,dSTdz}_${start_year}-${end_year}_${climate_version}.nc"
 done
 
+# ####################################################
+# Atmosphere ctrl_proj forcing
+# ####################################################
+
+cdo  -O -f nc4 -z zip_3 mergetime -seltimestep,1/25 MARv3.9_MIROC5-rcp85_climate_${start_year}-${end_year}_v1.nc -add  -seltimestep,26 MARv3.9_MIROC5-rcp85_climate_${start_year}-${end_year}_v1.nc -sub -seltimestep,26/111 MARv3.9_MIROC5-rcp85_climate_${start_year}-${end_year}_v1.nc -seltimestep,26/111 MARv3.9_MIROC5-rcp85_climate_${start_year}-${end_year}_v1.nc MAR3.9_MIROC-rcp85_ctrl_proj_climate_${start_year}-${end_year}_v1.nc 
 
 # ####################################################
 # Ocean Forcing
@@ -59,7 +64,7 @@ for (( i=1; i<${n}+1; i++ )); do
 done
 
 # ####################################################
-# ctrl_proj forcing
+# Ocean ctrl_proj forcing
 # ####################################################
 
-cdo  mergetime -seltimestep,1/25 MAR3.9_MIROC-ESM-CHEM_rcp85_ocean_1990-2100_v4.nc -add  -seltimestep,26 MAR3.9_MIROC-ESM-CHEM_rcp85_ocean_1990-2100_v4.nc -sub -seltimestep,26/111 MAR3.9_MIROC-ESM-CHEM_rcp85_ocean_1990-2100_v4.nc -seltimestep,26/111 MAR3.9_MIROC-ESM-CHEM_rcp85_ocean_1990-2100_v4.nc MAR3.9_MIROC-ESM-CHEM_ctrl_proj_ocean_1990-2100_v4.nc 
+cdo -O -f nc4 -z zip_3 mergetime -seltimestep,1/25 MAR3.9_MIROC-ESM-CHEM_rcp85_ocean_${start_year}-${end_year}_v4.nc -add  -seltimestep,26 MAR3.9_MIROC-ESM-CHEM_rcp85_ocean_${start_year}-${end_year}_v4.nc -sub -seltimestep,26/111 MAR3.9_MIROC-ESM-CHEM_rcp85_ocean_${start_year}-${end_year}_v4.nc -seltimestep,26/111 MAR3.9_MIROC-ESM-CHEM_rcp85_ocean_${start_year}-${end_year}_v4.nc MAR3.9_MIROC-ESM-CHEM_ctrl_proj_ocean_${start_year}-${end_year}_v4.nc 
