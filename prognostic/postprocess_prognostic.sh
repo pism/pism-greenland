@@ -17,9 +17,19 @@ scalar_dir=scalar_processed
 mkdir -p ${indir}/${scalar_dir}
 
 # Split variables
-for exp in 5; do
-    CDO_FILE_SUFFIX=_${IS}_${GROUP}_${MODEL}_${exp}.nc cdo -f nc4 -z zip_3 splitname  ${indir}_tmp/ex_${d}_g${g}m_v3a_id_EXP-${exp}-VCM-CALIB-G1000M_2015-1-1_2100-1-1.nc  ${indir}/spatial/
-    CDO_FILE_SUFFIX=_${IS}_${GROUP}_${MODEL}_${exp}.nc cdo  -f nc4 -z zip_3 splitname  ${indir}/scalar/ts_${d}_g${g}m_v3a_id_EXP-${exp}-VCM-CALIB-G1000M_2015-1-1_2100-1-1.nc  ${indir}/${scalar_dir}/
+# for exp in 1 5 7 8 9; do
+for exp in ctrl_proj; do
+    CDO_FILE_SUFFIX=_${IS}_${GROUP}_${MODEL}_${exp}.nc cdo -O -f nc4 -z zip_3 splitname  ${indir}_tmp/ex_${d}_g${g}m_v3a_id_EXP-${exp}_2015-1-1_2100-1-1.nc  ${indir}/spatial/
+    CDO_FILE_SUFFIX=_${IS}_${GROUP}_${MODEL}_${exp}.nc cdo -O -f nc4 -z zip_3 splitname  ${indir}/scalar/ts_${d}_g${g}m_v3a_id_EXP-${exp}_2015-1-1_2100-1-1.nc  ${indir}/${scalar_dir}/
 done
 
 python postprocess_prognostic.py -o ${indir}_processed ${indir}
+
+odir=2019_08_ismip6
+grid=900
+mkdir -p $odir/dgmsl
+cd $indir/scalar
+for file in *.nc; do
+    echo $file
+    cdo -L setattribute,ice_mass@units="cm" -setattribute,long_mame="contribution to global mean sea level" -divc,362 -divc,-1e13 -selvar,limnsw -sub $file -seltimestep,1 $file ../dgmsl/$file
+done
