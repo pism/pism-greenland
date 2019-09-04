@@ -2,7 +2,7 @@
 EXP-5,MARv3.9_MIROC5-rcp85_climate_2008-2100_v1.nc,0.6,1.25,retreatmasks_MIROC5-rcp85-Rmed_UAF_PISM2.nc
 EXP-6,MARv3.9_NorESM1-rcp85_climate_2008-2100_v1.nc,0.6,1.25,retreatmasks_NorESM1-rcp85-Rmed_UAF_PISM2.nc
 EXP-7,MARv3.9_MIROC5-rcp26_climate_2008-2100_v1.nc,0.6,1.25,retreatmasks_MIROC5-rcp26-Rmed_UAF_PISM2.nc
-EXP-8,MARv3.9_HadGEM2-ES-rcp85_climate_2008-2100_v1.nc,0.6,1.25,retreatmasks_MIROC5-rcp85-Rmed_UAF_PISM2.nc
+EXP-8,MARv3.9_HadGEM2-ES-rcp85_climate_2008-2100_v1.nc,0.6,1.25,retreatmasks_HadGEM2-ES-rcp85-Rmed_UAF_PISM2.nc
 EXP-9,MARv3.9_MIROC5-rcp85_climate_2008-2100_v1.nc,0.6,1.25,retreatmasks_MIROC5-rcp85-Rhigh_UAF_PISM2.nc
 EXP-10,MARv3.9_MIROC5-rcp85_climate_2008-2100_v1.nc,0.6,1.25,retreatmasks_MIROC5-rcp85-Rlow_UAF_PISM2.nc
 EXP-A1,MARv3.9_IPSL-CM5-MR-rcp85_climate_2008-2100_v1.nc,0.6,1.25,retreatmasks_MIROC5-rcp85-Rmed_UAF_PISM2.nc
@@ -14,3 +14,17 @@ EXP-B3,MARv3.9_UKESM1-CM6-ssp585_climate_2008-2100_v1.nc,0.6,1.25,retreatmasks_M
 EXP-B4,MARv3.9_CESM2-ssp585_climate_2008-2100_v1.nc,0.6,1.25,retreatmasks_MIROC5-rcp85-Rmed_UAF_PISM2.nc
 EXP-D1,MARv3.9_NorESM1-rcp85_climate_2008-2100_v1.nc,0.6,1.25,retreatmasks_MIROC5-rcp85-Rhigh_UAF_PISM2.nc
 EXP-D2,MARv3.9_NorESM1-rcp85_climate_2008-2100_v1.nc,0.6,1.25,retreatmasks_MIROC5-rcp85-Rlow_UAF_PISM2.nc
+EXP-D3,MARv3.9_HadGEM2-ES-rcp85_climate_2008-2100_v1.nc,0.6,1.25,retreatmasks_MIROC5-rcp85-Rhigh_UAF_PISM2.nc
+EXP-D4,MARv3.9_HadGEM2-ES-rcp85_climate_2008-2100_v1.nc,0.6,1.25,retreatmasks_MIROC5-rcp85-Rlow_UAF_PISM2.nc
+EXP-D5,MARv3.9_MIROC5-rcp26_climate_2008-2100_v1.nc,0.6,1.25,retreatmasks_MIROC5-rcp26-Rhigh_UAF_PISM2.nc
+EXP-D6,MARv3.9_MIROC5-rcp26_climate_2008-2100_v1.nc,0.6,1.25,retreatmasks_MIROC5-rcp26-Rlow_UAF_PISM2.nc
+EXP-D7,MARv3.9_IPSL-CM5-MR-rcp26_climate_2008-2100_v1.nc,0.6,1.25,retreatmasks_MIROC5-rcp26-Rhigh_UAF_PISM2.nc
+EXP-D8,MARv3.9_IPSL-CM5-MR-rcp26_climate_2008-2100_v1.nc,0.6,1.25,retreatmasks_MIROC5-rcp26-Rlow_UAF_PISM2.nc
+EXP-D9,MARv3.9_CSIRO-Mk3.6-rcp85_climate_2008-2100_v1.nc,0.6,1.25,retreatmasks_MIROC5-rcp26-Rhigh_UAF_PISM2.nc
+EXP-D10,MARv3.9_CSIRO-Mk3.6-rcp85_climate_2008-2100_v1.nc,0.6,1.25,retreatmasks_MIROC5-rcp26-Rlow_UAF_PISM2.nc
+EXP-D11,MARv3.9_ACCESS1.3-rcp85_climate_2008-2100_v1.nc,0.6,1.25,retreatmasks_MIROC5-rcp26-Rhigh_UAF_PISM2.nc
+EXP-D12,MARv3.9_ACCESS1.3-rcp85_climate_2008-2100_v1.nc,0.6,1.25,retreatmasks_MIROC5-rcp26-Rlow_UAF_PISM2.nc
+EXP-D13,MARv3.9_CNRM-CM6-ssp585_climate_2008-2100_v1.nc,0.6,1.25,retreatmasks_MIROC5-rcp26-Rhigh_UAF_PISM2.nc
+EXP-D14,MARv3.9_CNRM-CM6-ssp585_climate_2008-2100_v1.nc,0.6,1.25,retreatmasks_MIROC5-rcp26-Rlow_UAF_PISM2.nc
+EXP-D15,MARv3.9_CNRM-CM6-ssp126_climate_2008-2100_v1.nc,0.6,1.25,retreatmasks_MIROC5-rcp26-Rhigh_UAF_PISM2.nc
+EXP-D16,MARv3.9_CNRM-CM6-ssp126_climate_2008-2100_v1.nc,0.6,1.25,retreatmasks_MIROC5-rcp26-Rlow_UAF_PISM2.nc

@@ -139,18 +139,25 @@ def process_file(a_file, metadata):
         project_dir = os.path.join(base_dir, GROUP, EXP_RES)
         o_file = join(project_dir, m_file)
 
+        if IMSIP6[m_var]["dims"] == 1:
+            time_interval = 1
+        if IMSIP6[m_var]["dims"] == 2:
+            time_interval = 5
+        elif:
+            print("Wrong dims for time intervarl")
+        
         if ISMIP6[m_var]["type"] == "state":
             print("  Saving {}".format(o_file))
             cdo.seltimestep(
                 "1/1000", input="-setmissval,1.e20 {}".format(a_file), output=o_file, options="-f nc4 -z zip_3 -O -L"
             )
-            adjust_timeline(o_file, interval=5, interval_type="start", bounds=False)
+            adjust_timeline(o_file, interval=time_interval, interval_type="start", bounds=False)
         elif ISMIP6[m_var]["type"] == "flux":
             print("  Saving {}".format(o_file))
             cdo.seltimestep(
                 "2/1000", input="-setmissval,1.e20 {}".format(a_file), output=o_file, options="-f nc4 -z zip_3 -O -L"
             )
-            adjust_timeline(o_file, interval=5, interval_type="mid", bounds=True)
+            adjust_timeline(o_file, interval=time_interval, interval_type="mid", bounds=True)
         else:
             print("how did I get here")
 
