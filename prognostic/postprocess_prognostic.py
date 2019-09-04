@@ -26,7 +26,7 @@ cdo = Cdo()
 
 def adjust_timeline(
     filename,
-    start_date="2008-1-1",
+    start_date="2015-1-1",
     interval=1,
     interval_type="mid",
     bounds=True,
@@ -139,13 +139,13 @@ def process_file(a_file, metadata):
         project_dir = os.path.join(base_dir, GROUP, EXP_RES)
         o_file = join(project_dir, m_file)
 
-        if IMSIP6[m_var]["dims"] == 1:
+        if ISMIP6[m_var]["dims"] == str(1):
             time_interval = 1
-        if IMSIP6[m_var]["dims"] == 2:
+        elif ISMIP6[m_var]["dims"] == str(2):
             time_interval = 5
-        elif:
-            print("Wrong dims for time intervarl")
-        
+        else:
+            print("Wrong dims for time interval")
+
         if ISMIP6[m_var]["type"] == "state":
             print("  Saving {}".format(o_file))
             cdo.seltimestep(

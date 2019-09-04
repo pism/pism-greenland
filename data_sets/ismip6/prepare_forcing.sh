@@ -41,7 +41,8 @@ done
 # Atmosphere ctrl_proj forcing
 # ####################################################
 
-cdo  -O -f nc4 -z zip_3 mergetime -seltimestep,1/7 MARv3.9_MIROC5-rcp85_climate_${start_year}-${end_year}_v1.nc -add  -seltimestep,8 MARv3.9_MIROC5-rcp85_climate_${start_year}-${end_year}_v1.nc -sub -seltimestep,8/93 MARv3.9_MIROC5-rcp85_climate_${start_year}-${end_year}_v1.nc -seltimestep,8/93 MARv3.9_MIROC5-rcp85_climate_${start_year}-${end_year}_v1.nc MAR3.9_MIROC-rcp85_ctrl_proj_climate_${start_year}-${end_year}_v1.nc 
+cdo  -O -f nc4 -z zip_3 mergetime -seltimestep,1/7 MARv3.9_MIROC5-rcp85_climate_${start_year}-${end_year}_v1.nc -add  -seltimestep,8 MARv3.9_MIROC5-rcp85_climate_${start_year}-${end_year}_v1.nc -sub -seltimestep,8/93 MARv3.9_MIROC5-rcp85_climate_${start_year}-${end_year}_v1.nc -seltimestep,8/93 MARv3.9_MIROC5-rcp85_climate_${start_year}-${end_year}_v1.nc MARv3.9_MIROC-rcp85_ctrl_proj_climate_${start_year}-${end_year}_v1.nc 
+
 
 # ####################################################
 # Ocean Forcing
