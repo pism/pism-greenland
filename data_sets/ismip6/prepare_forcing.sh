@@ -21,14 +21,17 @@ oceanforcingdir=${basedir}/${grisdir}/${oceandir}
 
 rcm=MARv3.9
 
-start_year=2008
+start_year=1960
 end_year=2100
+ctrl_start_year=1960
+ctrl_end_year=1990
 
 # ####################################################
 # Climate Forcing
 # ####################################################
 
-for gcm in ACCESS1.3-rcp85 CNRM-CM6-ssp126 CNRM-CM6-ssp585 CNRM-ESM2-ssp585 CSIRO-Mk3.6-rcp85 HadGEM2-ES-rcp85 IPSL-CM5-MR-rcp85 MIROC5-rcp26 MIROC5-rcp85 NorESM1-rcp85 UKESM1-CM6-ssp585; do
+# for gcm in ACCESS1.3-rcp85 CNRM-CM6-ssp126 CNRM-CM6-ssp585 CNRM-ESM2-ssp585 CSIRO-Mk3.6-rcp85 HadGEM2-ES-rcp85 IPSL-CM5-MR-rcp85 MIROC5-rcp26 MIROC5-rcp85 NorESM1-rcp85 UKESM1-CM6-ssp585; do
+for gcm in CNRM-ESM2-ssp585; do
     for var in aSMB dSMBdz aST dSTdz; do
         eval "cdo -O -f nc4 -z zip_3 mergetime ${atmosphereforcingdir}/${gcm}/${var}/${var}_${rcm}-yearly-${gcm}-{"${start_year}..${end_year}"}.nc ${rcm}_${gcm}-${var}_${start_year}-${end_year}_${climate_version}.nc"
     done
@@ -37,11 +40,13 @@ for gcm in ACCESS1.3-rcp85 CNRM-CM6-ssp126 CNRM-CM6-ssp585 CNRM-ESM2-ssp585 CSIR
     eval "rm ${rcm}_${gcm}-{aSMB,dSMBdz,aST,dSTdz}_${start_year}-${end_year}_${climate_version}.nc"
 done
 
+exit
+
 # ####################################################
 # Atmosphere ctrl_proj forcing
 # ####################################################
 
-cdo  -O -f nc4 -z zip_3 mergetime -seltimestep,1/7 MARv3.9_MIROC5-rcp85_climate_${start_year}-${end_year}_v1.nc -add  -seltimestep,8 MARv3.9_MIROC5-rcp85_climate_${start_year}-${end_year}_v1.nc -sub -seltimestep,8/93 MARv3.9_MIROC5-rcp85_climate_${start_year}-${end_year}_v1.nc -seltimestep,8/93 MARv3.9_MIROC5-rcp85_climate_${start_year}-${end_year}_v1.nc MARv3.9_MIROC-rcp85_ctrl_proj_climate_${start_year}-${end_year}_v1.nc 
+cdo  -O -f nc4 -z zip_3 mulc,0  MARv3.9_MIROC5-rcp85_climate_${start_year}-${end_year}_v1.nc MARv3.9_MIROC5-rcp85_ctrl_proj_climate_${start_year}-${end_year}_v1.nc
 
 
 # ####################################################
@@ -49,8 +54,13 @@ cdo  -O -f nc4 -z zip_3 mergetime -seltimestep,1/7 MARv3.9_MIROC5-rcp85_climate_
 # ####################################################
 
 declare -a rcmdirs=("access1-3_rcp8.5" "cnrm-cm6_ssp126" "cnrm-cm6_ssp585" "cnrm-esm2_ssp585" "csiro-mk3.6_rcp8.5" "hadgem2-es_rcp8.5" "ipsl-cm5-mr_rcp8.5" "miroc-esm-chem_rcp2.6" "miroc-esm-chem_rcp8.5" "noresm1-m_rcp8.5" "ukesm1-cm6_ssp585")
-declare -a rcmbasenames=("ACCESS1-3_rcp85" "CNRM-CM6_ssp126" "CNRM-CM6_ssp585" "CNRM-ESM2_ssp585" "CSIRO-Mk3.6_rcp85" "HadGEM2-ES_rcp85" "IPSL-CM5-MR_rcp85" "MIROC-ESM-CHEM_rcp26" "MIROC-ESM-CHEM_rcp85" "NorESM1-M_rcp85" "UKESM1-CM6_ssp585")
+declare -a rcmbasenames=("ACCESS1-3_rcp85" "CNRM-CM6_ssp126" "CNRM-CM6_ssp585" "CNRM-ESM2_ssp585" "CSIRO-Mk3.6_rcp85" "HadGEM2-ES_rcp85"  "IPSL-CM5-MR_rcp85" "MIROC-ESM-CHEM_rcp26" "MIROC-ESM-CHEM_rcp85" "NorESM1-M_rcp85" "UKESM1-CM6_ssp585")
 n=${#rcmdirs[@]}
+
+declare -a rcmdirs=("ipsl-cm5-mr_rcp8.5")
+declare -a rcmbasenames=("IPSL-CM5-MR_rcp85")
+n=${#rcmdirs[@]}
+
 
 for (( i=1; i<${n}+1; i++ )); do
     rcmdir=${rcmdirs[$i-1]}
@@ -62,10 +72,12 @@ for (( i=1; i<${n}+1; i++ )); do
     ncap2 -O -s "where(subglacial_discharge<0) subglacial_discharge=0; where(water_input_rate<0) water_input_rate=0;" ${rcmbasename}_ocean_${start_year}-${end_year}_${ocean_version}.nc ${rcmbasename}_ocean_${start_year}-${end_year}_${ocean_version}.nc
     adjust_timeline.py -p yearly -a ${start_year}-1-1 -d ${start_year}-1-1  ${rcmbasename}_ocean_${start_year}-${end_year}_${ocean_version}.nc
     rm ${rcmbasename}_basinRunoff_${ocean_version}.nc  ${rcmbasename}_oceanThermalForcing_${ocean_version}.nc
+
+    # ####################################################
+    # Ocean ctrl_proj forcing
+    # ####################################################
+    
+    cdo -O -f nc4 -z zip_3 add -timmean -selyear,${ctrl_start_year}/${ctrl_end_year} ${rcmbasename}_ocean_${start_year}-${end_year}_${ocean_version}.nc -sub ${rcmbasename}_ocean_${start_year}-${end_year}_${ocean_version}.nc ${rcmbasename}_ocean_${start_year}-${end_year}_${ocean_version}.nc ${rcmbasename}_ctrl_proj_ocean_${start_year}-${end_year}_${ocean_version}.nc
 done
 
-# ####################################################
-# Ocean ctrl_proj forcing
-# ####################################################
 
-cdo -O -f nc4 -z zip_3 mergetime -seltimestep,1/7 MAR3.9_MIROC-ESM-CHEM_rcp85_ocean_${start_year}-${end_year}_v4.nc -add  -seltimestep,8 MAR3.9_MIROC-ESM-CHEM_rcp85_ocean_${start_year}-${end_year}_v4.nc -sub -seltimestep,8/93 MAR3.9_MIROC-ESM-CHEM_rcp85_ocean_${start_year}-${end_year}_v4.nc -seltimestep,8/93 MAR3.9_MIROC-ESM-CHEM_rcp85_ocean_${start_year}-${end_year}_v4.nc MAR3.9_MIROC-ESM-CHEM_ctrl_proj_ocean_${start_year}-${end_year}_v4.nc 
