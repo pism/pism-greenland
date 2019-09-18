@@ -40,10 +40,13 @@ for d in ismip6; do     python prognostic_core.py --spatial_ts ismip6 -b wc -d $
 
 for d in ismip6; do     python prognostic_open.py --spatial_ts ismip6 -b wc -d ${d} --o_dir ${odir} -q t2standard -s chinook -w 24:00:00 -n ${n} -g ${grid} -e ../uncertainty_qunatification/prognostic_open.csv ../historical/2019_08_calib/state/ismip6_g1000m_v3a_id_CALIB-G1000M_2008-1-1_2015-1-1.nc ; done
 
-odir=2019_08_ismip6
 n=140
 grid=1000
 
+odir=2019_09_open
+
 for d in ismip6; do     python prognostic_open.py --spatial_ts ismip6 -b wc -d ${d} --o_dir ${odir} -q long -s pleiades_broadwell -w 24:00:00 -n ${n} -g ${grid} -e ../uncertainty_qunatification/prognostic_open.csv ../historical/2019_08_calib/state/ismip6_g1000m_v3a_id_CALIB-G1000M_2008-1-1_2015-1-1.nc ; done
+
+odir=2019_09_core
 
 for d in ismip6; do     python prognostic_core.py --spatial_ts ismip6 -b wc -d ${d} --o_dir ${odir} -q long -s pleiades_broadwell -w 24:00:00 -n ${n} -g ${grid} -e ../uncertainty_qunatification/prognostic_core.csv ../historical/2019_08_calib/state/ismip6_g1000m_v3a_id_CALIB-G1000M_2008-1-1_2015-1-1.nc ; done

@@ -30,8 +30,7 @@ ctrl_end_year=1990
 # Climate Forcing
 # ####################################################
 
-# for gcm in ACCESS1.3-rcp85 CNRM-CM6-ssp126 CNRM-CM6-ssp585 CNRM-ESM2-ssp585 CSIRO-Mk3.6-rcp85 HadGEM2-ES-rcp85 IPSL-CM5-MR-rcp85 MIROC5-rcp26 MIROC5-rcp85 NorESM1-rcp85 UKESM1-CM6-ssp585; do
-for gcm in CNRM-ESM2-ssp585; do
+for gcm in ACCESS1.3-rcp85 CNRM-CM6-ssp126 CNRM-CM6-ssp585 CNRM-ESM2-ssp585 CSIRO-Mk3.6-rcp85 HadGEM2-ES-rcp85 IPSL-CM5-MR-rcp85 MIROC5-rcp26 MIROC5-rcp85 NorESM1-rcp85 UKESM1-CM6-ssp585; do
     for var in aSMB dSMBdz aST dSTdz; do
         eval "cdo -O -f nc4 -z zip_3 mergetime ${atmosphereforcingdir}/${gcm}/${var}/${var}_${rcm}-yearly-${gcm}-{"${start_year}..${end_year}"}.nc ${rcm}_${gcm}-${var}_${start_year}-${end_year}_${climate_version}.nc"
     done
@@ -39,8 +38,6 @@ for gcm in CNRM-ESM2-ssp585; do
     adjust_timeline.py -p yearly -a ${start_year}-1-1 -d ${start_year}-1-1  ${rcm}_${gcm}_climate_${start_year}-${end_year}_${climate_version}.nc
     eval "rm ${rcm}_${gcm}-{aSMB,dSMBdz,aST,dSTdz}_${start_year}-${end_year}_${climate_version}.nc"
 done
-
-exit
 
 # ####################################################
 # Atmosphere ctrl_proj forcing
