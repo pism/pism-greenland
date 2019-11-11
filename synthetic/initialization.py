@@ -92,7 +92,7 @@ parser.add_argument(
     default="pleiades_broadwell",
 )
 parser.add_argument(
-    "--spatial_ts", dest="spatial_ts", choices=["basic", "pdd"], help="output size type", default="basic"
+    "--spatial_ts", dest="spatial_ts", choices=["basic", "pdd", "outlet"], help="output size type", default="outlet"
 )
 parser.add_argument(
     "--hydrology",
@@ -116,12 +116,6 @@ parser.add_argument(
     default="ssa+sia",
 )
 parser.add_argument(
-    "--topg_delta", dest="topg_delta_file", help="end of initialization detla=(topg-topg_initial) file", default=None
-)
-parser.add_argument(
-    "--dataset_version", dest="version", choices=["2", "3", "3a"], help="input data set version", default="3a"
-)
-parser.add_argument(
     "--vertical_velocity_approximation",
     dest="vertical_velocity_approximation",
     choices=["centered", "upstream"],
@@ -143,7 +137,7 @@ parser.add_argument(
     "--ensemble_file",
     dest="ensemble_file",
     help="File that has all combinations for ensemble study",
-    default="../uncertainty_quantification/outletglacier.csv",
+    default="outletglacier.csv",
 )
 
 options = parser.parse_args()
@@ -169,10 +163,8 @@ initialstatefile = options.initialstatefile
 grid = options.grid
 hydrology = options.hydrology
 stress_balance = options.stress_balance
-topg_delta_file = options.topg_delta_file
 test_climate_models = options.test_climate_models
 vertical_velocity_approximation = options.vertical_velocity_approximation
-version = options.version
 
 ensemble_file = options.ensemble_file
 
@@ -251,15 +243,11 @@ topg_max = 700
 
 std_dev = 4.23
 lapse_rate = 6
-bed_deformation = "off"
 
 if system == "debug":
     combinations = np.genfromtxt(ensemble_file, dtype=None, encoding=None, delimiter=",", skip_header=1)
 else:
     combinations = np.genfromtxt(ensemble_file, dtype=None, delimiter=",", skip_header=1)
-
-m_bd = 0.0
-bd_dict = {-1.0: "off", 0.0: "i0", 1.0: "ip"}
 
 tsstep = "yearly"
 
@@ -293,7 +281,6 @@ m_sb = None
 for n, combination in enumerate(combinations):
 
     run_id, ppq, sia_e = combination
-    bed_deformation = bd_dict[m_bd]
 
     ttphi = "{},{},{},{}".format(phi_min, phi_max, topg_min, topg_max)
 
@@ -303,8 +290,7 @@ for n, combination in enumerate(combinations):
     except:
         name_options["id"] = "{}".format(str(run_id))
 
-    vversion = "v" + str(version)
-    full_exp_name = "_".join([vversion, "_".join(["_".join([k, str(v)]) for k, v in list(name_options.items())])])
+    full_exp_name = "_".join(["_".join([k, str(v)]) for k, v in list(name_options.items())])
     full_outfile = "{domain}_g{grid}m_{experiment}.nc".format(domain=domain.lower, grid=grid, experiment=full_exp_name)
 
     # All runs in one script file for coarse grids that fit into max walltime
@@ -320,7 +306,6 @@ for n, combination in enumerate(combinations):
 
             experiment = "_".join(
                 [
-                    vversion,
                     "_".join(["_".join([k, str(v)]) for k, v in list(name_options.items())]),
                     "{}".format(start),
                     "{}".format(end),
@@ -373,21 +358,10 @@ for n, combination in enumerate(combinations):
                 else:
                     general_params_dict["i"] = regridfile
 
-                if (start == simulation_start_year) and (topg_delta_file is not None):
-                    general_params_dict["topg_delta_file"] = topg_delta_file
-
                 if osize != "custom":
                     general_params_dict["o_size"] = osize
                 else:
                     general_params_dict["output.sizes.medium"] = "sftgif,velsurf_mag,usurf,mask,uvelsurf,vvelsurf"
-
-                if bed_deformation != "off":
-                    general_params_dict["bed_def"] = "lc"
-
-                if (bed_deformation == "ip") and (start == simulation_start_year):
-                    general_params_dict[
-                        "bed_deformation.bed_uplift_file"
-                    ] = "$input_dir/data_sets/uplift/uplift_g{}m.nc".format(grid)
 
                 if start == simulation_start_year:
                     grid_params_dict = generate_grid_description(grid, domain)
@@ -411,19 +385,8 @@ for n, combination in enumerate(combinations):
                     stress_balance = sb_dict[m_sb]
                 stress_balance_params_dict = generate_stress_balance(stress_balance, sb_params_dict)
 
-                ice_density = 910.0
-                # climate_parameters = {
-                #     "atmosphere_given_file": "../data_sets/climate_forcing/pism_g5000m_MERRA2_1980_2009_TM.nc",
-                #     "atmosphere_lapse_rate_file": "../data_sets/climate_forcing/pism_g5000m_MERRA2_1980_2009_TM.nc",
-                #     "lapse_rate_file": "../data_sets/climate_forcing/pism_g5000m_MERRA2_1980_2009_TM.nc",
-                #     "pdd_sd_file": "../data_sets/climate_forcing/pism_g5000m_MERRA2_1980_2009_TM.nc",
-                #     "atmosphere_delta_T_file": "../data_sets/climate_forcing/arctic_paleo_modifier.nc",
-                #     "paleo_precip_file": "../data_sets/climate_forcing/arctic_paleo_modifier.nc",
-                #     "atmosphere.precip_exponential_factor_for_temperature": 7.0 / 100,
-                # }
-
                 climate_parameters = {
-                    "climatic_mass_balance": "-2.5,3,200,1500,2000",
+                    "climatic_mass_balance": "-2.0,4.0,200,1500,3000",
                     "ice_surface_temp": "-5,-20,0,2000",
                 }
 

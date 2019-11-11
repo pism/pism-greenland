@@ -35,7 +35,7 @@ def generate_domain(domain):
     if domain.lower() in ("greenland", "gris", "gris_ext", "ismip6"):
         pism_exec = "pismr"
     elif domain.lower() in ("og"):
-        pism_exec = "pismr -no_model_strip 0 -calving_wrap_around"
+        pism_exec = "pismr -regional -no_model_strip 10 -calving_wrap_around"
     elif domain.lower() in ("hia"):
         x_min = -652200.0
         x_max = -232600.0
@@ -80,6 +80,7 @@ spatial_ts_vars["basic"] = [
     "beta",
     "bwat",
     "dHdt",
+    "diffusivity",
     "height_above_flotation",
     "frontal_melt_rate",
     "frontal_melt_retreat_rate",
@@ -121,9 +122,10 @@ spatial_ts_vars["hydro"] = [
     "vonmises_calving_rate",
 ]
 
-spatial_ts_vars["basic"] = [
+spatial_ts_vars["outlet"] = [
     "bwat",
     "dHdt",
+    "diffusivity",
     "ice_mass",
     "mask",
     "mass_fluxes",
@@ -359,7 +361,7 @@ def generate_grid_description(grid_resolution, domain, restart=False):
 
     elif domain.lower() in ("og"):
 
-        mx_max = 2601
+        mx_max = 3601
         my_max = 1001
 
         resolution_max = 100
