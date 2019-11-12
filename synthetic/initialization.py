@@ -386,7 +386,7 @@ for n, combination in enumerate(combinations):
                 stress_balance_params_dict = generate_stress_balance(stress_balance, sb_params_dict)
 
                 climate_parameters = {
-                    "climatic_mass_balance": "-2.0,4.0,200,1500,3000",
+                    "climatic_mass_balance": "-1.0,4.5,100,1600,2500",
                     "ice_surface_temp": "-5,-20,0,2000",
                 }
 
