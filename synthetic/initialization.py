@@ -229,6 +229,12 @@ done
     dirs=" ".join(list(dirs.values())),
 )
 
+if system != "debug":
+    cmd = "lfs setstripe -c -1 {}".format(dirs["output"])
+    sub.call(shlex.split(cmd))
+    cmd = "lfs setstripe -c -1 {}".format(dirs["spatial_tmp"])
+    sub.call(shlex.split(cmd))
+
 # ########################################################
 # set up model initialization
 # ########################################################
@@ -278,9 +284,12 @@ post_header = make_batch_post_header(system)
 
 m_sb = None
 
+ppq = 0.6
+sia_e = 1.5
+
 for n, combination in enumerate(combinations):
 
-    run_id, ppq, sia_e = combination
+    run_id, m_min, m_max, h_min, h_ela, h_max = combination
 
     ttphi = "{},{},{},{}".format(phi_min, phi_max, topg_min, topg_max)
 
@@ -377,7 +386,7 @@ for n, combination in enumerate(combinations):
                     "vertical_velocity_approximation": vertical_velocity_approximation,
                 }
 
-                if start == simulation_start_year:
+                if start == simulation_start_year and initialstatefile is None:
                     sb_params_dict["topg_to_phi"] = ttphi
 
                 # If stress balance choice is made in file, overwrite command line option
@@ -386,8 +395,8 @@ for n, combination in enumerate(combinations):
                 stress_balance_params_dict = generate_stress_balance(stress_balance, sb_params_dict)
 
                 climate_parameters = {
-                    "climatic_mass_balance": "-1.0,4.5,100,1600,2500",
-                    "ice_surface_temp": "-5,-20,0,2000",
+                    "climatic_mass_balance": "{},{},{},{},{}".format(m_min, m_max, h_min, h_ela, h_max),
+                    "ice_surface_temp": "-10,-10,0,4000",
                 }
 
                 climate_params_dict = generate_climate(climate, **climate_parameters)
