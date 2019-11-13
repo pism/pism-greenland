@@ -361,8 +361,8 @@ def generate_grid_description(grid_resolution, domain, restart=False):
 
     elif domain.lower() in ("og"):
 
-        mx_max = 3601
-        my_max = 1001
+        mx_max = 3600
+        my_max = 1000
 
         resolution_max = 100
 

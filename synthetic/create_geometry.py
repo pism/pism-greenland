@@ -32,9 +32,18 @@ else:
 
     sys.exit(0)
 
+
+dx = dy = grid_spacing  # m
+
 # Domain extend
 x0, x1 = 0.0, 360.0e3
 y0, y1 = -50.0e3, 50.0e3
+
+# shift to cell centers
+x0 += dx / 2
+x1 -= dx / 2
+y0 += dy / 2
+y1 -= dy / 2
 
 m_buffer = 10e3
 # add buffer
@@ -43,7 +52,6 @@ y0 -= m_buffer
 x1 += m_buffer
 y1 += m_buffer
 
-dx = dy = grid_spacing  # m
 # Number of grid points
 M = int((x1 - x0) / dx) + 1
 N = int((y1 - y0) / dy) + 1

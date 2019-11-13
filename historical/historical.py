@@ -262,6 +262,12 @@ done
     dirs=" ".join(list(dirs.values())),
 )
 
+if system != "debug":
+    cmd = "lfs setstripe -c -1 {}".format(dirs["output"])
+    sub.call(shlex.split(cmd))
+    cmd = "lfs setstripe -c -1 {}".format(dirs["spatial_tmp"])
+    sub.call(shlex.split(cmd))
+
 pism_timefile = join(time_dir, "timefile_{start}_{end}.nc".format(start=start_date, end=end_date))
 try:
     os.remove(pism_timefile)
