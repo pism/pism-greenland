@@ -106,7 +106,7 @@ points = np.vstack(((np.ndarray.flatten(Xsp), np.ndarray.flatten(Ysp)))).T
 values = np.vstack((np.ndarray.flatten(Zsp)))
 xi = np.vstack((np.ndarray.flatten(X - x_s), np.ndarray.flatten(Y))).T
 
-Zspi = griddata(points, values, xi, method="linear") - 250
+Zspi = griddata(points, values, xi, method="linear") - 1000
 
 
 radius = 25e3
