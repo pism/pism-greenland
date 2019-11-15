@@ -35,7 +35,7 @@ def generate_domain(domain):
     if domain.lower() in ("greenland", "gris", "gris_ext", "ismip6"):
         pism_exec = "pismr"
     elif domain.lower() in ("og"):
-        pism_exec = "pismr -regional -calving_wrap_around"
+        pism_exec = "pismr -regional -no_model_strip 10 -calving_wrap_around"
     elif domain.lower() in ("hia"):
         x_min = -652200.0
         x_max = -232600.0

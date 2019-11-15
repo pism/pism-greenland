@@ -85,7 +85,6 @@ Ze = np.real(Ze) + ze
 # Rotating this around the y-axis is not really complicated, per se. Rotation around an angle alpha would give you the following:
 
 alpha = 0.25  # angle of ellipsoid
-beta = 0.40  # angle of surface plane
 Xp = np.cos(np.deg2rad(alpha)) * X - np.sin(np.deg2rad(alpha)) * Ze
 Yp = Y
 Zp = np.sin(np.deg2rad(alpha)) * X + np.cos(np.deg2rad(alpha)) * Ze
@@ -106,7 +105,7 @@ points = np.vstack(((np.ndarray.flatten(Xsp), np.ndarray.flatten(Ysp)))).T
 values = np.vstack((np.ndarray.flatten(Zsp)))
 xi = np.vstack((np.ndarray.flatten(X - x_s), np.ndarray.flatten(Y))).T
 
-Zspi = griddata(points, values, xi, method="linear") - 1000
+Zspi = griddata(points, values, xi, method="linear") - 250
 
 
 radius = 25e3
