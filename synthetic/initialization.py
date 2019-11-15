@@ -396,7 +396,7 @@ for n, combination in enumerate(combinations):
 
                 climate_parameters = {
                     "climatic_mass_balance": "{},{},{},{},{}".format(m_min, m_max, h_min, h_ela, h_max),
-                    "ice_surface_temp": "-10,-10,0,4000",
+                    "ice_surface_temp": "-10,-10,-2000,4000",
                 }
 
                 climate_params_dict = generate_climate(climate, **climate_parameters)

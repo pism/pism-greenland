@@ -85,7 +85,6 @@ Ze = np.real(Ze) + ze
 # Rotating this around the y-axis is not really complicated, per se. Rotation around an angle alpha would give you the following:
 
 alpha = 0.25  # angle of ellipsoid
-beta = 0.40  # angle of surface plane
 Xp = np.cos(np.deg2rad(alpha)) * X - np.sin(np.deg2rad(alpha)) * Ze
 Yp = Y
 Zp = np.sin(np.deg2rad(alpha)) * X + np.cos(np.deg2rad(alpha)) * Ze
@@ -96,7 +95,7 @@ xi = np.vstack((np.ndarray.flatten(X), np.ndarray.flatten(Y))).T
 Zpi = griddata(points, values, xi, method="linear")
 
 a_s = 20
-x_s = 60e3
+x_s = 75e3
 Zs = np.real(np.sqrt(a_s * (np.array(X - x_s, dtype=np.complex))))
 Xsp = np.cos(np.deg2rad(alpha)) * (X - x_s) - np.sin(np.deg2rad(alpha)) * Zs
 Ysp = Y
@@ -110,19 +109,19 @@ Zspi = griddata(points, values, xi, method="linear") - 1000
 
 
 radius = 25e3
-xcl, ycl = 50e3, y0
-xcu, ycu = 50e3, y1
+xcl, ycl = 250e3, y0
+xcu, ycu = 250e3, y1
 
 CL = (X - xcl) ** 2 + (Y - ycl) ** 2 < radius ** 2
 CU = (X - xcu) ** 2 + (Y - ycu) ** 2 < radius ** 2
 
+
 wall_elevation = 1000.0
 if has_sidewalls:
-    Zpi[np.logical_or(CL, CU)] = wall_elevation
-    Zpi[np.logical_and((X < xcl), (Y < ycl + radius))] = wall_elevation
-    Zpi[np.logical_and((X < xcu), (Y > ycu - radius))] = wall_elevation
+    Zpi.reshape(N, M)[np.logical_or(CL, CU)] = wall_elevation
+    Zpi.reshape(N, M)[np.logical_and((X < xcl), (Y < ycl + radius))] = wall_elevation
+    Zpi.reshape(N, M)[np.logical_and((X < xcu), (Y > ycu - radius))] = wall_elevation
 
-mZ = (Zspi - Zpi).T
 thk = np.reshape(Zspi - Zpi, (N, M))
 
 thk[X < x_s] = 0.0
