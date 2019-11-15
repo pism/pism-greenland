@@ -61,7 +61,9 @@ parser.add_argument(
     help="calving",
     default="float_kill",
 )
-parser.add_argument("-d", "--domain", dest="domain", choices=["og"], help="sets the modeling domain", default="og")
+parser.add_argument(
+    "-d", "--domain", dest="domain", choices=["og", "ogj"], help="sets the modeling domain", default="og"
+)
 parser.add_argument("--exstep", dest="exstep", help="Writing interval for spatial time series", default=1)
 parser.add_argument(
     "-f",
@@ -156,7 +158,8 @@ system = options.system
 spatial_ts = options.spatial_ts
 
 calving = options.calving
-climate = "elevation"
+climate = "elevation_forcing"
+domain = options.domain
 exstep = options.exstep
 float_kill_calve_near_grounding_line = options.float_kill_calve_near_grounding_line
 initialstatefile = options.initialstatefile
@@ -173,6 +176,8 @@ pism_exec = generate_domain(domain)
 
 if domain.lower() in ("og"):
     pism_dataname = "pism_outletglacier_g{}m.nc".format(grid)
+elif domain.lower() in ("ogj"):
+    pism_dataname = "pism_jak_g{}m.nc".format(grid)
 else:
     print("Domain {} not recognized".format(domain))
 

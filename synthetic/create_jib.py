@@ -37,7 +37,7 @@ dx = dy = grid_spacing  # m
 
 # Domain extend
 x0, x1 = -20.0e3, 150.0e3
-y0, y1 = -50.0e3, 50.0e3
+y0, y1 = -25.0e3, 25.0e3
 
 # shift to cell centers
 x0 += dx / 2
@@ -54,21 +54,42 @@ y = np.linspace(y0, y1, N)
 X, Y = np.meshgrid(x, y)
 
 H_m = 1600
-x_t = 15
-x_r = 7
+x_t = 15e3
+x_r = 7e3
 beta_t = 2e-4
 beta_r = -8e-5
 mu = 7e-4
 
+# Bed
 z_c = np.ones_like(X)
-
-z_c[X < x_r] = (1 + beta_r) * (x_r - X[X < x_r])
+z_c[X < x_r] = 1 + beta_r * (x_r - X[X < x_r])
 z_c[X >= x_t] = np.exp(-(beta_t * (x_t - X[X >= x_t])) ** 2)
 z_b = -z_c * np.exp(-(mu * Y) ** 2) * H_m
+z_b[X < 0] = -1000
 
+radius = 10e3
+xcl, ycl = 25e3, y0
+xcu, ycu = 25e3, y1
+
+CL = (X - xcl) ** 2 + (Y - ycl) ** 2 < radius ** 2
+CU = (X - xcu) ** 2 + (Y - ycu) ** 2 < radius ** 2
+
+wall_elevation = 1000.0
+if has_sidewalls:
+    z_b[np.logical_or(CL, CU)] = wall_elevation
+    z_b[np.logical_and((X < xcl), (Y < ycl + radius))] = wall_elevation
+    z_b[np.logical_and((X < xcu), (Y > ycu - radius))] = wall_elevation
+
+
+# Surface
 z_s = np.zeros_like(X) + 50
 z_s[X >= 0] = 50 + 4.5 * np.sqrt(X[X >= 0])
 
+thickness = z_s - z_b
+thickness[thickness < 0] = 0
+thickness[X < 0] = 0
+
+# Create netCDF file
 nc = NC(nc_outfile, "w", format="NETCDF4")
 
 nc.createDimension("x", size=M)
@@ -97,15 +118,25 @@ var_out.standard_name = "bedrock_altitude"
 var_out[:] = z_b
 
 var = "usurf"
-var_out = nc.createVariable(var, "f", dimensions=("y", "x"), fill_value=0)
+var_out = nc.createVariable(var, "f", dimensions=("y", "x"))
 var_out.units = "meters"
 var_out.standard_name = "surface_altitude"
 var_out[:] = z_s
+
 var = "thk"
-var_out = nc.createVariable(var, "f", dimensions=("y", "x"), fill_value=0)
+var_out = nc.createVariable(var, "f", dimensions=("y", "x"))
 var_out.units = "meters"
 var_out.standard_name = "land_ice_thickness"
-var_out[:] = z_s - z_b
+var_out[:] = thickness
 
+var = "ftt_mask"
+var_out = nc.createVariable(var, "b", dimensions=("y", "x"))
+var_out.units = ""
+var_out.flag_meanings = "normal special_treatment"
+var_out.long_name = "mask: zeros (modeling domain) and ones (no-model buffer near grid edges)"
+var_out.flag_values = 0.0, 1.0
+var_out.pism_intent = "model_state"
+var_out = np.zeros_like(z_b)
+var_out[X > 0] = 1
 
 nc.close()

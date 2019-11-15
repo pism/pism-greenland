@@ -34,7 +34,7 @@ def generate_domain(domain):
 
     if domain.lower() in ("greenland", "gris", "gris_ext", "ismip6"):
         pism_exec = "pismr"
-    elif domain.lower() in ("og"):
+    elif domain.lower() in ("og", "ogj"):
         pism_exec = "pismr -regional -no_model_strip 10 -calving_wrap_around"
     elif domain.lower() in ("hia"):
         x_min = -652200.0
@@ -378,6 +378,25 @@ def generate_grid_description(grid_resolution, domain, restart=False):
         mz = 401
         mzb = 0
 
+    elif domain.lower() in ("ogj"):
+
+        mx_max = 1700
+        my_max = 500
+
+        resolution_max = 100
+
+        accepted_resolutions = (100, 200, 250, 500, 1000, 2000, 5000)
+
+        try:
+            grid_resolution in accepted_resolutions
+            pass
+        except:
+            print(("grid resolution {}m not recognized".format(grid_resolution)))
+
+        skip_max = 200
+        mz = 401
+        mzb = 0
+
     grid_div = grid_resolution / resolution_max
 
     mx = int(mx_max / grid_div)
@@ -593,6 +612,8 @@ def generate_climate(climate, **kwargs):
         params_dict["surface"] = "given,forcing"
     elif climate in ("elevation"):
         params_dict["surface"] = "elevation"
+    elif climate in ("elevation_forcing"):
+        params_dict["surface"] = "elevation, forcing"
     else:
         print(("climate {} not recognized, exiting".format(climate)))
         import sys
