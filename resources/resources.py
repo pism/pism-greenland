@@ -613,7 +613,7 @@ def generate_climate(climate, **kwargs):
     elif climate in ("elevation"):
         params_dict["surface"] = "elevation"
     elif climate in ("elevation_forcing"):
-        params_dict["surface"] = "elevation, forcing"
+        params_dict["surface"] = "elevation,forcing"
     else:
         print(("climate {} not recognized, exiting".format(climate)))
         import sys

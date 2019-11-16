@@ -158,7 +158,7 @@ system = options.system
 spatial_ts = options.spatial_ts
 
 calving = options.calving
-climate = "elevation_forcing"
+climate = "elevation"
 domain = options.domain
 exstep = options.exstep
 float_kill_calve_near_grounding_line = options.float_kill_calve_near_grounding_line
@@ -249,8 +249,8 @@ ssa_e = 1.0
 tefo = 0.020
 phi_min = 15.0
 phi_max = 45.0
-topg_min = -700
-topg_max = 700
+topg_min = -500
+topg_max = 200
 
 std_dev = 4.23
 lapse_rate = 6
@@ -400,6 +400,7 @@ for n, combination in enumerate(combinations):
                 stress_balance_params_dict = generate_stress_balance(stress_balance, sb_params_dict)
 
                 climate_parameters = {
+                    "force_to_thickness_file": pism_dataname,
                     "climatic_mass_balance": "{},{},{},{},{}".format(m_min, m_max, h_min, h_ela, h_max),
                     "ice_surface_temp": "-10,-10,-2000,4000",
                 }
