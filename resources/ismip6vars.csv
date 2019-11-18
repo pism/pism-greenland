@@ -13,6 +13,7 @@ xvelbase        , m s-1, land_ice_basal_x_velocity, 2, state
 yvelbase        , m s-1, land_ice_basal_y_velocity, 2, state
 zvelbase        , m s-1, land_ice_basal_upward_velocity, 2, state
 xvelmean        , m s-1, land_ice_vertical_mean_x_velocity, 2, state
+yvelmean        , m s-1, land_ice_vertical_mean_x_velocity, 2, state
 zvelmean        , m s-1, land_ice_vertical_mean_y_velocity, 2, state
 litemptop       , K, temperature_at_top_of_ice_sheet_model , 2, state
 litempbotgr     , K, temperature_at_base_of_ice_sheet_model, 2, state
