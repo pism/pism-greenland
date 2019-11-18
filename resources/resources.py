@@ -34,7 +34,7 @@ def generate_domain(domain):
 
     if domain.lower() in ("greenland", "gris", "gris_ext", "ismip6"):
         pism_exec = "pismr"
-    elif domain.lower() in ("og", "ogj"):
+    elif domain.lower() in ("synth_jib", "synth_ellps"):
         pism_exec = "pismr -regional -no_model_strip 10 -calving_wrap_around"
     elif domain.lower() in ("hia"):
         x_min = -652200.0
@@ -359,7 +359,7 @@ def generate_grid_description(grid_resolution, domain, restart=False):
             mz = 101
             mzb = 11
 
-    elif domain.lower() in ("og"):
+    elif domain.lower() in ("synth_ellps"):
 
         mx_max = 3600
         my_max = 1000
@@ -378,7 +378,7 @@ def generate_grid_description(grid_resolution, domain, restart=False):
         mz = 401
         mzb = 0
 
-    elif domain.lower() in ("ogj"):
+    elif domain.lower() in ("synth_jib"):
 
         mx_max = 1700
         my_max = 500
@@ -506,6 +506,8 @@ def generate_hydrology(hydro, **kwargs):
         params_dict["hydrology_null_diffuse_till_water"] = ""
     elif hydro in ("routing"):
         params_dict["hydrology"] = "routing"
+    elif hydro in ("steady"):
+        params_dict["hydrology"] = "steady"
     elif hydro in ("routing_coupled"):
         params_dict["hydrology"] = "routing"
     elif hydro in ("distributed"):

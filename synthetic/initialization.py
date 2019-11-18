@@ -62,7 +62,12 @@ parser.add_argument(
     default="float_kill",
 )
 parser.add_argument(
-    "-d", "--domain", dest="domain", choices=["og", "ogj"], help="sets the modeling domain", default="og"
+    "-d",
+    "--domain",
+    dest="domain",
+    choices=["synth_jib", "synth_ellps"],
+    help="sets the modeling domain",
+    default="synth_jib",
 )
 parser.add_argument("--exstep", dest="exstep", help="Writing interval for spatial time series", default=1)
 parser.add_argument(
@@ -95,13 +100,6 @@ parser.add_argument(
 )
 parser.add_argument(
     "--spatial_ts", dest="spatial_ts", choices=["basic", "pdd", "outlet"], help="output size type", default="outlet"
-)
-parser.add_argument(
-    "--hydrology",
-    dest="hydrology",
-    choices=["null", "diffuse", "routing"],
-    help="Basal hydrology model.",
-    default="diffuse",
 )
 parser.add_argument(
     "--stable_gl",
@@ -164,7 +162,6 @@ exstep = options.exstep
 float_kill_calve_near_grounding_line = options.float_kill_calve_near_grounding_line
 initialstatefile = options.initialstatefile
 grid = options.grid
-hydrology = options.hydrology
 stress_balance = options.stress_balance
 test_climate_models = options.test_climate_models
 vertical_velocity_approximation = options.vertical_velocity_approximation
@@ -174,12 +171,12 @@ ensemble_file = options.ensemble_file
 domain = options.domain
 pism_exec = generate_domain(domain)
 
-if domain.lower() in ("og"):
-    pism_dataname = "pism_outletglacier_g{}m.nc".format(grid)
-elif domain.lower() in ("ogj"):
-    pism_dataname = "pism_jak_g{}m.nc".format(grid)
+if domain.lower() in ("synth_jib"):
+    pism_dataname = "pism_{}_g{}m.nc".format(domain.lower(), grid)
+elif domain.lower() in ("synth_ellps"):
+    pism_dataname = "pism_{}_g{}m.nc".format(domain.lower(), grid)
 else:
-    print("Domain {} not recognized".format(domain))
+    print("Modeling domain {} not recognized".format(domain))
 
 regridvars = "litho_temp,enthalpy,age,tillwat,bmelt,ice_area_specific_volume,thk"
 
@@ -294,7 +291,7 @@ sia_e = 1.5
 
 for n, combination in enumerate(combinations):
 
-    run_id, m_min, m_max, h_min, h_ela, h_max = combination
+    run_id, m_min, m_max, h_min, h_ela, h_max, vct, hydrology, water_input_file = combination
 
     ttphi = "{},{},{},{}".format(phi_min, phi_max, topg_min, topg_max)
 
@@ -407,9 +404,22 @@ for n, combination in enumerate(combinations):
 
                 climate_params_dict = generate_climate(climate, **climate_parameters)
 
-                hydro_params_dict = generate_hydrology(hydrology)
+                hydrology_parameters = {
+                    "hydrology.routing.include_floating_ice": True,
+                    "hydrology.add_water_input_to_till_storage": False,
+                }
+                if water_input_file:
+                    hydrology_parameters[
+                        "hydrology.surface_input_file"
+                    ] = "$input_dir/data_sets/frontal_melt/{}".format(water_input_file)
 
-                calving_parameters = {"thickness_calving_threshold": 50}
+                hydro_params_dict = generate_hydrology(hydrology, **hydrology_parameters)
+
+                calving_parameters = {
+                    "thickness_calving_threshold": 50,
+                    "calving.vonmises_calving.sigma_max": vct * 1.0e6,
+                    "vonmises_calving.use_custom_flow_law": True,
+                }
 
                 calving_params_dict = generate_calving(calving, **calving_parameters)
 

@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# Copyright (C) 2016, 2017 Andy Aschwanden
+# Copyright (C) 2016-19 Andy Aschwanden
 
 import numpy as np
 from scipy.interpolate import griddata
@@ -9,7 +9,7 @@ from argparse import ArgumentParser
 
 # set up the option parser
 parser = ArgumentParser()
-parser.description = "Generating synthetic outlet glacier."
+parser.description = "Generating synthetic outlet glacier / Jakobshavn Isbrae-like (adapted from Tinu Luethi)."
 parser.add_argument("FILE", nargs="*")
 parser.add_argument("-g", "--grid", dest="grid_spacing", type=int, help="horizontal grid resolution", default=1000)
 parser.add_argument(
@@ -22,7 +22,7 @@ grid_spacing = options.grid_spacing
 has_sidewalls = options.has_sidewalls
 
 if len(args) == 0:
-    nc_outfile = "og" + str(grid_spacing) + "m.nc"
+    nc_outfile = "jak" + str(grid_spacing) + "m.nc"
 elif len(args) == 1:
     nc_outfile = args[0]
 else:
@@ -71,7 +71,7 @@ x_t = 15e3
 x_r = 7e3
 beta_t = 2e-4
 beta_r = -8e-5
-mu = 7e-4
+mu = 5e-4
 
 # Bed
 Z_c = np.ones_like(X)

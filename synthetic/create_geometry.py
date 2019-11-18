@@ -115,7 +115,6 @@ xcu, ycu = 250e3, y1
 CL = (X - xcl) ** 2 + (Y - ycl) ** 2 < radius ** 2
 CU = (X - xcu) ** 2 + (Y - ycu) ** 2 < radius ** 2
 
-
 wall_elevation = 1000.0
 if has_sidewalls:
     Zpi.reshape(N, M)[np.logical_or(CL, CU)] = wall_elevation
