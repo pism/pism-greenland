@@ -129,14 +129,20 @@ def get_var(m_string):
 def process_file(a_file, metadata):
 
     m_file = basename(a_file)
+    m_exp = m_file.split("_")[-1].split(".")[0]
     m_var = get_var(m_file)
+
+    EXP_GRID = "_".join([m_exp, "01"])
 
     base_dir = metadata["base_dir"]
 
     if m_var is not None:
 
         print("Processing {}".format(m_file))
-        project_dir = os.path.join(base_dir, GROUP, MODEL)
+        project_dir = os.path.join(base_dir, GROUP, MODEL, EXP_GRID)
+        if not os.path.exists(project_dir):
+            os.makedirs(project_dir)
+
         o_file = join(project_dir, m_file)
 
         if ISMIP6[m_var]["dims"] == str(1):
@@ -168,9 +174,7 @@ def process_file(a_file, metadata):
 parser = ArgumentParser()
 parser.description = "Script to make ISMIP6-conforming time series."
 parser.add_argument("INDIR", nargs=1)
-parser.add_argument("--id", dest="id", type=str, help="""Experiment ID""", default="1")
 parser.add_argument("--model", dest="model", type=str, help="""Model ID""", default="1")
-parser.add_argument("--grid", dest="grid", type=str, help="""Grid resolution""", default="1000")
 parser.add_argument("-o", dest="base_dir", type=str, help="""Basedirectory for output""", default=".")
 parser.add_argument(
     "--resource_dir", dest="resource_dir", type=str, help="""Directory with ISMIP6 resources""", default="."
@@ -210,10 +214,6 @@ if __name__ == "__main__":
     print("-------------------------------------------------\n")
     print("indir: {}".format(in_dir))
     print("basedir: {}".format(base_dir))
-
-    project_dir = os.path.join(base_dir, GROUP, MODEL)
-    if not os.path.exists(project_dir):
-        os.makedirs(project_dir)
 
     files = []
     files.extend(glob.glob(join(scalar_dir, "*.nc")))
