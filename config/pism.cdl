@@ -2,6 +2,8 @@ netcdf pism_overrides {
     variables:
     byte pism_overrides;
 
+    pism_overrides:output.extra.stop_missing = "no";
+
     pism_overrides:grid.allow_extrapolation = "yes";
 
     pism_overrides:energy.minimum_allowed_temperature = 0.0;

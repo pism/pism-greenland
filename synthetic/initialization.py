@@ -57,7 +57,7 @@ parser.add_argument(
 parser.add_argument(
     "--calving",
     dest="calving",
-    choices=["float_kill", "vonmises_calving", "eigen_calving"],
+    choices=["float_kill", "vonmises_calving", "eigen_calving", "vonmises_nofloat_calving"],
     help="calving",
     default="float_kill",
 )
@@ -156,7 +156,7 @@ system = options.system
 spatial_ts = options.spatial_ts
 
 calving = options.calving
-climate = "elevation"
+climate = "elevation_forcing"
 domain = options.domain
 exstep = options.exstep
 float_kill_calve_near_grounding_line = options.float_kill_calve_near_grounding_line
@@ -241,13 +241,15 @@ if system != "debug":
 # set up model initialization
 # ########################################################
 
+sia_e = 1.5
 ssa_n = 3.25
-ssa_e = 1.0
+ssa_e = 3.0
+ppq = 0.6
 tefo = 0.020
 phi_min = 15.0
 phi_max = 45.0
-topg_min = -500
-topg_max = 200
+topg_min = -700
+topg_max = 300
 
 std_dev = 4.23
 lapse_rate = 6
@@ -286,12 +288,10 @@ post_header = make_batch_post_header(system)
 
 m_sb = None
 
-ppq = 0.6
-sia_e = 1.5
 
 for n, combination in enumerate(combinations):
 
-    run_id, m_min, m_max, h_min, h_ela, h_max, vct, hydrology, water_input_file = combination
+    run_id, m_min, m_max, h_min, h_ela, h_max, vct, hydrology, frontal_melt_file = combination
 
     ttphi = "{},{},{},{}".format(phi_min, phi_max, topg_min, topg_max)
 
@@ -408,10 +408,17 @@ for n, combination in enumerate(combinations):
                     "hydrology.routing.include_floating_ice": True,
                     "hydrology.add_water_input_to_till_storage": False,
                 }
-                if water_input_file:
+                if frontal_melt_file:
                     hydrology_parameters[
                         "hydrology.surface_input_file"
-                    ] = "$input_dir/data_sets/frontal_melt/{}".format(water_input_file)
+                    ] = "$input_dir/data_sets/frontal_melt/{}".format(frontal_melt_file)
+
+                    frontalmelt_parameters = {
+                        "frontal_melt": "routing",
+                        "frontal_melt.routing.file": "$input_dir/data_sets/frontal_melt/{}".format(frontal_melt_file),
+                    }
+                else:
+                    frontalmelt_parameters = {}
 
                 hydro_params_dict = generate_hydrology(hydrology, **hydrology_parameters)
 
@@ -423,10 +430,10 @@ for n, combination in enumerate(combinations):
 
                 calving_params_dict = generate_calving(calving, **calving_parameters)
 
-                front_retreat_params_dict = {"front_retreat_file": pism_dataname}
-                ocean_params_dict = {"shelf_base_melt_rate": 0.2}
-
+                ocean_params_dict = {}
                 ocean_params_dict["ocean"] = "constant"
+
+                frontalmelt_params_dict = frontalmelt_parameters
 
                 scalar_ts_dict = generate_scalar_ts(
                     outfile, tsstep, start=simulation_start_year, end=simulation_end_year, odir=dirs["scalar"]
@@ -438,6 +445,7 @@ for n, combination in enumerate(combinations):
                     stress_balance_params_dict,
                     climate_params_dict,
                     hydro_params_dict,
+                    frontalmelt_params_dict,
                     ocean_params_dict,
                     calving_params_dict,
                     scalar_ts_dict,

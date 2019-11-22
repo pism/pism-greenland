@@ -82,6 +82,7 @@ spatial_ts_vars["basic"] = [
     "dHdt",
     "diffusivity",
     "height_above_flotation",
+    "grounding_line_flux",
     "frontal_melt_rate",
     "frontal_melt_retreat_rate",
     "ice_mass",
@@ -107,6 +108,7 @@ spatial_ts_vars["hydro"] = [
     "dHdt",
     "frontal_melt_rate",
     "frontal_melt_retreat_rate",
+    "grounding_line_flux",
     "hydraulic_potential",
     "ice_mass",
     "mask",
@@ -123,18 +125,26 @@ spatial_ts_vars["hydro"] = [
 ]
 
 spatial_ts_vars["outlet"] = [
-    "bwat",
     "dHdt",
     "diffusivity",
+    "frontal_melt_rate",
+    "frontal_melt_retreat_rate",
+    "grounding_line_flux",
+    "height_above_flotation",
+    "hydraulic_potential",
     "ice_mass",
     "mask",
     "mass_fluxes",
     "sftgif",
+    "taud",
+    "tendency_of_subglacial_water_mass",
     "thk",
     "topg",
     "usurf",
+    "velbase",
     "velbase_mag",
     "velsurf_mag",
+    "vonmises_calving_rate",
 ]
 
 
@@ -380,8 +390,8 @@ def generate_grid_description(grid_resolution, domain, restart=False):
 
     elif domain.lower() in ("synth_jib"):
 
-        mx_max = 1700
-        my_max = 500
+        mx_max = 2700
+        my_max = 1000
 
         resolution_max = 100
 
@@ -535,6 +545,8 @@ def generate_calving(calving, **kwargs):
     params_dict = OrderedDict()
     if calving in ("thickness_calving", "hayhurst_calving"):
         params_dict["calving"] = calving
+    elif calving in ("vonmises_nofloat_calving"):
+        params_dict["calving"] = "vonmises_calving,float_kill".format(calving)
     elif calving in ("eigen_calving", "vonmises_calving"):
         params_dict["calving"] = "{},thickness_calving".format(calving)
     elif calving in ("hybrid_calving"):

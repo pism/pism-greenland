@@ -32,12 +32,11 @@ else:
 
     sys.exit(0)
 
-
 dx = dy = grid_spacing  # m
 
 # Domain extend
-x0, x1 = -20.0e3, 150.0e3
-y0, y1 = -25.0e3, 25.0e3
+x0, x1 = -20.0e3, 250.0e3
+y0, y1 = -50.0e3, 50.0e3
 
 # shift to cell centers
 x0 += dx / 2
@@ -66,7 +65,7 @@ m_buffer_idy = int(m_buffer / dy)
 MM = int(M - m_buffer / dx * 2)
 NN = int(N - m_buffer / dy * 2)
 
-H_m = 1600
+H_m = 1200
 x_t = 15e3
 x_r = 7e3
 beta_t = 2e-4
@@ -92,18 +91,20 @@ Zpi = griddata(points, values, xi, method="linear")
 
 Z_b = Zpi.reshape(N, M)
 
-radius = 20e3
+radius = 50e3
 xcl, ycl = 25e3, y0
 xcu, ycu = 25e3, y1
+a = 100e3
+b = 50e3
 
-CL = (X - xcl) ** 2 + (Y - ycl) ** 2 < radius ** 2
-CU = (X - xcu) ** 2 + (Y - ycu) ** 2 < radius ** 2
+CL = (X - xcl) ** 2 / a ** 2 + (Y - ycl) ** 2 / b ** 2 < 1 ** 2
+CU = (X - xcu) ** 2 / a ** 2 + (Y - ycu) ** 2 / b ** 2 < 1 ** 2
 
-wall_elevation = 1000.0
+wall_elevation = 2000.0
 if has_sidewalls:
     Z_b[np.logical_or(CL, CU)] = wall_elevation
-    Z_b[np.logical_and((X < xcl), (Y < ycl + radius))] = wall_elevation
-    Z_b[np.logical_and((X < xcu), (Y > ycu - radius))] = wall_elevation
+    Z_b[np.logical_and((X < xcl), (Y < ycl + b))] = wall_elevation
+    Z_b[np.logical_and((X < xcu), (Y > ycu - b))] = wall_elevation
 
 
 # Surface
@@ -162,7 +163,11 @@ var_out.long_name = "mask: zeros (modeling domain) and ones (no-model buffer nea
 var_out.flag_values = 0.0, 1.0
 var_out.pism_intent = "model_state"
 ftt_mask = np.zeros_like(Z_b)
-ftt_mask[X >= 0] = 1
+if has_sidewalls:
+    ftt_mask[np.logical_or(CL, CU)] = 1
+    ftt_mask[np.logical_and((X < xcl), (Y < ycl + radius))] = 1
+    ftt_mask[np.logical_and((X < xcu), (Y > ycu - radius))] = 1
+
 var_out[:] = ftt_mask.reshape(N, M)[m_buffer_idy:-m_buffer_idy, m_buffer_idx:-m_buffer_idx]
 
 

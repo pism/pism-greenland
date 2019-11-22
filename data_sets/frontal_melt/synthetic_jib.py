@@ -72,12 +72,15 @@ nc.createDimension("nb", size=2)
 
 t = np.arange(0, 365) + 0.5
 
-runoff = np.zeros_like(X)
+m_runoff = 1000  # kg m-2 year-1
+x_r = 100e3  # m
 
-# runoff = np.sin(t / np.pi)
-runoff = 1000 - 1000.0 / 100e3 * X
+runoff = m_runoff - m_runoff / x_r * X
 runoff[X < 0] = 0
 runoff[X > 100e3] = 0
+
+m_theta = 1.0
+theta = np.zeros_like(X) + m_theta
 
 var = "time"
 var_out = nc.createVariable(var, "d", dimensions=("time"))
@@ -115,9 +118,16 @@ var_out = nc.createVariable(var, "f", dimensions=("time", "y", "x"))
 var_out.units = "kg m-2 year-1"
 
 for t in range(0, 365):
-    var_out[t, :] = runoff[m_buffer_idy:-m_buffer_idy, m_buffer_idx:-m_buffer_idx] * np.sin(
-        (t + 0.5) * 1 * np.pi / 365
-    )
+    var_out[t, :] = 0
+for t in range(121, 245):
+    var_out[t, :] = runoff[m_buffer_idy:-m_buffer_idy, m_buffer_idx:-m_buffer_idx]
+
+var = "theta_ocean"
+var_out = nc.createVariable(var, "f", dimensions=("time", "y", "x"))
+var_out.units = "Celsius"
+
+for t in range(0, 365):
+    var_out[t, :] = theta[m_buffer_idy:-m_buffer_idy, m_buffer_idx:-m_buffer_idx]
 
 
 nc.close()
