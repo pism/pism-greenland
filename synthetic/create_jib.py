@@ -35,7 +35,7 @@ else:
 dx = dy = grid_spacing  # m
 
 # Domain extend
-x0, x1 = -20.0e3, 250.0e3
+x0, x1 = -50.0e3, 250.0e3
 y0, y1 = -50.0e3, 50.0e3
 
 # shift to cell centers
@@ -100,7 +100,7 @@ b = 50e3
 CL = (X - xcl) ** 2 / a ** 2 + (Y - ycl) ** 2 / b ** 2 < 1 ** 2
 CU = (X - xcu) ** 2 / a ** 2 + (Y - ycu) ** 2 / b ** 2 < 1 ** 2
 
-wall_elevation = 2000.0
+wall_elevation = 1000.0
 if has_sidewalls:
     Z_b[np.logical_or(CL, CU)] = wall_elevation
     Z_b[np.logical_and((X < xcl), (Y < ycl + b))] = wall_elevation
@@ -141,19 +141,28 @@ var = "topg"
 var_out = nc.createVariable(var, "f", dimensions=("y", "x"))
 var_out.units = "meters"
 var_out.standard_name = "bedrock_altitude"
-var_out[:] = Z_b[m_buffer_idy:-m_buffer_idy, m_buffer_idx:-m_buffer_idx]
+var_out[:] = np.fliplr(Z_b[m_buffer_idy:-m_buffer_idy, m_buffer_idx:-m_buffer_idx])
 
 var = "usurf"
 var_out = nc.createVariable(var, "f", dimensions=("y", "x"))
 var_out.units = "meters"
 var_out.standard_name = "surface_altitude"
-var_out[:] = Z_s[m_buffer_idy:-m_buffer_idy, m_buffer_idx:-m_buffer_idx]
+if has_sidewalls:
+    Z_s[np.logical_or(CL, CU)] = wall_elevation
+    Z_s[np.logical_and((X < xcl), (Y < ycl + radius))] = wall_elevation
+    Z_s[np.logical_and((X < xcu), (Y > ycu - radius))] = wall_elevation
+
+var_out[:] = np.fliplr(Z_s[m_buffer_idy:-m_buffer_idy, m_buffer_idx:-m_buffer_idx])
 
 var = "thk"
 var_out = nc.createVariable(var, "f", dimensions=("y", "x"))
 var_out.units = "meters"
 var_out.standard_name = "land_ice_thickness"
-var_out[:] = thickness[m_buffer_idy:-m_buffer_idy, m_buffer_idx:-m_buffer_idx]
+if has_sidewalls:
+    thickness[np.logical_or(CL, CU)] = 0
+    thickness[np.logical_and((X < xcl), (Y < ycl + radius))] = 0
+    thickness[np.logical_and((X < xcu), (Y > ycu - radius))] = 0
+var_out[:] = np.fliplr(thickness[m_buffer_idy:-m_buffer_idy, m_buffer_idx:-m_buffer_idx])
 
 var = "ftt_mask"
 var_out = nc.createVariable(var, "f", dimensions=("y", "x"))
@@ -168,7 +177,18 @@ if has_sidewalls:
     ftt_mask[np.logical_and((X < xcl), (Y < ycl + radius))] = 1
     ftt_mask[np.logical_and((X < xcu), (Y > ycu - radius))] = 1
 
-var_out[:] = ftt_mask.reshape(N, M)[m_buffer_idy:-m_buffer_idy, m_buffer_idx:-m_buffer_idx]
+mask = np.fliplr(ftt_mask.reshape(N, M)[m_buffer_idy:-m_buffer_idy, m_buffer_idx:-m_buffer_idx])
+var_out[:] = mask
+
+# var = "no_model_mask"
+# var_out = nc.createVariable(var, "f", dimensions=("y", "x"))
+# var_out.units = ""
+# var_out.flag_meanings = "normal special_treatment"
+# var_out.long_name = "mask: zeros (modeling domain) and ones (no-model buffer near grid edges)"
+# var_out.flag_values = 0.0, 1.0
+# var_out.pism_intent = "model_state"
+
+# var_out[:] = mask
 
 
 nc.close()

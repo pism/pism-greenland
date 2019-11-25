@@ -125,7 +125,9 @@ spatial_ts_vars["hydro"] = [
 ]
 
 spatial_ts_vars["outlet"] = [
+    "beta",
     "dHdt",
+    "climatic_mass_balance",
     "diffusivity",
     "frontal_melt_rate",
     "frontal_melt_retreat_rate",
@@ -135,6 +137,7 @@ spatial_ts_vars["outlet"] = [
     "ice_mass",
     "mask",
     "mass_fluxes",
+    "nuH",
     "sftgif",
     "taud",
     "tendency_of_subglacial_water_mass",
@@ -390,7 +393,7 @@ def generate_grid_description(grid_resolution, domain, restart=False):
 
     elif domain.lower() in ("synth_jib"):
 
-        mx_max = 2700
+        mx_max = 3000
         my_max = 1000
 
         resolution_max = 100
