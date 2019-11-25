@@ -74,27 +74,62 @@ mu = 5e-4
 
 # Bed
 Z_c = np.ones_like(X)
-Z_c[X < x_r] = 1 + beta_r * (x_r - X[X < x_r])
-Z_c[X >= x_t] = np.exp(-(beta_t * (x_t - X[X >= x_t])) ** 2)
-Z_b = -Z_c * np.exp(-(mu * Y) ** 2) * H_m
+
+# Ellipsoid center
+xe = x0
+ye = 0
+ze = 250
+
+# Ellipsoid parameters
+a = 500e3
+b = 50e3
+c = 250
+
+Ze = -c * np.sqrt(
+    1 - ((np.array(X, dtype=np.complex) - xe) / a) ** 2 - ((np.array(Y, dtype=np.complex) - ye) / b) ** 2
+)
+Ze = np.real(Ze) + ze
+
+# Z_c = Ze
+
+# Z_c[X < x_r] = 1 + beta_r * (x_r - X[X < x_r])
+# Z_c[X >= x_t] = np.exp(-(beta_t * (x_t - X[X >= x_t])) ** 2)
+# Z_b = -Z_c * np.exp(-(mu * Y) ** 2) * H_m
+
+# Ellipsoid center
+xc = 15e3
+yc = 0
+zc = 250
+
+# Ellipsoid parameters
+ac = 25e3
+bc = 3.5e3
+cc = 1500
+
+
+Zc = -cc * np.sqrt(
+    1 - ((np.array(X, dtype=np.complex) - xc) / ac) ** 2 - ((np.array(Y, dtype=np.complex) - yc) / bc) ** 2
+)
+Zc = np.real(Zc) + zc
+
+Z_b = Zc + Ze
+# alpha = 0.10  # angle of plane
+# Xp = np.cos(np.deg2rad(alpha)) * X - np.sin(np.deg2rad(alpha)) * Z_b
+# Yp = Y
+# Zp = np.sin(np.deg2rad(alpha)) * X + np.cos(np.deg2rad(alpha)) * Z_b
+# # The only problem is now that Xp, Yp is no longer a regular grid, so you need to interpolate back onto the original grid:
+# points = np.vstack(((np.ndarray.flatten(Xp), np.ndarray.flatten(Yp)))).T
+# values = np.vstack((np.ndarray.flatten(Zp)))
+# xi = np.vstack((np.ndarray.flatten(X), np.ndarray.flatten(Y))).T
+# Zpi = griddata(points, values, xi, method="linear")
+
+# Z_b = Zpi.reshape(N, M)
 Z_b[X < 0] = -800
 
-alpha = 0.10  # angle of plane
-Xp = np.cos(np.deg2rad(alpha)) * X - np.sin(np.deg2rad(alpha)) * Z_b
-Yp = Y
-Zp = np.sin(np.deg2rad(alpha)) * X + np.cos(np.deg2rad(alpha)) * Z_b
-# The only problem is now that Xp, Yp is no longer a regular grid, so you need to interpolate back onto the original grid:
-points = np.vstack(((np.ndarray.flatten(Xp), np.ndarray.flatten(Yp)))).T
-values = np.vstack((np.ndarray.flatten(Zp)))
-xi = np.vstack((np.ndarray.flatten(X), np.ndarray.flatten(Y))).T
-Zpi = griddata(points, values, xi, method="linear")
-
-Z_b = Zpi.reshape(N, M)
-
 radius = 50e3
-xcl, ycl = 25e3, y0
-xcu, ycu = 25e3, y1
-a = 100e3
+xcl, ycl = 25e3, y0 - 10e3
+xcu, ycu = 25e3, y1 + 10e3
+a = 125e3
 b = 50e3
 
 CL = (X - xcl) ** 2 / a ** 2 + (Y - ycl) ** 2 / b ** 2 < 1 ** 2
