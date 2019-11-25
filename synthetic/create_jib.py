@@ -135,7 +135,7 @@ b = 50e3
 CL = (X - xcl) ** 2 / a ** 2 + (Y - ycl) ** 2 / b ** 2 < 1 ** 2
 CU = (X - xcu) ** 2 / a ** 2 + (Y - ycu) ** 2 / b ** 2 < 1 ** 2
 
-wall_elevation = 1000.0
+wall_elevation = 3000.0
 if has_sidewalls:
     Z_b[np.logical_or(CL, CU)] = wall_elevation
     Z_b[np.logical_and((X < xcl), (Y < ycl + b))] = wall_elevation
@@ -207,23 +207,28 @@ var_out.long_name = "mask: zeros (modeling domain) and ones (no-model buffer nea
 var_out.flag_values = 0.0, 1.0
 var_out.pism_intent = "model_state"
 ftt_mask = np.zeros_like(Z_b)
+nmm_width = 10e3
+ftt_mask[X < x0 + nmm_width + m_buffer] = 1
+ftt_mask[X > x1 - nmm_width - m_buffer] = 1
+ftt_mask[Y < y0 + nmm_width + m_buffer] = 1
+ftt_mask[Y > y1 - nmm_width - m_buffer] = 1
 if has_sidewalls:
     ftt_mask[np.logical_or(CL, CU)] = 1
     ftt_mask[np.logical_and((X < xcl), (Y < ycl + radius))] = 1
     ftt_mask[np.logical_and((X < xcu), (Y > ycu - radius))] = 1
 
 mask = np.fliplr(ftt_mask.reshape(N, M)[m_buffer_idy:-m_buffer_idy, m_buffer_idx:-m_buffer_idx])
+var_out[:] = 0
+
+var = "no_model_mask"
+var_out = nc.createVariable(var, "f", dimensions=("y", "x"))
+var_out.units = ""
+var_out.flag_meanings = "normal special_treatment"
+var_out.long_name = "mask: zeros (modeling domain) and ones (no-model buffer near grid edges)"
+var_out.flag_values = 0.0, 1.0
+var_out.pism_intent = "model_state"
+
 var_out[:] = mask
-
-# var = "no_model_mask"
-# var_out = nc.createVariable(var, "f", dimensions=("y", "x"))
-# var_out.units = ""
-# var_out.flag_meanings = "normal special_treatment"
-# var_out.long_name = "mask: zeros (modeling domain) and ones (no-model buffer near grid edges)"
-# var_out.flag_values = 0.0, 1.0
-# var_out.pism_intent = "model_state"
-
-# var_out[:] = mask
 
 
 nc.close()
