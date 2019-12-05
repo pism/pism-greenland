@@ -248,8 +248,8 @@ ppq = 0.6
 tefo = 0.020
 phi_min = 15.0
 phi_max = 45.0
-topg_min = -700
-topg_max = 300
+topg_min = -900
+topg_max = 500
 
 std_dev = 4.23
 lapse_rate = 6
@@ -386,6 +386,7 @@ for n, combination in enumerate(combinations):
                     "pseudo_plastic_q": ppq,
                     "till_effective_fraction_overburden": tefo,
                     "vertical_velocity_approximation": vertical_velocity_approximation,
+                    "stress_balance.sia.bed_smoother.range": 0.0,
                 }
 
                 if start == simulation_start_year and initialstatefile is None:

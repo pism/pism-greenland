@@ -65,6 +65,8 @@ m_buffer_idy = int(m_buffer / dy)
 MM = int(M - m_buffer / dx * 2)
 NN = int(N - m_buffer / dy * 2)
 
+nmm_width = 10e3
+
 H_m = 1200
 x_t = 15e3
 x_r = 7e3
@@ -97,14 +99,14 @@ Ze = np.real(Ze) + ze
 # Z_b = -Z_c * np.exp(-(mu * Y) ** 2) * H_m
 
 # Ellipsoid center
-xc = 15e3
+xc = 10e3
 yc = 0
 zc = 250
 
 # Ellipsoid parameters
 ac = 25e3
-bc = 3.5e3
-cc = 1500
+bc = 4.0e3
+cc = 750
 
 
 Zc = -cc * np.sqrt(
@@ -141,6 +143,10 @@ if has_sidewalls:
     Z_b[np.logical_and((X < xcl), (Y < ycl + b))] = wall_elevation
     Z_b[np.logical_and((X < xcu), (Y > ycu - b))] = wall_elevation
 
+    Z_b[X < x0 + nmm_width + m_buffer] = wall_elevation
+    Z_b[X > x1 - nmm_width - m_buffer] = wall_elevation
+    Z_b[Y < y0 + nmm_width + m_buffer] = wall_elevation
+    Z_b[Y > y1 - nmm_width - m_buffer] = wall_elevation
 
 # Surface
 Z_s = np.zeros_like(X) + 0
@@ -197,6 +203,10 @@ if has_sidewalls:
     thickness[np.logical_or(CL, CU)] = 0
     thickness[np.logical_and((X < xcl), (Y < ycl + radius))] = 0
     thickness[np.logical_and((X < xcu), (Y > ycu - radius))] = 0
+    thickness[X < x0 + nmm_width + m_buffer] = 0
+    thickness[X > x1 - nmm_width - m_buffer] = 0
+    thickness[Y < y0 + nmm_width + m_buffer] = 0
+    thickness[Y > y1 - nmm_width - m_buffer] = 0
 var_out[:] = np.fliplr(thickness[m_buffer_idy:-m_buffer_idy, m_buffer_idx:-m_buffer_idx])
 
 var = "ftt_mask"
@@ -207,7 +217,6 @@ var_out.long_name = "mask: zeros (modeling domain) and ones (no-model buffer nea
 var_out.flag_values = 0.0, 1.0
 var_out.pism_intent = "model_state"
 ftt_mask = np.zeros_like(Z_b)
-nmm_width = 10e3
 ftt_mask[X < x0 + nmm_width + m_buffer] = 1
 ftt_mask[X > x1 - nmm_width - m_buffer] = 1
 ftt_mask[Y < y0 + nmm_width + m_buffer] = 1
@@ -218,7 +227,7 @@ if has_sidewalls:
     ftt_mask[np.logical_and((X < xcu), (Y > ycu - radius))] = 1
 
 mask = np.fliplr(ftt_mask.reshape(N, M)[m_buffer_idy:-m_buffer_idy, m_buffer_idx:-m_buffer_idx])
-var_out[:] = 0
+var_out[:] = mask
 
 var = "no_model_mask"
 var_out = nc.createVariable(var, "f", dimensions=("y", "x"))

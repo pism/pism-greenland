@@ -35,7 +35,7 @@ def generate_domain(domain):
     if domain.lower() in ("greenland", "gris", "gris_ext", "ismip6"):
         pism_exec = "pismr"
     elif domain.lower() in ("synth_jib", "synth_ellps"):
-        pism_exec = "pismr -regional -calving_wrap_around"
+        pism_exec = "pismr -regional -calving_wrap_around -ssa_dirichelt_bc"
     elif domain.lower() in ("hia"):
         x_min = -652200.0
         x_max = -232600.0
@@ -129,6 +129,7 @@ spatial_ts_vars["outlet"] = [
     "dHdt",
     "climatic_mass_balance",
     "diffusivity",
+    "diffusivity_staggered",
     "frontal_melt_rate",
     "frontal_melt_retreat_rate",
     "grounding_line_flux",
@@ -139,6 +140,8 @@ spatial_ts_vars["outlet"] = [
     "mass_fluxes",
     "nuH",
     "sftgif",
+    "tauc",
+    "tillphi",
     "taud",
     "tendency_of_subglacial_water_mass",
     "thk",
