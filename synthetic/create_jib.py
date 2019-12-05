@@ -143,7 +143,7 @@ if has_sidewalls:
     Z_b[np.logical_and((X < xcl), (Y < ycl + b))] = wall_elevation
     Z_b[np.logical_and((X < xcu), (Y > ycu - b))] = wall_elevation
 
-    Z_b[X < x0 + nmm_width + m_buffer] = wall_elevation
+    Z_b[X > x1 - nmm_width - m_buffer] = wall_elevation
     Z_b[Y < y0 + nmm_width + m_buffer] = wall_elevation
     Z_b[Y > y1 - nmm_width - m_buffer] = wall_elevation
 
