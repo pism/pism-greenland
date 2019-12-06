@@ -9,5 +9,5 @@ ELA1500-7-VC0.5,-3.0,2.0,0,1500,2000,0.5,diffuse,
 ELA1500-8-VC0.5,-3.5,2.0,0,1500,2000,0.5,diffuse,
 ELA1750-1-VC0.5,-3.5,2.0,0,1750,2000,0.5,diffuse,
 ELA1750-2-VC0.5,-1.0,2.0,0,1750,2000,0.5,diffuse,
-STEADY,-1.0,2.0,0,1750,2000,0.5,steady,jak_runoff_1000m.nc
-ROUTING,-1.0,2.0,0,1750,2000,0.5,routing,jak_runoff_1000m.nc
+STEADY,-1.0,2.0,0,1750,2000,0.4,steady,synth_jib_runoff_g1000m.nc
+ROUTING,-1.0,2.0,0,1750,2000,0.4,routing,synth_jib_runoff_g1000m.nc

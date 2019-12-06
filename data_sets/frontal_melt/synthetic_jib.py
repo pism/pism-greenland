@@ -18,7 +18,7 @@ args = options.FILE
 grid_spacing = options.grid_spacing
 
 if len(args) == 0:
-    nc_outfile = "jak_runoff_" + str(grid_spacing) + "m.nc"
+    nc_outfile = "synth_jib_runoff_g" + str(grid_spacing) + "m.nc"
 elif len(args) == 1:
     nc_outfile = args[0]
 else:
@@ -32,8 +32,8 @@ else:
 dx = dy = grid_spacing  # m
 
 # Domain extend
-x0, x1 = -20.0e3, 150.0e3
-y0, y1 = -25.0e3, 25.0e3
+x0, x1 = -50.0e3, 250.0e3
+y0, y1 = -50.0e3, 50.0e3
 
 # shift to cell centers
 x0 += dx / 2
@@ -67,35 +67,36 @@ nc = NC(nc_outfile, "w", format="NETCDF4")
 
 nc.createDimension("x", size=MM)
 nc.createDimension("y", size=NN)
-nc.createDimension("time", size=365)
+nc.createDimension("time")
 nc.createDimension("nb", size=2)
 
-t = np.arange(0, 365) + 0.5
+time = np.arange(0, 3650) + 0.5
 
-m_runoff = 1000  # kg m-2 year-1
-x_r = 100e3  # m
+m_runoff = 4.0 * 910.0  # kg m-2 year-1
+x_r = 500e3  # m
 
 runoff = m_runoff - m_runoff / x_r * X
 runoff[X < 0] = 0
-runoff[X > 100e3] = 0
+runoff[X > x_r] = 0
+runoff = np.fliplr(runoff)
 
-m_theta = 1.0
-theta = np.zeros_like(X) + m_theta
+m_theta = 4.0
+theta = np.fliplr(np.zeros_like(X) + m_theta)
 
 var = "time"
 var_out = nc.createVariable(var, "d", dimensions=("time"))
 var_out.axis = "T"
-var_out.units = "days since 1-1-1"
+var_out.units = "day"
 var_out.calendar = "365_day"
 var_out.long_name = "time"
 var_out.bounds = "time_bounds"
-var_out[:] = t
+var_out[:] = time
 
 var = "time_bounds"
 var_out = nc.createVariable(var, "d", dimensions=("time", "nb"))
 var_out.bounds = "time_bounds"
-var_out[:, 0] = t - 0.5
-var_out[:, 1] = t + 0.5
+var_out[:, 0] = time - 0.5
+var_out[:, 1] = time + 0.5
 
 var = "x"
 var_out = nc.createVariable(var, "d", dimensions=("x"))
@@ -117,16 +118,17 @@ var = "water_input_rate"
 var_out = nc.createVariable(var, "f", dimensions=("time", "y", "x"))
 var_out.units = "kg m-2 year-1"
 
-for t in range(0, 365):
-    var_out[t, :] = 0
-for t in range(121, 245):
-    var_out[t, :] = runoff[m_buffer_idy:-m_buffer_idy, m_buffer_idx:-m_buffer_idx]
+for year in range(0, 10):
+    for day in range(0, 365):
+        var_out[year * 365 + day, :] = 0
+        if (day > 120) and (day < 245):
+            var_out[year * 365 + day, :] = runoff[m_buffer_idy:-m_buffer_idy, m_buffer_idx:-m_buffer_idx]
 
 var = "theta_ocean"
 var_out = nc.createVariable(var, "f", dimensions=("time", "y", "x"))
 var_out.units = "Celsius"
 
-for t in range(0, 365):
+for t in time:
     var_out[t, :] = theta[m_buffer_idy:-m_buffer_idy, m_buffer_idx:-m_buffer_idx]
 
 

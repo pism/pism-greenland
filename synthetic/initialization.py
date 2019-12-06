@@ -355,6 +355,7 @@ for n, combination in enumerate(combinations):
                     "o": join(dirs["state"], outfile),
                     "o_format": oformat,
                     "config_override": "$config",
+                    "profile": join(dirs["performance"], "profile_${job_id}.py".format(**batch_system)),
                 }
 
                 if start == simulation_start_year:
@@ -408,10 +409,11 @@ for n, combination in enumerate(combinations):
                 hydrology_parameters = {
                     "hydrology.routing.include_floating_ice": True,
                     "hydrology.add_water_input_to_till_storage": False,
+                    "hydrology.surface_innput.period": 10,
                 }
                 if frontal_melt_file:
                     hydrology_parameters[
-                        "hydrology.surface_input_file"
+                        "hydrology.surface_input.file"
                     ] = "$input_dir/data_sets/frontal_melt/{}".format(frontal_melt_file)
 
                     frontalmelt_parameters = {

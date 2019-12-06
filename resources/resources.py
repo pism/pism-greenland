@@ -126,6 +126,7 @@ spatial_ts_vars["hydro"] = [
 
 spatial_ts_vars["outlet"] = [
     "beta",
+    "bwatvel",
     "dHdt",
     "climatic_mass_balance",
     "diffusivity",
@@ -135,10 +136,12 @@ spatial_ts_vars["outlet"] = [
     "grounding_line_flux",
     "height_above_flotation",
     "hydraulic_potential",
+    "hydraulic_potential_adjustment",
     "ice_mass",
     "mask",
     "mass_fluxes",
     "nuH",
+    "subglacial_water_flux",
     "sftgif",
     "tauc",
     "tillphi",
