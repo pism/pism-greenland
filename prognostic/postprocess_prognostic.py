@@ -219,6 +219,8 @@ if __name__ == "__main__":
     files.extend(glob.glob(join(scalar_dir, "*.nc")))
     files.extend(glob.glob(join(spatial_dir, "*.nc")))
 
+    # Only process files that match "MODEL"
+    files = [x for x in files if MODEL in x]
     metadata = {"base_dir": base_dir}
     pool = Pool(n_procs)
     pool.map(partial(process_file, metadata=metadata), files)

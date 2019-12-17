@@ -29,6 +29,7 @@ for (( i=1; i<${n}+1; i++ )); do
     oldexp=${oldexps[$i-1]}
     newexp=${newexps[$i-1]}
     echo "Renaming ${oldexp} to ${newexp}"
+    mkdir -p ${outdir}/${GROUP}/${MODEL}/${newexp}_01
     CDO_FILE_SUFFIX=_${IS}_${GROUP}_${MODEL}_${newexp}.nc cdo -O -f nc4 -z zip_3 splitname  ${indir}_tmp/ex_${d}_g${g}m_v3a_id_EXP-${oldexp}_2015-1-1_2100-1-1.nc  ${indir}/spatial/
     CDO_FILE_SUFFIX=_${IS}_${GROUP}_${MODEL}_${newexp}.nc cdo -O -f nc4 -z zip_3 splitname  ${indir}/scalar/ts_${d}_g${g}m_v3a_id_EXP-${oldexp}_2015-1-1_2100-1-1.nc  ${indir}/${scalar_dir}/
 done
