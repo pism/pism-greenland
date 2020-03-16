@@ -49,6 +49,6 @@ mpiexec -n 48 $HOME/pism/bin/pismr \
         -energy none \
         -hydrology.surface_input.file ../data_sets/runoff/DMI-HIRHAM5_GL2_ERAI_1980_2016_MRROS_EPSG3413_4500m_MM.nc \
         -extra_times monthly \
-        -extra_vars bwat,tillwat,hydrology_fluxes,subglacial_water_input_rate_from_surface,subglacial_water_flux_mag \
+        -extra_vars bwat,tillwat,hydrology_fluxes,subglacial_water_input_rate,subglacial_water_flux_mag \
         -extra_file $output_dir/ex_g4500m_water_routing_DMI-HIRHAM5_GL2_ERAI_1980_2016_MM.nc \
-        -verbose 3 > $output_dir/job.$SLURM_JOBID 2>&1
+         > $output_dir/job.$SLURM_JOBID 2>&1
