@@ -38,8 +38,11 @@ do
   mkdir -p $each
 done
 
+GRID=$1
+
 mpiexec -n 48 $HOME/pism/bin/pismr \
-        -i ../data_sets/bed_dem/pism_Greenland_4500m_mcb_jpl_v4_ctrl.nc \
+        -i ../data_sets/bed_dem/pism_Greenland_${GRID}m_mcb_jpl_v4_ctrl.nc \
+        -o_size none \
         -bootstrap \
         -Mz 3 \
         -time_file ../data_sets/runoff/DMI-HIRHAM5_GL2_ERAI_1980_2016_MRROS_EPSG3413_4500m_MM.nc \
@@ -47,8 +50,8 @@ mpiexec -n 48 $HOME/pism/bin/pismr \
         -hydrology.tillwat_max 0 \
         -stress_balance none \
         -energy none \
-        -hydrology.surface_input.file ../data_sets/runoff/DMI-HIRHAM5_GL2_ERAI_1980_2016_MRROS_EPSG3413_4500m_MM.nc \
+        -hydrology.surface_input.file ../data_sets/runoff/DMI-HIRHAM5_GL2_ERAI_1980_2016_MRROS_EPSG3413_${GRID}m_MM.nc \
         -extra_times monthly \
         -extra_vars bwat,tillwat,hydrology_fluxes,subglacial_water_input_rate,subglacial_water_flux_mag \
-        -extra_file $output_dir/ex_g4500m_water_routing_DMI-HIRHAM5_GL2_ERAI_1980_2016_MM.nc \
+        -extra_file $output_dir/ex_g${GRID}m_water_routing_DMI-HIRHAM5_GL2_ERAI_1980_2016_MM.nc \
          > $output_dir/job.$SLURM_JOBID 2>&1
