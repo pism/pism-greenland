@@ -55,3 +55,5 @@ mpiexec -n 48 $HOME/pism/bin/pismr \
         -extra_vars bwat,tillwat,hydrology_fluxes,subglacial_water_input_rate,subglacial_water_flux_mag \
         -extra_file $output_dir/ex_g${GRID}m_water_routing_DMI-HIRHAM5_GL2_ERAI_1980_2016_MM.nc \
          > $output_dir/job.$SLURM_JOBID 2>&1
+
+ncks -O -4 -L 2 $output_dir/ex_g${GRID}m_water_routing_DMI-HIRHAM5_GL2_ERAI_1980_2016_MM.nc $output_dir/ex_g${GRID}m_water_routing_DMI-HIRHAM5_GL2_ERAI_1980_2016_MM.nc
