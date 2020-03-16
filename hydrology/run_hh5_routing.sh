@@ -41,7 +41,7 @@ done
 GRID=$1
 
 mpiexec -n 48 $HOME/pism/bin/pismr \
-        -i ../data_sets/bed_dem/pism_Greenland_${GRID}m_mcb_jpl_v4_ctrl.nc \
+        -i ../data_sets/bed_dem/pism_Greenland_${GRID}m_mcb_jpl_v4_wc.nc \
         -o_size none \
         -bootstrap \
         -Mz 3 \
