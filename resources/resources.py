@@ -126,6 +126,7 @@ spatial_ts_vars["hydro"] = [
 
 spatial_ts_vars["outlet"] = [
     "beta",
+    "bmelt",
     "bwatvel",
     "dHdt",
     "climatic_mass_balance",
@@ -556,6 +557,8 @@ def generate_calving(calving, **kwargs):
         params_dict["calving"] = calving
     elif calving in ("vonmises_nofloat_calving"):
         params_dict["calving"] = "vonmises_calving,float_kill".format(calving)
+    elif calving in ("hayhurst_nofloat_calving"):
+        params_dict["calving"] = "hayhurst_calving,float_kill".format(calving)
     elif calving in ("eigen_calving", "vonmises_calving"):
         params_dict["calving"] = "{},thickness_calving".format(calving)
     elif calving in ("hybrid_calving"):
