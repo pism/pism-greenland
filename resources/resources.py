@@ -157,6 +157,26 @@ spatial_ts_vars["outlet"] = [
     "vonmises_calving_rate",
 ]
 
+spatial_ts_vars["strain"] = [
+    "beta",
+    "dHdt",
+    "deviatoric_stresses",
+    "diffusivity",
+    "effective_viscosity",
+    "frontal_melt_rate",
+    "frontal_melt_retreat_rate",
+    "ice_mass",
+    "mask",
+    "mass_fluxes",
+    "sftgif",
+    "strain_rates",
+    "thk",
+    "tillwat",
+    "topg",
+    "usurf",
+    "velbase_mag",
+    "velsurf_mag",
+]
 
 def generate_spatial_ts(outfile, exvars, step, start=None, end=None, split=None, odir=None):
     """

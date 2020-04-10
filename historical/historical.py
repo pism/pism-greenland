@@ -98,7 +98,7 @@ parser.add_argument(
 parser.add_argument(
     "--spatial_ts",
     dest="spatial_ts",
-    choices=["basic", "standard", "none", "ismip6"],
+    choices=["basic", "standard", "none", "ismip6", "strain"],
     help="output size type",
     default="basic",
 )
