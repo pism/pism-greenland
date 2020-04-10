@@ -57,7 +57,14 @@ parser.add_argument(
 parser.add_argument(
     "--calving",
     dest="calving",
-    choices=["float_kill", "vonmises_calving", "eigen_calving", "vonmises_nofloat_calving"],
+    choices=[
+        "float_kill",
+        "vonmises_calving",
+        "eigen_calving",
+        "vonmises_nofloat_calving",
+        "hayhurst_calving",
+        "hayhurst_nofloat_calving",
+    ],
     help="calving",
     default="float_kill",
 )
@@ -409,7 +416,7 @@ for n, combination in enumerate(combinations):
                 hydrology_parameters = {
                     "hydrology.routing.include_floating_ice": True,
                     "hydrology.add_water_input_to_till_storage": False,
-                    "hydrology.surface_innput.period": 10,
+                    "hydrology.surface_innput.period": 1,
                 }
                 if frontal_melt_file:
                     hydrology_parameters[
@@ -433,8 +440,10 @@ for n, combination in enumerate(combinations):
 
                 calving_params_dict = generate_calving(calving, **calving_parameters)
 
-                ocean_params_dict = {}
-                ocean_params_dict["ocean"] = "constant"
+                ocean_params_dict = {
+                    "ocean": "th",
+                    "ocean.th.file": "$input_dir/data_sets/frontal_melt/{}".format(frontal_melt_file),
+                }
 
                 frontalmelt_params_dict = frontalmelt_parameters
 

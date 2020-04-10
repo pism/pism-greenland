@@ -131,5 +131,9 @@ var_out.units = "Celsius"
 for t in time:
     var_out[t, :] = theta[m_buffer_idy:-m_buffer_idy, m_buffer_idx:-m_buffer_idx]
 
+var = "salinity_ocean"
+var_out = nc.createVariable(var, "f", dimensions=("time", "y", "x"))
+var_out.units = "g/kg"
+var_out = 34.0
 
 nc.close()
