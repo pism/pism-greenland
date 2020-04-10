@@ -3,11 +3,10 @@ from cdo import Cdo
 from datetime import datetime, timedelta
 import gdal
 from glob import glob
-
+from os.path import join, split
 cdo = Cdo()
 reftime = "2008-1-1"
 
-# Let's just process the two velocity compontents:
 components = ["vx", "vy", "vv"]
 
 download_dir = "data"
@@ -31,7 +30,8 @@ for glacier in ["W69.10N"]:
         end_date = datetime.strptime(end_date_str, "%d%b%y")
         nominal_date = start_date + (end_date - start_date) / 2
         # Set the time axis
-        cdo.settaxis(nominal_date.isoformat(), input=f"""-setreftime,{reftime} -setattribute,{var}@units="m year-1" -chname,Band1,{var} {f_nc}""", output=f"{download_dir}/cdo_{f_nc}", options="-f nc4 -z zip_2")
+        out_file = split(f_nc)[-1]
+        cdo.settaxis(nominal_date.isoformat(), input=f"""-setreftime,{reftime} -setattribute,{var}@units="m year-1" -chname,Band1,{var} {f_nc}""", output=f"{download_dir}/cdo_{out_file}", options="-f nc4 -z zip_2")
 
 # Merge the indiviual compontents and sort by time using "mergetime"
 for v in components:
