@@ -8,7 +8,7 @@ cdo = Cdo()
 reftime = "2008-1-1"
 
 # Let's just process the two velocity compontents:
-components = ["vx", "vy"]
+components = ["vx", "vy", "vv"]
 
 download_dir = "data"
 
@@ -16,8 +16,8 @@ for glacier in ["W69.10N"]:
     f_tiffs = glob(f"{download_dir}/TSX_{glacier}_*_v02.0.tif")
     
     for f_tiff in f_tiffs:
-        print(f"Converting {f_tiff} to {f_nc}")
         f_nc = f_tiff.replace(".tif", ".nc")
+        print(f"Converting {f_tiff} to {f_nc}")
         # use gdal's python binging to convert GeoTiff to netCDF
         # advantage of GDAL: it gets the projection information right
         # disadvantage: the variable is named "Band1", lacks metadata
