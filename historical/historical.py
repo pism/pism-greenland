@@ -131,7 +131,11 @@ parser.add_argument(
     default="ssa+sia",
 )
 parser.add_argument(
-    "--dataset_version", dest="version", choices=["2", "3", "3a", "4"], help="input data set version", default="3a"
+    "--dataset_version",
+    dest="version",
+    choices=["2", "3", "3a", "4", "1980"],
+    help="input data set version",
+    default="3a",
 )
 parser.add_argument(
     "--vertical_velocity_approximation",
