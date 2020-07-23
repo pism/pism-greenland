@@ -13,108 +13,270 @@ This script uses the isothermal flow law, so ice thickness is irrelevant but sho
 positive in the ice-covered area. The enthalpy value does not matter.
 """
 
-#### I need to mimic this: Ross_combined.nc plus the script that made it
-# Script in the main PISM repo, it's in examples/ross/preprocess.py
-#input_file = "~/github/pism/pism/examples/ross/Ross_combined.nc"
-#input_file = "Ross_combined.nc"
-velocity_file = 'outputs/TSX_W69.10N_2008_2020_pism_filled.nc'
-bedmachine_file = 'outputs/BedMachineGreenland-2017-09-20_pism_W69.10N.nc'
 import PISM
-ctx = PISM.Context()
-config = ctx.config
 
-# This is a way to set the ice softness (and therefore hardness)
-# We will have to make a decision about this, we are not modeling T profile of ice
-# It makes sense to use an isothermal flow law: ice softness is a prescribed constant
-# and hardness is related to softness.
-config.set_number("flow_law.isothermal_Glen.ice_softness", 3.1689e-24)
+def create_grid(ctx, filename, variable_name):
+    """Create a shallow (2 vertical levels) computational grid by
+    extracting grid information from a NetCDF variable.
 
-# get grid information from the variable "thk" in a file.
-# (Not a full-blown 3D grid, by getting from thk which is a 2D variable)
-grid = PISM.IceGrid.FromFile(ctx.ctx, bedmachine_file, ["thickness"], PISM.CELL_CENTER)
+    """
+    return PISM.IceGrid.FromFile(ctx, filename, [variable_name], PISM.CELL_CENTER)
 
-# allocate storage for ice enthalpy
-# Has to be there because model expects as part of input, but its content doesn't matter.
-# It has a dummy vertical dimension with as few vertical levels as possible,
-# it only has 2 levels.
-ice_enthalpy = PISM.IceModelVec3(grid, "enthalpy", PISM.WITH_GHOSTS, 2)
-ice_enthalpy.set(0.0)
+def init_geometry(grid, filename, min_ice_thickness):
+    """Allocate storage for ice thickness and bed elevation (and other
+    geometry-related fields) and initialize them from a NetCDF file.
 
-# allocate storage for ice velocity
-# 2V ===> Vectorfield, allocates 2 fields, stored interlaced in RAM, separately in files.
-ice_velocity = PISM.IceModelVec2V(grid, "_ssa_bc", PISM.WITH_GHOSTS, 2)
+    """
+    # Geometry is a struct containing a bunch of IceModelVec instances.
+    # It automatically pre-fills all the attributes in the constructor of Geometry.
+    geometry = PISM.Geometry(grid)
 
-# These two calls set internal and "human-friendly" units. Data read from a file will be
-# converted into internal units.
-# Ignore "input", long_name, internal_units, human_units, std_name, index into vector
-ice_velocity.set_attrs("input", "x-component of ice velocity", "m / s", "m / year", "", 0)
-ice_velocity.set_attrs("input", "y-component of ice velocity", "m / s", "m / year", "", 1)
-ice_velocity.read(velocity_file, 0)   # 0 ==> first record of that file (if time-dependent)
+    # Read the first last record of ice thickness and bed
+    # elevation, stopping if not found
+    geometry.ice_thickness.regrid(filename, critical=True)
+    geometry.bed_elevation.regrid(filename, critical=True)
+    geometry.sea_level_elevation.set(0.0)
 
-# Geometry is a struct containing a bunch of these IceModelVec instances.
-# It automatically pre-fills the constructor of Geometry, all the attributes.
-# It's easier to just do that, rather than allocating the handful of them we may need.
-# allocate storage for all geometry-related fields. This does more than we need (but it's
-# easy).
-geometry = PISM.Geometry(grid)
+    geometry.ensure_consistency(min_ice_thickness)
 
-# read the first (0th) record of ice thickness and bed elevation
-#geometry.ice_thickness.read(bedmachine_file, 0)
-#geometry.bed_elevation.read(bedmachine_file, 0)
-geometry.ice_thickness.regrid(bedmachine_file, critical=True)
-geometry.bed_elevation.regrid(bedmachine_file, critical=True)
-geometry.sea_level_elevation.set(0.0)
+    return geometry
 
-# Compute ice_free_thickness_standard based on what we just set above.
-# We're grabbing ice_free_thickness_standard from our config database and
-# using it to compute surface elevation and cell type.
-# Generally, think of ice_free_thickness_standard == 0
-# ensure consistency of geometry (computes surface elevation and cell type)
-geometry.ensure_consistency(config.get_number("geometry.ice_free_thickness_standard"))
+def init_velocity(grid, filename, record_index=0):
+    """Allocate storage for ice velocity and initialize it from a file."""
+    # allocate storage for ice velocity
+    ice_velocity = PISM.model.create2dVelocityVec(grid, "_ssa_bc", stencil_width=2)
+    ice_velocity.read(filename, record_index)
 
-# allocate the flow law
-flow_law_factory = PISM.FlowLawFactory("calving.vonmises_calving.",
-                                       ctx.config, ctx.enthalpy_converter)
-flow_law_factory.set_default("isothermal_glen")
-flow_law = flow_law_factory.create()
+    return ice_velocity
 
-# allocate and initialize the calving model
-model = PISM.CalvingvonMisesCalving(grid, flow_law)
-model.init()
+class FrontEvolution(object):
 
-# compute the calving rate
-model.update(geometry.cell_type, geometry.ice_thickness, ice_velocity, ice_enthalpy)
+    def __init__(self, grid, ice_softness=3.1689e-24, sigma_max=1e6):
+        self.grid = grid
+        self.ctx = grid.ctx()
+        self.config = grid.ctx().config()
 
-# Writes just a scalar: movement of the front in horizontal direction, by how much (s-1)
-# the front retreats.  Currently, how it's used in PISM, it's computed at ice-free locations
-# immediately adjacent to the calving front.  That's where it would be applied by
-# PISM's parameterization of sub-grid position of the calving front.
-# save to an output file
-output = PISM.util.prepare_output("output.nc")
-model.calving_rate().write(output)
-geometry.ice_thickness.write(output)    # One more thing to write
-output.close()
+        # Use the sub-grid parameterization of the front position.
+        self.config.set_flag("geometry.part_grid.enabled", True)
 
-# this is a way to access the calving rate in a Python script without saving to a file
-# rate = model.calving_rate().numpy()
+        self.min_thickness = self.config.get_number("geometry.ice_free_thickness_standard")
 
-front_retreat = PISM.FrontRetreat(grid)
+        # Allocate storage for ice enthalpy.
+        #
+        # Has to be there because model expects as part of input, but its content doesn't matter.
+        #
+        # It has a dummy vertical dimension with as few vertical
+        # levels as possible, it only has 2 levels.
+        self.ice_enthalpy = PISM.IceModelVec3(grid, "enthalpy", PISM.WITH_GHOSTS, 2)
+        self.ice_enthalpy.set(0.0)
 
-retreat_rate = PISM.IceModelVec2S(grid, "total_retreat_rate", PISM.WITHOUT_GHOSTS)
-retreat_rate.set_attrs("output", "rate of ice front retreat", "m / s", "m / s", "", 0)
+        # The GeometryEvolution class requires both the "advective"
+        # (sliding) velocity and the SIA (diffusive) flux. We set it
+        # to zero here.
+        self.sia_flux = PISM.IceModelVec2Stag(grid, "sia_flux", PISM.WITHOUT_GHOSTS)
+        self.sia_flux.set(0.0)
 
-# Use our calving for retreat rate: produces dtmax_s = NaN (_s = seconds)
-retreat_rate.copy_from(model.calving_rate())
-# Use this, and it produces a super-large dtmax_s
-#retreat_rate.set(0.0)
-# Do this, and it produces a "resonable" dtmax_s
-#retreat_rate.set(1000.0)
+        # Allocate storage for ice velocity.
+        self.ice_velocity = PISM.model.create2dVelocityVec(grid, "_ssa_bc", stencil_width=2)
 
-bc_mask = PISM.IceModelVec2Int(grid, "bc_mask", PISM.WITH_GHOSTS)
-bc_mask.set(0.0)
+        # Create the "Dirichlet BC" mask. This mask specifies
+        # locations where ice thickness is fixed, i.e. prescribed as a BC.
+        self.bc_mask = PISM.IceModelVec2Int(grid, "bc_mask", PISM.WITH_GHOSTS)
 
-dtmax_s = front_retreat.max_timestep(
-    geometry.cell_type,
-    bc_mask, retreat_rate).value()
+        # Storage for the retreat rate. Later on we will add the melt rate to this field.
+        self.retreat_rate = PISM.IceModelVec2S(grid, "total_retreat_rate", PISM.WITHOUT_GHOSTS)
+        self.retreat_rate.set_attrs("output", "rate of ice front retreat", "m / s", "m / day", "", 0)
 
-print('dtmax_s = {} s ({} days)'.format(dtmax_s, dtmax_s/86400.))
+        self.calving_model = self.create_calving_model(grid, ice_softness, sigma_max)
+
+        self.retreat_model = PISM.FrontRetreat(grid)
+
+        self.advance_model = PISM.GeometryEvolution(grid)
+
+        self.iceberg_remover = PISM.IcebergRemover(grid)
+
+        self.iceberg_remover.init()
+
+    def set_bc_mask(self, velocity, bc_mask):
+        """Set the BC mask to prevent ice thickness changes in areas where ice
+        velocity is missing.
+
+        """
+        huge_value = 1e6
+
+        bc_mask.set(0.0)
+
+        with PISM.vec.Access([velocity, bc_mask]):
+            for i, j in self.grid.points():
+                speed = velocity[i, j].magnitude()
+                if not speed < huge_value:
+                    bc_mask[i, j] = 1
+
+    def run(self, geometry, ice_velocity, run_length, report_filename=None):
+        """Perform a number of steps of the mass continuity equation and the
+        calving parameterization to evolve ice geometry.
+
+        """
+        day_length = 86400.0
+
+        if report_filename is not None:
+            output = PISM.util.prepare_output(report_filename, append_time=False)
+        else:
+            output = None
+
+        # create a copy of the velocity field. This copy will be
+        # modified to cap ice speeds.
+        self.ice_velocity.copy_from(ice_velocity)
+
+        # Set the BC mask: 1 (fix ice thickness) where ice velocity is
+        # missing, 0 (evolve thickness) elsewhere.
+        self.set_bc_mask(self.ice_velocity, self.bc_mask)
+
+        # Cap ice speed at ~15.8 km/year (5e-4 m/s).
+        self.cap_ice_speed(self.ice_velocity, valid_max=5e-4)
+
+        t = 0.0
+        while t < run_length:
+            # compute the calving rate
+            self.calving_model.update(geometry.cell_type, geometry.ice_thickness,
+                                      self.ice_velocity, self.ice_enthalpy)
+
+            self.retreat_rate.copy_from(self.calving_model.calving_rate())
+
+            # Adjust the retreat rate to make sure that it does not
+            # contain any NaNs or very large values.
+            self.replace_missing(self.retreat_rate)
+
+            dt_advance = PISM.max_timestep_cfl_2d(geometry.ice_thickness,
+                                                  geometry.cell_type,
+                                                  self.ice_velocity).dt_max.value()
+
+            dt_retreat = self.retreat_model.max_timestep(geometry.cell_type,
+                                                         self.bc_mask, self.retreat_rate).value()
+
+            dt = min(dt_advance, dt_retreat)
+
+            if t + dt > run_length:
+                dt = run_length - t
+
+            print(f"{t/day_length:.2f}, dt = {dt:.2f} (s) or {dt/day_length:2.2f} days")
+
+            self.advance_model.flow_step(geometry, dt, self.ice_velocity,
+                                         self.sia_flux, self.bc_mask)
+            self.advance_model.apply_flux_divergence(geometry)
+
+            geometry.ensure_consistency(self.min_thickness)
+
+            self.retreat_model.update_geometry(dt, geometry, self.bc_mask, self.retreat_rate,
+                                               geometry.ice_area_specific_volume,
+                                               geometry.ice_thickness)
+
+            # re-compute the cell type mask using 0 as the threshold
+            # to clean up *all* icebergs, no matter how thin
+            geometry.ensure_consistency(0.0)
+
+            # Remove "icebergs" (left-over patches of floating ice not
+            # connected to grounded ice).
+            self.iceberg_remover.update(self.bc_mask,
+                                        geometry.cell_type, geometry.ice_thickness)
+
+            geometry.ensure_consistency(self.min_thickness)
+
+            if output:
+                PISM.append_time(output, self.config, t)
+
+                geometry.ice_thickness.write(output)
+                geometry.cell_type.write(output)
+                self.retreat_rate.write(output)
+                self.advance_model.flux_divergence().write(output)
+
+            t += dt
+
+        if output:
+            output.close()
+
+    def cap_ice_speed(self, array, valid_max):
+        "Cap velocity at valid_max"
+        huge_value = 1e6
+        with PISM.vec.Access(array):
+            for i, j in self.grid.points():
+                speed = array[i, j].magnitude()
+                if not speed < huge_value:
+                    # replace missing values
+                    array[i, j].u = 0.0
+                    array[i, j].v = 0.0
+                elif speed > valid_max:
+                    # cap speeds exceeding valid_max
+                    C = valid_max / speed
+                    array[i, j].u *= C;
+                    array[i, j].v *= C;
+
+        array.update_ghosts()
+
+    def replace_missing(self, array, valid_max=1e6):
+        """Eliminate too large (usually NaN) values resulting from missing
+        input (usually ice velocity) values.
+
+        """
+        with PISM.vec.Access(array):
+            for i, j in self.grid.points():
+                if not array[i, j] < valid_max:
+                    array[i, j] = 0.0
+
+        array.update_ghosts()
+
+    def create_calving_model(self, grid, ice_softness, sigma_max):
+        """Create and initialize the calving model using the isothermal Glen
+        flow law with a given ice softness.
+
+        """
+        # This is a way to set the ice softness (and therefore hardness)
+        # We will have to make a decision about this, we are not modeling T profile of ice
+        #
+        # It makes sense to use an isothermal flow law: ice softness is a prescribed constant
+        # and hardness is related to softness.
+        self.config.set_number("flow_law.isothermal_Glen.ice_softness", ice_softness)
+
+        # allocate the flow law
+        flow_law_factory = PISM.FlowLawFactory("calving.vonmises_calving.",
+                                               self.ctx.config(), self.ctx.enthalpy_converter())
+        flow_law_factory.set_default("isothermal_glen")
+        flow_law = flow_law_factory.create()
+
+        # set the tuning parameter of the calving law
+        self.config.set_number("calving.vonmises_calving.sigma_max", sigma_max)
+
+        # allocate and initialize the calving model
+        model = PISM.CalvingvonMisesCalving(grid, flow_law)
+        model.init()
+
+        return model
+
+
+if __name__ == "__main__":
+
+    velocity_file   = 'outputs/TSX_W69.10N_2008_2020_pism_filled.nc'
+    bedmachine_file = 'outputs/BedMachineGreenland-2017-09-20_pism_W69.10N.nc'
+
+    ctx = PISM.Context()
+
+    # ignore ice that is less than min_thickness meters thick
+    min_ice_thickness = 50.0
+
+    ctx.config.set_number("geometry.ice_free_thickness_standard", min_ice_thickness)
+
+    grid = create_grid(ctx.ctx, bedmachine_file, "thickness")
+
+    geometry = init_geometry(grid, bedmachine_file, min_ice_thickness)
+
+    ice_velocity = init_velocity(grid, velocity_file)
+
+    # NB: here I use a low value of sigma_max to make it more
+    # interesting.
+    front_evolution = FrontEvolution(grid, sigma_max=1e5)
+
+    run_length_days = 120
+
+    front_evolution.run(geometry, ice_velocity,
+                        run_length=run_length_days * 86400,
+                        report_filename="test.nc")
