@@ -69,9 +69,16 @@ parser.add_argument(
     "-f",
     "--o_format",
     dest="oformat",
-    choices=["netcdf3", "netcdf4_parallel", "pnetcdf"],
+    choices=["netcdf3", "netcdf4_parallel", "netcdf4_serial", "pnetcdf"],
     help="output format",
-    default="netcdf4_parallel",
+    default="netcdf4_serial",
+)
+parser.add_argument(
+    "-L",
+    "--comp_level",
+    dest="compression_level",
+    help="Compression level for output file. Only works with netcdf4_serial.",
+    default=2,
 )
 parser.add_argument(
     "-g", "--grid", dest="grid", type=int, choices=grid_choices, help="horizontal grid resolution", default=9000
@@ -134,7 +141,7 @@ parser.add_argument(
 parser.add_argument(
     "--dataset_version",
     dest="version",
-    choices=["2", "3", "3a", "4", "1980", "1980a"],
+    choices=["2", "3", "3a", "4", "1980", "1980a", "1980v3"],
     help="input data set version",
     default="3a",
 )
@@ -164,6 +171,7 @@ input_dir = abspath(options.input_dir)
 output_dir = abspath(options.output_dir)
 spatial_tmp_dir = abspath(options.output_dir + "_tmp")
 
+compression_level = options.compression_level
 oformat = options.oformat
 osize = options.osize
 queue = options.queue
@@ -212,7 +220,7 @@ else:
 regridvars = "litho_temp,enthalpy,age,tillwat,bmelt,ice_area_specific_volume,thk"
 
 dirs = {"output": "$output_dir", "spatial_tmp": "$spatial_tmp_dir"}
-for d in ["state", "scalar", "spatial", "jobs", "basins"]:
+for d in ["performance", "state", "scalar", "spatial", "jobs", "basins"]:
     dirs[d] = "$output_dir/{dir}".format(dir=d)
 
 if spatial_ts == "none":
@@ -317,6 +325,8 @@ for n, combination in enumerate(combinations):
     (
         run_id,
         climate,
+        hydrology,
+        frontal_melt,
         climate_file,
         runoff_file,
         frontal_melt_file,
@@ -371,9 +381,11 @@ for n, combination in enumerate(combinations):
         pism = generate_prefix_str(pism_exec)
 
         general_params_dict = {
+            "profile": join(dirs["performance"], "profile_${job_id}.py".format(**batch_system)),
             "time_file": pism_timefile,
             "o": join(dirs["state"], outfile),
             "o_format": oformat,
+            "output.compression_level": compression_level,
             "config_override": "$config",
         }
 
@@ -389,6 +401,12 @@ for n, combination in enumerate(combinations):
 
         grid_params_dict = generate_grid_description(grid, domain)
 
+        THRESHOLD = 4.5e4  #  stress threshold
+        FRACRATE = 0.5  #  fracture rate
+        HEALTHRESHOLD = 2.0e-10  #  healing threshold
+        HEALRATE = 0.05  #  healing rate
+        SOFTRES = 0.01  #  softening residual (avoid viscosity from degeneration), value 1 inhibits softening effect
+
         sb_params_dict = {
             "sia_e": sia_e,
             "ssa_e": ssa_e,
@@ -396,6 +414,10 @@ for n, combination in enumerate(combinations):
             "pseudo_plastic_q": ppq,
             "till_effective_fraction_overburden": tefo,
             "vertical_velocity_approximation": vertical_velocity_approximation,
+            # "fractures": True,
+            # "fracture_parameters": "{},{},{},{}".format(FRACRATE, THRESHOLD, HEALRATE, HEALTHRESHOLD),
+            # "write_fd_fields": True,
+            # "scheme_fd2d": True,
         }
 
         sb_params_dict["topg_to_phi"] = ttphi
@@ -413,9 +435,27 @@ for n, combination in enumerate(combinations):
             "hydrology.routing.include_floating_ice": True,
             "hydrology.surface_input_file": "$input_dir/data_sets/ismip6/{}".format(runoff_file),
             "hydrology.routing.add_water_input_to_till_storage": False,
+            "hydrology.add_water_input_to_till_storage": False,
         }
 
         hydro_params_dict = generate_hydrology(hydrology, **hydrology_parameters)
+
+        if frontal_melt == "discharge_routing":
+            hydrology_parameters["hydrology.surface_input.file"] = "$input_dir/data_sets/ismip6/{}".format(
+                frontal_melt_file
+            )
+
+            frontalmelt_parameters = {
+                "frontal_melt": "routing",
+                "frontal_melt.routing.file": "$input_dir/data_sets/ismip6/{}".format(frontal_melt_file),
+            }
+        else:
+            frontalmelt_parameters = {
+                "frontal_melt": "discharge_given",
+                "frontal_melt.discharge_given.file": "$input_dir/data_sets/ismip6/{}".format(frontal_melt_file),
+            }
+
+        frontalmelt_params_dict = frontalmelt_parameters
 
         # Need to add salinity first
         ocean_parameters = {
@@ -425,13 +465,6 @@ for n, combination in enumerate(combinations):
         }
         ocean_params_dict = generate_ocean("th", **ocean_parameters)
         # ocean_params_dict = {}
-
-        frontalmelt_parameters = {
-            "frontal_melt": "discharge_given",
-            "frontal_melt.discharge_given.file": "$input_dir/data_sets/ismip6/{}".format(frontal_melt_file),
-        }
-
-        frontalmelt_params_dict = frontalmelt_parameters
 
         try:
             vcm = float(vcm)
@@ -489,11 +522,9 @@ for n, combination in enumerate(combinations):
         f.write(cmd)
         f.write("\n")
         f.write("\n")
-        f.write("ncks -O -4 -L 3 {ofile} {ofile}\n".format(ofile=join(dirs["state"], outfile)))
-        f.write("\n")
         if not spatial_ts == "none":
             f.write(
-                "ncks -O -4 -L 3 {tmpfile} {ofile}\n".format(
+                "mv {tmpfile} {ofile}\n".format(
                     tmpfile=spatial_ts_dict["extra_file"], ofile=join(dirs["spatial"], "ex_" + outfile)
                 )
             )

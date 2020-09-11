@@ -107,6 +107,7 @@ spatial_ts_vars["standard"] = [
     "bwat",
     "dHdt",
     "diffusivity",
+    "fracture_density",
     "height_above_flotation",
     "grounding_line_flux",
     "frontal_melt_rate",
@@ -115,6 +116,8 @@ spatial_ts_vars["standard"] = [
     "mask",
     "mass_fluxes",
     "sftgif",
+    "subglacial_discharge",
+    "tendency_of_subglacial_water_mass",
     "thk",
     "tillwat",
     "topg",
@@ -598,6 +601,7 @@ def generate_calving(calving, **kwargs):
 
     Returns: OrderedDict
     """
+
     params_dict = OrderedDict()
     if calving in ("thickness_calving", "hayhurst_calving"):
         params_dict["calving"] = calving
