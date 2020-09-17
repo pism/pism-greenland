@@ -99,6 +99,32 @@ spatial_ts_vars["basic"] = [
     "vonmises_stress",
 ]
 
+spatial_ts_vars["standard"] = [
+    "bmelt",
+    "basal_melt_rate_floating",
+    "basal_melt_rate_grounded",
+    "beta",
+    "bwat",
+    "dHdt",
+    "diffusivity",
+    "height_above_flotation",
+    "grounding_line_flux",
+    "frontal_melt_rate",
+    "frontal_melt_retreat_rate",
+    "ice_mass",
+    "mask",
+    "mass_fluxes",
+    "sftgif",
+    "thk",
+    "tillwat",
+    "topg",
+    "usurf",
+    "velbase_mag",
+    "velsurf_mag",
+    "vonmises_calving_rate",
+    "vonmises_stress",
+]
+
 spatial_ts_vars["hydro"] = [
     "basal_melt_rate_grounded",
     "bwat",
@@ -177,6 +203,7 @@ spatial_ts_vars["strain"] = [
     "velbase_mag",
     "velsurf_mag",
 ]
+
 
 def generate_spatial_ts(outfile, exvars, step, start=None, end=None, split=None, odir=None):
     """
@@ -571,7 +598,6 @@ def generate_calving(calving, **kwargs):
 
     Returns: OrderedDict
     """
-
     params_dict = OrderedDict()
     if calving in ("thickness_calving", "hayhurst_calving"):
         params_dict["calving"] = calving

@@ -28,6 +28,7 @@ import netrc
 import ssl
 import sys
 from getpass import getpass
+from os.path import isfile
 
 try:
     from urllib.parse import urlparse
@@ -177,7 +178,10 @@ def cmr_download(urls):
                 req.add_header('Authorization', 'Basic {0}'.format(credentials))
             opener = build_opener(HTTPCookieProcessor())
             data = opener.open(req).read()
-            open(filename, 'wb').write(data)
+            if not isfile(filename):
+                open(filename, 'wb').write(data)
+            else:
+                print("already")
         except HTTPError as e:
             print('HTTP error {0}, {1}'.format(e.code, e.reason))
         except URLError as e:

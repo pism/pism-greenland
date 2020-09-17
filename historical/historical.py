@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# Copyright (C) 2019 Andy Aschwanden
+# Copyright (C) 2019-20 Andy Aschwanden
 
 # Historical simulations for ISMIP6
 
@@ -64,6 +64,7 @@ parser.add_argument(
     default="ismip6",
 )
 parser.add_argument("--exstep", dest="exstep", help="Writing interval for spatial time series", default="yearly")
+parser.add_argument("--tsstep", dest="tsstep", help="Writing interval for scalar time series", default="yearly")
 parser.add_argument(
     "-f",
     "--o_format",
@@ -100,7 +101,7 @@ parser.add_argument(
     dest="spatial_ts",
     choices=["basic", "standard", "none", "ismip6", "strain"],
     help="output size type",
-    default="basic",
+    default="standard",
 )
 parser.add_argument(
     "--hydrology",
@@ -133,7 +134,7 @@ parser.add_argument(
 parser.add_argument(
     "--dataset_version",
     dest="version",
-    choices=["2", "3", "3a", "4", "1980"],
+    choices=["2", "3", "3a", "4", "1980", "1980a"],
     help="input data set version",
     default="3a",
 )
@@ -172,9 +173,9 @@ system = options.system
 spatial_ts = options.spatial_ts
 
 bed_type = options.bed_type
-climate = "given"
 calving = options.calving
 exstep = options.exstep
+tsstep = options.tsstep
 float_kill_calve_near_grounding_line = options.float_kill_calve_near_grounding_line
 grid = options.grid
 hydrology = options.hydrology
@@ -207,7 +208,8 @@ else:
     pism_dataname = "$input_dir/data_sets/bed_dem/pism_Greenland_{}m_mcb_jpl_v{}_{}.nc".format(grid, version, bed_type)
 
 # Removed "thk" from regrid vars
-regridvars = "litho_temp,enthalpy,age,tillwat,bmelt,ice_area_specific_volume"
+# regridvars = "litho_temp,enthalpy,age,tillwat,bmelt,ice_area_specific_volume"
+regridvars = "litho_temp,enthalpy,age,tillwat,bmelt,ice_area_specific_volume,thk"
 
 dirs = {"output": "$output_dir", "spatial_tmp": "$spatial_tmp_dir"}
 for d in ["state", "scalar", "spatial", "jobs", "basins"]:
@@ -229,7 +231,7 @@ if not os.path.isdir(time_dir):
     os.makedirs(time_dir)
 
 # generate the config file *after* creating the output directory
-pism_config = "ismip6"
+pism_config = "pism"
 pism_config_nc = join(output_dir, pism_config + ".nc")
 
 cmd = "ncgen -o {output} {input_dir}/config/{config}.cdl".format(
@@ -277,7 +279,9 @@ try:
     os.remove(pism_timefile)
 except OSError:
     pass
-cmd = ["create_timeline.py", "-a", start_date, "-e", end_date, "-d", "2008-01-01", pism_timefile]
+
+periodicity = "monthly"
+cmd = ["create_timeline.py", "-a", start_date, "-e", end_date, "-p", periodicity, "-d", "2008-01-01", pism_timefile]
 sub.call(cmd)
 
 # ########################################################
@@ -291,7 +295,6 @@ phi_min = 5.0
 phi_max = 40.0
 topg_min = -700
 topg_max = 700
-
 try:
     combinations = np.loadtxt(ensemble_file, delimiter=",", skiprows=1)
 except:
@@ -299,8 +302,6 @@ except:
         combinations = np.genfromtxt(ensemble_file, dtype=None, encoding=None, delimiter=",", skip_header=1)
     except:
         combinations = np.genfromtxt(ensemble_file, dtype=None, delimiter=",", skip_header=1)
-
-tsstep = "yearly"
 
 scripts = []
 scripts_post = []
@@ -313,7 +314,22 @@ post_header = make_batch_post_header(system)
 
 for n, combination in enumerate(combinations):
 
-    run_id, climate_file, runoff_file, frontal_melt_file, fm_a, fm_b, fm_alpha, fm_beta, vcm, ppq, sia_e = combination
+    (
+        run_id,
+        climate,
+        climate_file,
+        runoff_file,
+        frontal_melt_file,
+        fm_a,
+        fm_b,
+        fm_alpha,
+        fm_beta,
+        vcm,
+        calving_threshold,
+        salinity,
+        ppq,
+        sia_e,
+    ) = combination
 
     ttphi = "{},{},{},{}".format(phi_min, phi_max, topg_min, topg_max)
 
@@ -402,9 +418,13 @@ for n, combination in enumerate(combinations):
         hydro_params_dict = generate_hydrology(hydrology, **hydrology_parameters)
 
         # Need to add salinity first
-        ocean_parameters = {"ocean.th.file": "$input_dir/data_sets/ismip6/{}".format(frontal_melt_file)}
+        ocean_parameters = {
+            "ocean.th.file": "$input_dir/data_sets/ismip6/{}".format(frontal_melt_file),
+            "ocean.three_equation_model_clip_salinity": False,
+            "constants.sea_water.salinity": salinity,
+        }
         ocean_params_dict = generate_ocean("th", **ocean_parameters)
-        ocean_params_dict = {}
+        # ocean_params_dict = {}
 
         frontalmelt_parameters = {
             "frontal_melt": "discharge_given",
@@ -420,6 +440,7 @@ for n, combination in enumerate(combinations):
                 "calving.vonmises_calving.sigma_max": vcm * 1e6,
                 "calving.vonmises_calving.use_custom_flow_law": True,
                 "calving.vonmises_calving.Glen_exponent": 3.0,
+                "calving.thickness_calving.threshold": calving_threshold,
             }
         except:
             calving_parameters = {
