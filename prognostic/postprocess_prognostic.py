@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# Copyright (C) 2019 Andy Aschwanden
+# Copyright (C) 2019-20 Andy Aschwanden
 
 import os
 from os.path import abspath, basename, join
@@ -152,23 +152,27 @@ def process_file(a_file, metadata):
         else:
             print("Wrong dims for time interval")
 
+        # Historical and prognostic simulations have different start dates
+        if "historical" in m_file:
+            start_date = "2008-1-1"
+        else:
+            start_date = "2015-1-1"
+
         if ISMIP6[m_var]["type"] == "state":
             print("  Saving {}".format(o_file))
             cdo.seltimestep(
                 "1/1000", input="-setmissval,1.e20 {}".format(a_file), output=o_file, options="-f nc4 -z zip_3 -O -L"
             )
-            adjust_timeline(o_file, interval=time_interval, interval_type="start", bounds=False)
+            adjust_timeline(o_file, start_date=start_date, interval=time_interval, interval_type="start", bounds=False)
         elif ISMIP6[m_var]["type"] == "flux":
             print("  Saving {}".format(o_file))
             cdo.seltimestep(
                 "2/1000", input="-setmissval,1.e20 {}".format(a_file), output=o_file, options="-f nc4 -z zip_3 -O -L"
             )
-            adjust_timeline(o_file, interval=time_interval, interval_type="mid", bounds=True)
+            adjust_timeline(o_file, start_date=start_date, interval=time_interval, interval_type="mid", bounds=True)
         else:
             print("how did I get here")
 
-
-# from ISMIP6 import *
 
 # Set up the option parser
 parser = ArgumentParser()
