@@ -136,7 +136,7 @@ for GRID in 1000; do
     done
         
     # This is not needed, but it can be used by PISM to calculate correct cell volumes, and for remapping scripts"
-    ncatted -a proj4,global,o,c,"+init=epsg:3413" $outfile
+    ncatted -a proj4,global,o,c,"epsg:3413" $outfile
 
     # Add IBCAO bathymetry for the outer part of the domain
     gdalwarp $CUT -overwrite -r bilinear -t_srs EPSG:3413 -te $xmin $ymin $xmax $ymax -tr $GRID $GRID -of GTiff ${ibcaofile}_tif/${ibcaofile}.tif ${ibcaofile}_epsg3413_g${GRID}m.tif
@@ -200,7 +200,8 @@ xmax=$((864700 + $buffer_x))
 ymax=$((-657600 + $buffer_y))
 
 
-for GRID in 18000 9000 6000 4500 3600 3000 2400 1800 1500 1200 900 600 450 300; do
+# for GRID in 18000 9000 6000 4500 3600 3000 2400 1800 1500 1200 900 600 450 300; do
+for GRID in  900 600 450 300; do
     outfile_prefix=pism_Greenland_ext_${GRID}m_mcb_jpl_v${ver}
     outfile=${outfile_prefix}.nc
     outfile_ctrl=${outfile_prefix}_ctrl.nc
@@ -247,7 +248,7 @@ for GRID in 18000 9000 6000 4500 3600 3000 2400 1800 1500 1200 900 600 450 300; 
 
     # Remap SeaRISE fields
     ncks -4 -O g${GRID}m_${var}_v${ver}.nc griddes_${GRID}m.nc
-    nc2cdo.py --srs "+init=epsg:3413" griddes_${GRID}m.nc
+    nc2cdo.py --srs "epsg:3413" griddes_${GRID}m.nc
     if [[ $N == 1 ]] ; then
         cdo -f nc4 remapbil,griddes_${GRID}m.nc ${PISMVERSION} v${ver}_tmp_${GRID}m_searise.nc
     else

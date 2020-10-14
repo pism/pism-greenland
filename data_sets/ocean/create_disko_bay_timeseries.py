@@ -5,15 +5,32 @@ from cftime import utime
 from dateutil import rrule
 from dateutil.parser import parse
 from datetime import datetime
-
 from netCDF4 import Dataset as NC
 import pymc3 as pm
 import numpy as np
 import pandas as pd
 import pylab as plt
 from pyproj import Proj
-
 from pymc3.gp.util import plot_gp_dist
+import time
+from itertools import product
+
+
+def toDecimalYear(date):
+    def sinceEpoch(date):  # returns seconds since epoch
+        return time.mktime(date.timetuple())
+
+    s = sinceEpoch
+
+    year = date.year
+    startOfThisYear = datetime(year=year, month=1, day=1)
+    startOfNextYear = datetime(year=year + 1, month=1, day=1)
+
+    yearElapsed = s(date) - s(startOfThisYear)
+    yearDuration = s(startOfNextYear) - s(startOfThisYear)
+    fraction = yearElapsed / yearDuration
+
+    return date.year + fraction
 
 
 def melting_point_temperature(depth, salinity):
@@ -208,6 +225,10 @@ def create_nc(nc_outfile, theta_ocean, grid_spacing, time_dict):
 
 if __name__ == "__main__":
 
+    # depths to average over
+    depth_min = 225
+    depth_max = 275
+    # depth for freezing point calculation
     depth = 250
     salinity = 34
     grid_spacing = 4500
@@ -217,8 +238,8 @@ if __name__ == "__main__":
     cdftime_days = utime(units, calendar)
 
     start_date = datetime(1980, 1, 1)
-    end_date = datetime(2020, 1, 1)
-    end_date_yearly = datetime(2020, 1, 2)
+    end_date = datetime(2021, 1, 1)
+    end_date_yearly = datetime(2021, 1, 2)
 
     # create list with dates from start_date until end_date with
     # periodicity prule.
@@ -243,17 +264,55 @@ if __name__ == "__main__":
     decimal_time = bnds_interval_since_refdate[0:-1] / dpy + 1980
 
     kh_df = pd.read_csv("disko-bay_khazendar.csv", names=["time", "temperature"])
+
     mo_df = pd.read_csv("disko-bay_motyka.csv", names=["time", "temperature"])
-    all_df = pd.concat([kh_df, mo_df])
+
+    omg_df = pd.read_csv("omg_axctd_disko_bay.csv", na_values=-99.0).dropna()
+    omg_df = omg_df[(omg_df["Depth"] <= depth_max) & (omg_df["Depth"] >= depth_min)]
+    omg_df = omg_df.rename(columns={"Temperature": "temperature", "Time": "time"}).reset_index(drop=True)
+    omg_time = pd.to_datetime(omg_df["time"], format="%m/%d/%Y %H:%M:%S")
+    omg_df["time"] = omg_time
+    omg_df = omg_df.set_index("time").drop(columns=["Unnamed: 0"])
+    omg_df = omg_df.groupby(pd.Grouper(freq="1D")).mean().dropna()
+    omg_time = [toDecimalYear(d) for d in omg_df.index]
+    omg_df["time"] = omg_time
+
+    ices_df = pd.read_csv("disko_bay_ices.csv")
+    ices_df = (
+        ices_df[(ices_df["PRES [db]"] >= depth_min) & (ices_df["PRES [db]"] <= depth_max)][
+            ["yyyy-mm-ddThh:mm", "TEMP [deg C]"]
+        ]
+        .rename(columns={"yyyy-mm-ddThh:mm": "time", "TEMP [deg C]": "temperature"})
+        .reset_index(drop=True)
+    )
+    ices_time = pd.to_datetime(ices_df["time"], format="%Y/%m/%d %H:%M:%S")
+    ices_df["time"] = ices_time
+    ices_df = ices_df.set_index("time")
+    ices_df = ices_df.groupby(pd.Grouper(freq="1D")).mean().dropna()
+    ices_time = [toDecimalYear(d) for d in ices_df.index]
+    ices_df["time"] = ices_time
+
+    all_df = pd.concat([kh_df, mo_df, ices_df, omg_df])
     all_df = all_df.sort_values(by="time")
 
     X_kh = kh_df.time.values.reshape(-1, 1)
     X_mo = mo_df.time.values.reshape(-1, 1)
+    X_ices = ices_df.time.values.reshape(-1, 1)
+    X_omg = omg_df.time.values.reshape(-1, 1)
+
     y_kh = kh_df.temperature.values
     y_mo = mo_df.temperature.values
+    y_ices = ices_df.temperature.values
+    y_omg = omg_df.temperature.values
 
     X = all_df.time.values.reshape(-1, 1)
     y = all_df.temperature.values
+
+    # Normalize
+    X_mean = X.mean(axis=0)
+    y_mean = y.mean(axis=0)
+    # X -= X_mean
+    # y -= y_mean
 
     X_new = decimal_time[:, None]
 
@@ -266,38 +325,53 @@ if __name__ == "__main__":
         "exp-quad": pm.gp.cov.ExpQuad,
     }
 
+    covs = {
+        "mat32": pm.gp.cov.Matern32,
+    }
+
+    mus = [0.10, 0.25, 0.50, 1.00]
+    sigmas = [0.10, 0.25, 0.50, 1.00]
+    combinations = list(product(mus, sigmas, mus, etas))
+    #    combinations = [(0.5, 0.1)]
     for kernel, cov in covs.items():
-        print(kernel)
-        # Khazendar and Motyka merged
-        with pm.Model() as gp:
-            ρ = pm.Normal("ρ", 1)
-            η = pm.Normal("η", 5)
-            K = η * cov(1, ρ)
-            σ = pm.Normal("σ", 0.2)
-            gp = pm.gp.Marginal(cov_func=K)
-            y_ = gp.marginal_likelihood("y", X=X, y=y, noise=σ)
-            mp = pm.find_MAP()
-            f_pred = gp.conditional(f, X_new)
-            pred_samples = pm.sample_posterior_predictive([mp], vars=[f_pred], samples=10)
+        print(f"Covariance function: {kernel}")
+        for rho_mu, rho_sigma, eta_mu, eta_sigma in combinations:
+            print(f"mu={mu:.2f}, sigma={sigma:.2f}")
+            with pm.Model() as gp:
+                ρ = pm.Normal("ρ", mu=rho_mu, sigma=rho_sigma)
+                η = pm.Normal("η", mu=eta_mu, sigma=eta_sigma)
+                K = η * cov(1, ρ)
+                σ = pm.Normal("σ", mu=0.1)
+                gp = pm.gp.Marginal(cov_func=K)
+                y_ = gp.marginal_likelihood("y", X=X, y=y, noise=σ)
+                mp = pm.find_MAP()
+                f_pred = gp.conditional(f, X_new)
+                pred_samples = pm.sample_posterior_predictive([mp], vars=[f_pred], samples=10)
 
-        for s, temperate in enumerate(pred_samples[f]):
-            theta_ocean = temperate - melting_point_temperature(depth, salinity)
-            ofile = f"disko_bay_theta_ocean_{kernel}_{s}_1980_2019.nc"
-            create_nc(ofile, theta_ocean, grid_spacing, time_dict)
+            for s, temperate in enumerate(pred_samples[f]):
+                theta_ocean = temperate - melting_point_temperature(depth, salinity)
+                ofile = f"disko_bay_theta_ocean_{kernel}_{s}_1980_2019.nc"
+                create_nc(ofile, theta_ocean, grid_spacing, time_dict)
 
-        fig = plt.figure()
-        ax = fig.gca()
+            fig = plt.figure()
+            ax = fig.gca()
 
-        # plot the samples from the gp posterior with samples and shading
-        plot_gp_dist(ax, pred_samples[f], X_new, palette="Blues")
+            # plot the samples from the gp posterior with samples and shading
+            plot_gp_dist(ax, pred_samples[f], X_new, palette="Greys")
 
-        # plot the data and the true latent function
-        ax.plot(X_kh, y_kh, "o", color="0.4", ms=5, label="Observed data Khazendar")
-        ax.plot(X_mo, y_mo, "o", color="0.6", ms=5, label="Observed data Motyka")
+            # plot the data and the true latent function
+            ax.plot(X_kh, y_kh, "o", color="#b2182b", ms=4, label="Observed (Khazendar)")
+            ax.plot(X_mo, y_mo, "o", color="#f4a582", ms=4, label="Observed (Motyka)")
+            ax.plot(X_ices, y_ices, "o", color="#92c5de", ms=4, label="Observed (ICES)")
+            ax.plot(X_omg, y_omg, "o", color="#2166ac", ms=4, label="Observed (OMG)")
 
-        ax.set_xlabel("Time")
-        ax.set_ylabel("Temperature (Celsius)")
-        ax.set_xlim(1980, 2020)
-        ax.set_ylim(0)
-        plt.legend()
-        fig.savefig(f"disko-bay-temps_{kernel}.pdf")
+            ax.set_xlabel("Time")
+            ax.set_ylabel("Temperature (Celsius)")
+            ax.set_xlim(1980, 2021)
+            ax.set_ylim(0, 5)
+            plt.legend()
+            fig.savefig(
+                f"disko-bay-temps_{kernel}_rho_mu_{rho_mu:.2f}_rho_sigma_{rho_sigma:.2f}_eta_mu_{eta_mu:.2f}_eta_sigma_{eta_sigma:.2f}.pdf"
+            )
+            plt.cla()
+            plt.close(fig)
