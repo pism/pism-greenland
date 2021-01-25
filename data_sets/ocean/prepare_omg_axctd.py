@@ -9,7 +9,7 @@ from glob import glob
 if __name__ == "__main__":
 
     dfs = []
-    files = glob("OMG_*.edf")
+    files = glob("omg_axctd/OMG_*.edf")
     for m_file in files:
         print(f"Processing {m_file}")
         header_info = {"Date": [], "Time": [], "Longitude": [], "Latitude": []}
@@ -48,7 +48,12 @@ if __name__ == "__main__":
                 lon = data[header_info["Longitude"][0]].split(":")[-1].replace("\n", " ").strip()
 
         s_df = pd.read_csv(
-            m_file, sep="\t", header=49, usecols=[2, 3], encoding="latin-1", names=["depth", "temperature"]
+            m_file,
+            sep="\t",
+            header=49,
+            usecols=[2, 3, 5],
+            encoding="latin-1",
+            names=["depth", "temperature", "salinity"],
         )
         n = len(s_df.depth)
         if n != 0:
@@ -60,21 +65,29 @@ if __name__ == "__main__":
                         np.repeat(lat, n).reshape(-1, 1),
                         s_df.depth.values[0:n].reshape(-1, 1),
                         s_df.temperature.values[0:n].reshape(-1, 1),
+                        s_df.salinity.values[0:n].reshape(-1, 1),
                     ]
                 ),
-                columns=["Time", "Longitude", "Latitude", "Depth", "Temperature"],
+                columns=["Date", "Longitude", "Latitude", "Depth", "Temperature", "Salinity"],
             )
             dfs.append(m_df)
 
     df = pd.concat(dfs).reset_index(drop=True)
     df = df.astype({"Longitude": float, "Latitude": float, "Depth": float, "Temperature": float})
-    df.to_csv("omg_axctd_all.csv")
+    df.to_csv("omg_axctd.csv")
+
+    # depths to average over
+    depth_min = 225
+    depth_max = 275
 
     # bounding box by Khazendar (2019)
     lon_min = -54.0208
     lon_max = -52.0096
     lat_min = 68.8608
     lat_max = 69.321
+
+    df_da = df[(df.Depth >= depth_min) & (df.Depth <= depth_max)].reset_index(drop=True)
+    df_da.to_csv("omg_axctd_da_225_275.csv")
 
     df_filtered = df[
         (df.Longitude >= lon_min) & (df.Longitude <= lon_max) & (df.Latitude >= lat_min) & (df.Latitude <= lat_max)
@@ -90,4 +103,19 @@ if __name__ == "__main__":
     df_filtered = df[
         (df.Longitude >= lon_min) & (df.Longitude <= lon_max) & (df.Latitude >= lat_min) & (df.Latitude <= lat_max)
     ].reset_index(drop=True)
-    df_filtered.to_csv("omg_axctd_disko_bay_fjord.csv")
+    df_filtered.to_csv(
+        "disk_bay_fjord_omg_axctd.csv", columns=["Date", "Longitude", "Latitude", "Depth", "Temperature", "Salinity"]
+    )
+
+    # narrow bounding box for fjord
+    lon_min = -54.0208
+    lon_max = -50.1
+    lat_min = 68.8608
+    lat_max = 69.321
+
+    df_filtered = df[
+        (df.Longitude >= lon_min) & (df.Longitude <= lon_max) & (df.Latitude >= lat_min) & (df.Latitude <= lat_max)
+    ].reset_index(drop=True)
+    df_filtered.to_csv(
+        "disko_bay_omg_axctd.csv", columns=["Date", "Longitude", "Latitude", "Depth", "Temperature", "Salinity"]
+    )
