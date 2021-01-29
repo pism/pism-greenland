@@ -240,7 +240,7 @@ if __name__ == "__main__":
     cdftime_days = utime(units, calendar)
 
     start_date = datetime(1980, 1, 1)
-    end_date = datetime(2021, 1, 1)
+    end_date = datetime(2021, 1, 2)
     end_date_yearly = datetime(2021, 1, 2)
 
     # create list with dates from start_date until end_date with
@@ -263,7 +263,8 @@ if __name__ == "__main__":
     dpy = np.diff(bnds_interval_since_refdate_yearly)
     dpy = np.repeat(dpy, 12, axis=0)
 
-    decimal_time = bnds_interval_since_refdate[0:-1] / dpy + 1980
+    step = 1. / 12
+    decimal_time = np.arange(1980, 2021 + step, step)
 
     mo_df = pd.read_csv("disko_bay_motyka.csv")
 
@@ -295,6 +296,7 @@ if __name__ == "__main__":
     holl_df.to_csv("disko_bay_ices_depth_averaged.csv")
 
     all_df = pd.concat([mo_df, ices_df, omg_df, holl_df])
+    # all_df = pd.concat([mo_df, ices_df, omg_df])
     all_df = all_df.sort_values(by="Date")
 
     X_mo = mo_df.Date.values.reshape(-1, 1)
@@ -370,24 +372,24 @@ if __name__ == "__main__":
     }
 
 
-    odir = "test"
+    odir = "gamma"
     if not os.path.isdir(odir):
         os.makedirs(odir)
-    mus = [0.2, 1.00]
-    sigmas = [0.2, 1.00]
-    combinations = list(product(mus, sigmas, mus, sigmas))
-#    combinations = [(2, 1, 1, 1)]
+    alphas = [5.00]
+    betas = [2.00]
+    beta_n = 2
+    combinations = list(product(alphas, betas))
     for kernel, cov in covs.items():
         print(f"Covariance function: {kernel}")
-        for rho_mu, rho_sigma, eta_mu, eta_sigma in combinations:
-            print(f"rho_mu={rho_mu:.2f}, rho_sigma={rho_sigma:.2f} eta_mu={eta_mu:.2f}, eta_sigma={eta_sigma:.2f}")
+        for alpha_l, beta_l in combinations:
+            print(f"alpha_l={alpha_l:.2f}, beta_l={beta_l:.2f}")
             with pm.Model() as gp:
-                ℓ = pm.Normal("ℓ", mu=rho_mu, sigma=rho_sigma)
-                η = pm.Normal("η", mu=eta_mu, sigma=eta_sigma)
-                mean_func = pm.gp.mean.Zero()
+                ℓ = pm.Gamma("ℓ", alpha=alpha_l, beta=beta_l)
+                η = pm.HalfCauchy("η", beta=beta_n)
                 cov_func = η * cov(1, ℓ)
-                noise_mu = 0.05
-                noise_sigma = 0.1
+                mean_func = pm.gp.mean.Zero()
+                noise_mu = 5
+                noise_sigma = 2.5
                 σ = pm.Normal("σ", sigma=noise_sigma, mu=noise_mu)
                 gp = pm.gp.Marginal(mean_func=mean_func, cov_func=cov_func)
                 y_ = gp.marginal_likelihood("y", X=X, y=y, noise=σ)
@@ -427,7 +429,7 @@ if __name__ == "__main__":
             ax.set_ylim(0, 5)
             plt.legend()
             fig.savefig(
-                f"{odir}/disko-bay-temps_{kernel}_rho_mu_{rho_mu:.2f}_rho_sigma_{rho_sigma:.2f}_eta_mu_{eta_mu:.2f}_eta_sigma_{eta_sigma:.2f}_noise_mu_{noise_mu:.2f}_noise_sigma_{noise_sigma:.2f}_no_noise.pdf"
+                f"{odir}/disko-bay-temps_{kernel}_alpha_l_{alpha_l:.2f}_beta_l_{beta_l:.2f}_beta_n_{beta_n:.2f}_noise_mu_{noise_mu:.2f}_noise_sigma_{noise_sigma:.2f}_no_noise.pdf"
             )
             plt.cla()
             plt.close(fig)
@@ -450,7 +452,7 @@ if __name__ == "__main__":
             ax.set_ylim(0, 5)
             plt.legend()
             fig.savefig(
-                f"{odir}/disko-bay-temps_{kernel}_rho_mu_{rho_mu:.2f}_rho_sigma_{rho_sigma:.2f}_eta_mu_{eta_mu:.2f}_eta_sigma_{eta_sigma:.2f}_noise_mu_{noise_mu:.2f}_noise_sigma_{noise_sigma:.2f}_w_noise.pdf"
+                f"{odir}/disko-bay-temps_{kernel}_alpha_l_{alpha_l:.2f}_beta_l_{beta_l:.2f}_beta_n_{beta_n:.2f}_noise_mu_{noise_mu:.2f}_noise_sigma_{noise_sigma:.2f}_w_noise.pdf"
             )
             plt.cla()
             plt.close(fig)
