@@ -730,15 +730,17 @@ def generate_ocean(ocean, **kwargs):
     elif ocean == "paleo_const":
         params_dict["ocean"] = "given,delta_SL"
     elif ocean == "paleo_const_mbp":
-        params_dict["ocean"] = "given,delta_SL,delta_MBP"
+        params_dict["ocean"] = "given,delta_SL,frac_MBP"
     elif ocean in ("given", "relax"):
         params_dict["ocean"] = "given"
     elif ocean in ("given_mbp"):
-        params_dict["ocean"] = "given,delta_MBP"
+        params_dict["ocean"] = "given,frac_MBP"
     elif ocean == "const":
         params_dict["ocean"] = "constant"
     elif ocean == "th":
         params_dict["ocean"] = "th"
+    elif ocean == "th_mbp":
+        params_dict["ocean"] = "th,frac_MBP"
     else:
         print(("ocean {} not recognized, exiting".format(ocean)))
         import sys
@@ -849,7 +851,7 @@ cd $SLURM_SUBMIT_DIR
 # Generate a list of compute node hostnames reserved for this job,
 # this ./nodes file is necessary for slurm to spawn mpi processes
 # across multiple compute nodes
-rsrun -l /bin/hostname | sort -n | awk '{{print $2}}' > ./nodes_$SLURM_JOBID
+srun -l /bin/hostname | sort -n | awk '{{print $2}}' > ./nodes_$SLURM_JOBID
 
 ulimit -l unlimited
 ulimit -s unlimited

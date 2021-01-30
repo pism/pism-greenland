@@ -9,11 +9,13 @@ from argparse import ArgumentParser
 # set up the option parser
 parser = ArgumentParser()
 parser.add_argument("FILE", nargs="*")
-parser.add_argument("-g", "--grid", dest="grid_spacing", type=int, help="horizontal grid resolution", default=1000)
+parser.add_argument(
+    "-s", "--scaling_factor", dest="scaling_factor", type=float, help="Scales the maximum back pressure", default=1
+)
 
 options = parser.parse_args()
 args = options.FILE
-grid_spacing = options.grid_spacing
+scaling_factor = options.scaling_factor
 
 if len(args) == 0:
     nc_outfile = "melange_back_pressure_max.nc"
@@ -39,7 +41,7 @@ time = np.arange(0, 365) + 0.5
 var = "time"
 var_out = nc.createVariable(var, "d", dimensions=("time"))
 var_out.axis = "T"
-var_out.units = "day"
+var_out.units = "days since 1980-1-1"
 var_out.calendar = "365_day"
 var_out.long_name = "time"
 var_out.bounds = "time_bounds"
@@ -71,6 +73,6 @@ for k, t in enumerate(time):
     else:
         MBP[k] = 0
 
-var_out[:] = np.roll(MBP, -90)
+var_out[:] = np.roll(MBP, -90) * scaling_factor
 
 nc.close()

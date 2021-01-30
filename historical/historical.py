@@ -141,7 +141,7 @@ parser.add_argument(
 parser.add_argument(
     "--dataset_version",
     dest="version",
-    choices=["2", "3", "3a", "4", "1980", "1980a", "1980v3"],
+    choices=["2", "3", "3a", "4", "1980", "1980a", "1980v3", "1_RAGIS"],
     help="input data set version",
     default="3a",
 )
@@ -330,12 +330,14 @@ for n, combination in enumerate(combinations):
         climate_file,
         runoff_file,
         frontal_melt_file,
+        mbp_file,
         fm_a,
         fm_b,
         fm_alpha,
         fm_beta,
         vcm,
         calving_threshold,
+        gamma_T,
         salinity,
         ppq,
         sia_e,
@@ -447,24 +449,31 @@ for n, combination in enumerate(combinations):
 
             frontalmelt_parameters = {
                 "frontal_melt": "routing",
-                "frontal_melt.routing.file": "$input_dir/data_sets/ismip6/{}".format(frontal_melt_file),
+                "frontal_melt.routing.file": "$input_dir/data_sets/ocean/{}".format(frontal_melt_file),
             }
         else:
             frontalmelt_parameters = {
                 "frontal_melt": "discharge_given",
-                "frontal_melt.discharge_given.file": "$input_dir/data_sets/ismip6/{}".format(frontal_melt_file),
+                "frontal_melt.discharge_given.file": "$input_dir/data_sets/ocean/{}".format(frontal_melt_file),
             }
 
         frontalmelt_params_dict = frontalmelt_parameters
 
         # Need to add salinity first
         ocean_parameters = {
-            "ocean.th.file": "$input_dir/data_sets/ismip6/{}".format(frontal_melt_file),
-            "ocean.three_equation_model_clip_salinity": False,
+            "ocean.th.file": "$input_dir/data_sets/ocean/{}".format(frontal_melt_file),
+            "ocean.th.clip_salinity": False,
+            "ocean.th.gamma_T": gamma_T,
             "constants.sea_water.salinity": salinity,
         }
-        ocean_params_dict = generate_ocean("th", **ocean_parameters)
-        # ocean_params_dict = {}
+
+        if mbp_file:
+            ocean_parameters["ocean.frac_MBP.file"] = "$input_dir/data_sets/melange/{}".format(mbp_file)
+            ocean_parameters["ocean.frac_MBP.period"] = 1
+            ocean_parameters["ocean.melange_back_pressure_fraction"] = 1.0
+            ocean_params_dict = generate_ocean("th_mbp", **ocean_parameters)
+        else:
+            ocean_params_dict = generate_ocean("th", **ocean_parameters)
 
         try:
             vcm = float(vcm)
