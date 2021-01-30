@@ -43,6 +43,7 @@ def create_nc(nc_outfile, theta_ocean, grid_spacing, time_dict):
     Generate netCDF file
     """
 
+
     time = time_dict["time"]
     time_units = time_dict["units"]
     time_calendar = time_dict["calendar"]
