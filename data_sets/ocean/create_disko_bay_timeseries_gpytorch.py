@@ -99,7 +99,7 @@ if __name__ == "__main__":
     X_test = torch.tensor(X_new).to(torch.float)
 
     # initialize likelihood and model
-    noise_prior = gpytorch.priors.NormalPrior(1.0, 0.1)
+    noise_prior = gpytorch.priors.NormalPrior(0.2, 0.2)
     likelihood = gpytorch.likelihoods.GaussianLikelihood(noise_prior=noise_prior)
 
     cov = gpytorch.kernels.RBFKernel

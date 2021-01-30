@@ -6,16 +6,14 @@ from dateutil import rrule
 from dateutil.parser import parse
 from datetime import datetime
 from netCDF4 import Dataset as NC
-import pymc3 as pm
+import gpytorch
+import torch
 import numpy as np
 import pandas as pd
 import pylab as plt
 from pyproj import Proj
-from pymc3.gp.util import plot_gp_dist
 import time
-from itertools import product
 import os
-import statsmodels.api as sm
 
 
 def toDecimalYear(date):
@@ -204,9 +202,9 @@ def create_nc(nc_outfile, theta_ocean, grid_spacing, time_dict):
     var_out[:] = gc_lat
 
     var = "theta_ocean"
-    var_out = nc.createVariable(var, "f", dimensions=("time", "y", "x"), fill_value=-2e9)
+    var_out = nc.createVariable(var, "f", dimensions=("time", "y", "x"), fill_value=-2e9, zlib=True, complevel=2)
     var_out.units = "Celsius"
-    var_out.long_name = "Just A Dummy"
+    var_out.long_name = "theta_ocean"
     var_out.grid_mapping = "mapping"
     var_out.coordinates = "lon lat"
     var_out[:] = np.repeat(theta_ocean, M * N).reshape(nt, N, M)
@@ -233,14 +231,14 @@ if __name__ == "__main__":
     # depth for freezing point calculation
     depth = 250
     salinity = 34
-    grid_spacing = 4500
+    grid_spacing = 18000
 
     calendar = "standard"
     units = "days since 1980-1-1"
     cdftime_days = utime(units, calendar)
 
     start_date = datetime(1980, 1, 1)
-    end_date = datetime(2021, 1, 2)
+    end_date = datetime(2021, 1, 1)
     end_date_yearly = datetime(2021, 1, 2)
 
     # create list with dates from start_date until end_date with
@@ -252,7 +250,7 @@ if __name__ == "__main__":
     bnds_interval_since_refdate = cdftime_days.date2num(bnds_datelist)
     bnds_interval_since_refdate_yearly = cdftime_days.date2num(bnds_datelist_yearly)
     time_interval_since_refdate = bnds_interval_since_refdate[0:-1] + np.diff(bnds_interval_since_refdate) / 2
-
+    print(len(time_interval_since_refdate))
     time_dict = {
         "calendar": calendar,
         "units": units,
@@ -260,11 +258,9 @@ if __name__ == "__main__":
         "time_bnds": bnds_interval_since_refdate,
     }
 
-    dpy = np.diff(bnds_interval_since_refdate_yearly)
-    dpy = np.repeat(dpy, 12, axis=0)
 
     step = 1. / 12
-    decimal_time = np.arange(1980, 2021 + step, step)
+    decimal_time = np.arange(start_date.year, end_date.year, step)
 
     mo_df = pd.read_csv("disko_bay_motyka.csv")
 
@@ -295,9 +291,6 @@ if __name__ == "__main__":
     holl_df["Date"] = holl_time
     holl_df.to_csv("disko_bay_ices_depth_averaged.csv")
 
-    all_df = pd.concat([mo_df, ices_df, omg_df, holl_df])
-    # all_df = pd.concat([mo_df, ices_df, omg_df])
-    all_df = all_df.sort_values(by="Date")
 
     X_mo = mo_df.Date.values.reshape(-1, 1)
     X_ices = ices_df.Date.values.reshape(-1, 1)
@@ -309,150 +302,92 @@ if __name__ == "__main__":
     y_omg = omg_df.Temperature.values
     y_holl = holl_df.Temperature.values
 
-    trend_start = [1980, 1998]
-    trend_end = [1998, 2016]
-
-    df = all_df
-    x_var = "Date"
-    y_var = "Temperature"
-
-    fig = plt.figure()
-    ax = fig.gca()
-
-    ax.plot(X_holl, y_holl, "o", color="#f4a582", ms=4, label="Observed (Holland)")
-    ax.plot(X_mo, y_mo, "o", color="#b2182b", ms=4, label="Observed (Motyka)")
-    ax.plot(X_ices, y_ices, "o", color="#92c5de", ms=4, label="Observed (ICES)")
-    ax.plot(X_omg, y_omg, "o", color="#2166ac", ms=4, label="Observed (OMG)")
-
-    # for a, e in zip(trend_start, trend_end):
-    #     m_df = df[(df[x_var] >= a) & (df[x_var] <= e)]
-    #     x = m_df[x_var]
-    #     y = m_df[y_var]
-    #     X = sm.add_constant(x)
-    #     ols = sm.OLS(y, X).fit()
-    #     p = ols.params
-    #     bias = p[0]
-    #     trend = p[1]
-    #     trend_error = ols.bse[-1]
-    #     mean = np.mean(y)
-    #     ax.plot([a, e], np.array([a, e]) * trend + bias, linewidth=2, color="k")
-    #     ax.plot([a, e], np.array([mean, mean]), linewidth=2, color="0.5")
-        
-    ax.set_xlabel("Time")
-    ax.set_ylabel("Temperature (Celsius)")
-    ax.set_xlim(1980, 2021)
-    ax.set_ylim(0, 5)
-    plt.legend()
-    fig.savefig("disko-bay-temps-obs.pdf")
-    plt.cla()
-    plt.close(fig)
-
+    all_df = pd.concat([mo_df, ices_df, omg_df, holl_df])
+    all_df = all_df.sort_values(by="Date")
+    
     X = all_df.Date.values.reshape(-1, 1)
     y = all_df.Temperature.values
-
-    # Normalize
-    X_mean = X.mean(axis=0)
-    y_mean = y.mean(axis=0)
-    # X -= X_mean
-    # y -= y_mean
-
     X_new = decimal_time[:, None]
 
-    f = "f_pred"
+    # We will use the simplest form of GP model, exact inference
+    class ExactGPModel(gpytorch.models.ExactGP):
+        def __init__(self, train_x, train_y, likelihood, cov):
+            super(ExactGPModel, self).__init__(train_x, train_y, likelihood)
+            self.mean_module = gpytorch.means.ConstantMean()
+            self.covar_module = gpytorch.kernels.ScaleKernel(cov)
 
-    # covs = {
-    #     "mat32": pm.gp.cov.Matern32,
-    #     "mat52": pm.gp.cov.Matern52,
-    #     "exp": pm.gp.cov.Exponential,
-    #     "exp-quad": pm.gp.cov.ExpQuad,
-    # }
+        def forward(self, x):
+            mean_x = self.mean_module(x)
+            covar_x = self.covar_module(x)
+            return gpytorch.distributions.MultivariateNormal(mean_x, covar_x)
+        
+    X_train = torch.tensor(X).to(torch.float)
+    y_train = torch.tensor(np.squeeze(y)).to(torch.float)
+    X_test = torch.tensor(X_new).to(torch.float)
 
-    covs = {
-        "mat32": pm.gp.cov.Matern32,
-    }
+    # initialize likelihood and model
+    noise_prior = gpytorch.priors.NormalPrior(0.2, 0.2)
+    likelihood = gpytorch.likelihoods.GaussianLikelihood(noise_prior=noise_prior)
+
+    cov = gpytorch.kernels.RBFKernel
+    model = ExactGPModel(X_train, y_train, likelihood, cov())
+
+    # Find optimal model hyperparameters
+    model.train()
+    likelihood.train()
+
+    # Use the adam optimizer
+    optimizer = torch.optim.Adam(model.parameters(), lr=0.1)  # Includes GaussianLikelihood parameters
+
+    # "Loss" for GPs - the marginal log likelihood
+    mll = gpytorch.mlls.ExactMarginalLogLikelihood(likelihood, model)
+
+    for i in range(500):
+        # Zero gradients from previous iteration
+        optimizer.zero_grad()
+        # Output from model
+        output = model(X_train)
+        # Calc loss and backprop gradients
+        loss = -mll(output, y_train)
+        loss.backward()
+        if i % 20 == 0:
+            print(i, loss.item(), model.likelihood.noise.item())
+        optimizer.step()
 
 
-    odir = "gamma"
-    if not os.path.isdir(odir):
-        os.makedirs(odir)
-    alphas = [5.00]
-    betas = [2.00]
-    beta_n = 2
-    combinations = list(product(alphas, betas))
-    for kernel, cov in covs.items():
-        print(f"Covariance function: {kernel}")
-        for alpha_l, beta_l in combinations:
-            print(f"alpha_l={alpha_l:.2f}, beta_l={beta_l:.2f}")
-            with pm.Model() as gp:
-                ℓ = pm.Gamma("ℓ", alpha=alpha_l, beta=beta_l)
-                η = pm.HalfCauchy("η", beta=beta_n)
-                cov_func = η * cov(1, ℓ)
-                mean_func = pm.gp.mean.Zero()
-                noise_mu = 5
-                noise_sigma = 2.5
-                σ = pm.Normal("σ", sigma=noise_sigma, mu=noise_mu)
-                gp = pm.gp.Marginal(mean_func=mean_func, cov_func=cov_func)
-                y_ = gp.marginal_likelihood("y", X=X, y=y, noise=σ)
-                mp = pm.find_MAP()
-                mp_df = pd.DataFrame(
-                    {
-                        "Parameter": ["ℓ", "η", "σ"],
-                        "Value at MAP": [float(mp["ℓ"]), float(mp["η"]), float(mp["σ"])],
-                    }
-                )
-                print(mp_df)
-                f_pred = gp.conditional("f_pred", X_new, pred_noise=False)
-                f_samples = pm.sample_posterior_predictive([mp], var_names=["f_pred"], samples=10)
-                y_pred = gp.conditional("y_pred", X_new, pred_noise=True)
-                y_samples = pm.sample_posterior_predictive([mp], var_names=["y_pred"], samples=10)
+    # Get into evaluation (predictive posterior) mode
+    model.eval()
+    likelihood.eval()
+    with torch.no_grad():  # , gpytorch.settings.fast_pred_var():
+        # Draw n_samples
+        n_samples = 10
+        f_pred = model(X_test)
+        samples = f_pred.sample(sample_shape=torch.Size([n_samples,]))
+        
+        # Initialize plot
+        fig, ax = plt.subplots(1, 1)
 
-            # for s, temperate in enumerate(pred_samples[f]):
-            #     theta_ocean = temperate - melting_point_temperature(depth, salinity)
-            #     ofile = f"disko_bay_theta_ocean_{kernel}_{s}_1980_2019.nc"
-            #     create_nc(ofile, theta_ocean, grid_spacing, time_dict)
+        ax.plot(X_test.numpy(), samples.numpy().T, color='k', linewidth=0.5)
 
-            fig = plt.figure()
-            ax = fig.gca()
+        # plot the data and the true latent function
+        ax.plot(X_holl, y_holl, "o", color="#f4a582", ms=4, label="Observed (Holland)")
+        ax.plot(X_mo, y_mo, "o", color="#b2182b", ms=4, label="Observed (Motyka)")
+        ax.plot(X_ices, y_ices, "o", color="#92c5de", ms=4, label="Observed (ICES)")
+        ax.plot(X_omg, y_omg, "o", color="#2166ac", ms=4, label="Observed (OMG)")
 
-            # plot the samples from the gp posterior with samples and shading
-            plot_gp_dist(ax, f_samples["f_pred"], X_new, palette="Greys")
+        ax.set_xlabel("Time")
+        ax.set_ylabel("Temperature (Celsius)")
+        ax.set_xlim(1980, 2021)
+        ax.set_ylim(0, 5)
+        plt.legend()
+        fig.savefig(
+            "disko-bay-temps.pdf"
+        )
 
-            # plot the data and the true latent function
-            ax.plot(X_holl, y_holl, "o", color="#f4a582", ms=4, label="Observed (Holland)")
-            ax.plot(X_mo, y_mo, "o", color="#b2182b", ms=4, label="Observed (Motyka)")
-            ax.plot(X_ices, y_ices, "o", color="#92c5de", ms=4, label="Observed (ICES)")
-            ax.plot(X_omg, y_omg, "o", color="#2166ac", ms=4, label="Observed (OMG)")
 
-            ax.set_xlabel("Time")
-            ax.set_ylabel("Temperature (Celsius)")
-            ax.set_xlim(1980, 2021)
-            ax.set_ylim(0, 5)
-            plt.legend()
-            fig.savefig(
-                f"{odir}/disko-bay-temps_{kernel}_alpha_l_{alpha_l:.2f}_beta_l_{beta_l:.2f}_beta_n_{beta_n:.2f}_noise_mu_{noise_mu:.2f}_noise_sigma_{noise_sigma:.2f}_no_noise.pdf"
-            )
-            plt.cla()
-            plt.close(fig)
 
-            fig = plt.figure()
-            ax = fig.gca()
+        for s, temperate in enumerate(samples.numpy()):
+            theta_ocean = temperate - melting_point_temperature(depth, salinity)
+            ofile = f"illulisat_fjord_theta_ocean_{s}_1980_2020.nc"
+            create_nc(ofile, theta_ocean, grid_spacing, time_dict)
 
-            # plot the samples from the gp posterior with samples and shading
-            plot_gp_dist(ax, y_samples["y_pred"], X_new, palette="Greys")
-
-            # plot the data and the true latent function
-            ax.plot(X_holl, y_holl, "o", color="#f4a582", ms=4, label="Observed (Holland)")
-            ax.plot(X_mo, y_mo, "o", color="#b2182b", ms=4, label="Observed (Motyka)")
-            ax.plot(X_ices, y_ices, "o", color="#92c5de", ms=4, label="Observed (ICES)")
-            ax.plot(X_omg, y_omg, "o", color="#2166ac", ms=4, label="Observed (OMG)")
-
-            ax.set_xlabel("Time")
-            ax.set_ylabel("Temperature (Celsius)")
-            ax.set_xlim(1980, 2021)
-            ax.set_ylim(0, 5)
-            plt.legend()
-            fig.savefig(
-                f"{odir}/disko-bay-temps_{kernel}_alpha_l_{alpha_l:.2f}_beta_l_{beta_l:.2f}_beta_n_{beta_n:.2f}_noise_mu_{noise_mu:.2f}_noise_sigma_{noise_sigma:.2f}_w_noise.pdf"
-            )
-            plt.cla()
-            plt.close(fig)
