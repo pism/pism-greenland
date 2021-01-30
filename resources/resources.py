@@ -107,6 +107,7 @@ spatial_ts_vars["standard"] = [
     "bwat",
     "dHdt",
     "diffusivity",
+    "fracture_density",
     "height_above_flotation",
     "grounding_line_flux",
     "frontal_melt_rate",
@@ -115,6 +116,8 @@ spatial_ts_vars["standard"] = [
     "mask",
     "mass_fluxes",
     "sftgif",
+    "subglacial_discharge",
+    "tendency_of_subglacial_water_mass",
     "thk",
     "tillwat",
     "topg",
@@ -598,6 +601,7 @@ def generate_calving(calving, **kwargs):
 
     Returns: OrderedDict
     """
+
     params_dict = OrderedDict()
     if calving in ("thickness_calving", "hayhurst_calving"):
         params_dict["calving"] = calving
@@ -726,15 +730,17 @@ def generate_ocean(ocean, **kwargs):
     elif ocean == "paleo_const":
         params_dict["ocean"] = "given,delta_SL"
     elif ocean == "paleo_const_mbp":
-        params_dict["ocean"] = "given,delta_SL,delta_MBP"
+        params_dict["ocean"] = "given,delta_SL,frac_MBP"
     elif ocean in ("given", "relax"):
         params_dict["ocean"] = "given"
     elif ocean in ("given_mbp"):
-        params_dict["ocean"] = "given,delta_MBP"
+        params_dict["ocean"] = "given,frac_MBP"
     elif ocean == "const":
         params_dict["ocean"] = "constant"
     elif ocean == "th":
         params_dict["ocean"] = "th"
+    elif ocean == "th_mbp":
+        params_dict["ocean"] = "th,frac_MBP"
     else:
         print(("ocean {} not recognized, exiting".format(ocean)))
         import sys
