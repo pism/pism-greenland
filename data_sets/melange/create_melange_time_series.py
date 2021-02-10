@@ -37,6 +37,7 @@ nc.createDimension("nb", size=2)
 
 time = np.arange(0, 365) + 0.5
 
+h = 100
 
 var = "time"
 var_out = nc.createVariable(var, "d", dimensions=("time"))
@@ -56,7 +57,7 @@ var_out[:, 1] = time + 0.5
 
 var = "frac_MBP"
 var_out = nc.createVariable(var, "f", dimensions=("time"))
-var_out.units = "1"
+var_out.units = "N m-1"
 
 MBP_max = 1
 
@@ -67,9 +68,9 @@ spring_e = 105
 MBP = np.zeros(len(time))
 for k, t in enumerate(time):
     if t < 150:
-        MBP[k] = MBP_max / np.sqrt(150) * np.sqrt(t)
+        MBP[k] = MBP_max / np.sqrt(150) * np.sqrt(t) * h
     elif (t > 150) and (t < 200):
-        MBP[k] = MBP_max - MBP_max / np.sqrt(200) * np.sqrt(t)
+        MBP[k] = MBP_max - MBP_max / np.sqrt(200) * np.sqrt(t) * h
     else:
         MBP[k] = 0
 
