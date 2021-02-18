@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# Copyright (C) 2020 Andy Aschwanden
+# Copyright (C) 2020-21 Andy Aschwanden
 
 from cftime import utime
 from dateutil import rrule
@@ -17,17 +17,11 @@ import os
 
 
 def toDecimalYear(date):
-    def sinceEpoch(date):  # returns seconds since epoch
-        return time.mktime(date.timetuple())
-
-    s = sinceEpoch
-
     year = date.year
     startOfThisYear = datetime(year=year, month=1, day=1)
     startOfNextYear = datetime(year=year + 1, month=1, day=1)
-
-    yearElapsed = s(date) - s(startOfThisYear)
-    yearDuration = s(startOfNextYear) - s(startOfThisYear)
+    yearElapsed = (date - startOfThisYear).total_seconds()
+    yearDuration = (startOfNextYear - startOfThisYear).total_seconds()
     fraction = yearElapsed / yearDuration
 
     return date.year + fraction
@@ -42,7 +36,6 @@ def create_nc(nc_outfile, theta_ocean, grid_spacing, time_dict):
     """
     Generate netCDF file
     """
-
 
     time = time_dict["time"]
     time_units = time_dict["units"]
@@ -234,6 +227,7 @@ if __name__ == "__main__":
     salinity = 34
     grid_spacing = 18000
 
+    freq = "1D"
     calendar = "standard"
     units = "days since 1980-1-1"
     cdftime_days = utime(units, calendar)
@@ -251,7 +245,7 @@ if __name__ == "__main__":
     bnds_interval_since_refdate = cdftime_days.date2num(bnds_datelist)
     bnds_interval_since_refdate_yearly = cdftime_days.date2num(bnds_datelist_yearly)
     time_interval_since_refdate = bnds_interval_since_refdate[0:-1] + np.diff(bnds_interval_since_refdate) / 2
-    print(len(time_interval_since_refdate))
+
     time_dict = {
         "calendar": calendar,
         "units": units,
@@ -259,55 +253,57 @@ if __name__ == "__main__":
         "time_bnds": bnds_interval_since_refdate,
     }
 
-
-    step = 1. / 12
+    step = 1.0 / 12
     decimal_time = np.arange(start_date.year, end_date.year, step)
 
-    mo_df = pd.read_csv("disko_bay_motyka.csv")
+    ginr_df = pd.read_csv("ginr/ginr_ctd_station_26.csv")
 
-    omg_df = pd.read_csv("disko_bay_omg_axctd.csv", na_values=-99.0).dropna()
-    omg_df = omg_df[(omg_df["Depth"] <= depth_max) & (omg_df["Depth"] >= depth_min)]
-    omg_time = pd.to_datetime(omg_df.Date, format="%m/%d/%Y %H:%M:%S")
-    omg_df["Date"] = omg_time
+    omg_df = pd.read_csv("omg/omg_axctd_ilulissat_fjord_10s_mean.csv", parse_dates=["Date"])
+    omg_df = omg_df[(omg_df["Depth [meters]"] <= depth_max) & (omg_df["Depth [meters]"] >= depth_min)]
     omg_df = omg_df.set_index("Date").drop(columns=["Unnamed: 0"])
-    omg_df = omg_df.groupby(pd.Grouper(freq="1D")).mean().dropna()
-    omg_time = [toDecimalYear(d) for d in omg_df.index]
-    omg_df["Date"] = omg_time
+    omg_df = omg_df.groupby(pd.Grouper(freq=freq)).mean().dropna()
 
-    ices_df = pd.read_csv("disko_bay_ices.csv")
-    ices_df = ices_df[(ices_df.Depth >= depth_min) & (ices_df.Depth <= depth_max)].reset_index(drop=True)
+    ices_df = pd.read_csv("ices/ices_disko_bay.csv")
+    ices_df = ices_df[(ices_df["Depth [m]"] >= depth_min) & (ices_df["Depth [m]"] <= depth_max)].reset_index(drop=True)
     ices_time = pd.to_datetime(ices_df.Date, format="%Y/%m/%d %H:%M:%S")
     ices_df["Date"] = ices_time
     ices_df = ices_df.set_index("Date")
-    ices_df = ices_df.groupby(pd.Grouper(freq="1D")).mean().dropna()
+    ices_df = ices_df.groupby(pd.Grouper(freq=freq)).mean().dropna()
     ices_time = [toDecimalYear(d) for d in ices_df.index]
-    ices_df["Date"] = ices_time
-    ices_df.to_csv("disko_bay_ices_depth_averaged.csv")
+    ices_df["Year"] = ices_time
 
-    holl_df = pd.read_csv("disko_bay_xctd_holland.csv", parse_dates=[0])
-    holl_df = holl_df[(holl_df.Depth >= depth_min) & (holl_df.Depth <= depth_max)].reset_index(drop=True)
-    holl_df = holl_df.set_index("Date")
-    holl_df = holl_df.groupby(pd.Grouper(freq="1D")).mean().dropna()
-    holl_time = [toDecimalYear(d) for d in holl_df.index]
-    holl_df["Date"] = holl_time
-    holl_df.to_csv("disko_bay_ices_depth_averaged.csv")
+    xctd_if_df = pd.read_csv("xctd_fjord/xctd_ilulissat_fjord.csv", parse_dates=["Date"]).dropna()
+    xctd_if_df = xctd_if_df[
+        (xctd_if_df["Depth [m]"] >= depth_min) & (xctd_if_df["Depth [m]"] <= depth_max)
+    ].reset_index(drop=True)
+    xctd_if_df = xctd_if_df.set_index("Date")
+    xctd_if_df = xctd_if_df.groupby(pd.Grouper(freq=freq)).mean().dropna()
+    xctd_if_time = [toDecimalYear(d) for d in xctd_if_df.index]
+    xctd_if_df["Year"] = xctd_if_time
 
+    xctd_db_df = pd.read_csv("moorings/xctd_mooring_disko_bay.csv", parse_dates=["Date"])
+    xctd_db_df = xctd_db_df.set_index("Date")
+    xctd_db_df = xctd_db_df.groupby(pd.Grouper(freq=freq)).mean().dropna()
+    xctd_db_time = [toDecimalYear(d) for d in xctd_db_df.index]
+    xctd_db_df["Year"] = xctd_db_time
 
-    X_mo = mo_df.Date.values.reshape(-1, 1)
-    X_ices = ices_df.Date.values.reshape(-1, 1)
-    X_omg = omg_df.Date.values.reshape(-1, 1)
-    X_holl = holl_df.Date.values.reshape(-1, 1)
+    X_ginr = ginr_df["Year"].values.reshape(-1, 1)
+    X_ices = ices_df["Year"].values.reshape(-1, 1)
+    X_omg = omg_df["Year"].values.reshape(-1, 1)
+    X_xctd_if = xctd_if_df["Year"].values.reshape(-1, 1)
+    X_xctd_db = xctd_db_df["Year"].values.reshape(-1, 1)
 
-    y_mo = mo_df.Temperature.values
-    y_ices = ices_df.Temperature.values
-    y_omg = omg_df.Temperature.values
-    y_holl = holl_df.Temperature.values
+    y_ginr = ginr_df["Temperature [Celsius]"].values
+    y_ices = ices_df["Temperature [Celsius]"].values
+    y_omg = omg_df["Temperature [Celsius]"].values
+    y_xctd_if = xctd_if_df["Temperature [Celsius]"].values
+    y_xctd_db = xctd_db_df["Temperature [Celsius]"].values
 
-    all_df = pd.concat([mo_df, ices_df, omg_df, holl_df])
-    all_df = all_df.sort_values(by="Date")
-    
-    X = all_df.Date.values.reshape(-1, 1)
-    y = all_df.Temperature.values
+    all_df = pd.concat([ginr_df, ices_df, omg_df, xctd_if_df])
+    all_df = all_df.sort_values(by="Year")
+
+    X = all_df["Year"].values.reshape(-1, 1)
+    y = all_df["Temperature [Celsius]"].values
     X_new = decimal_time[:, None]
 
     # We will use the simplest form of GP model, exact inference
@@ -321,7 +317,7 @@ if __name__ == "__main__":
             mean_x = self.mean_module(x)
             covar_x = self.covar_module(x)
             return gpytorch.distributions.MultivariateNormal(mean_x, covar_x)
-        
+
     X_train = torch.tensor(X).to(torch.float)
     y_train = torch.tensor(np.squeeze(y)).to(torch.float)
     X_test = torch.tensor(X_new).to(torch.float)
@@ -355,7 +351,6 @@ if __name__ == "__main__":
             print(i, loss.item(), model.likelihood.noise.item())
         optimizer.step()
 
-
     # Get into evaluation (predictive posterior) mode
     model.eval()
     likelihood.eval()
@@ -363,32 +358,34 @@ if __name__ == "__main__":
         # Draw n_samples
         n_samples = 10
         f_pred = model(X_test)
-        samples = f_pred.sample(sample_shape=torch.Size([n_samples,]))
-        
-        # Initialize plot
-        fig, ax = plt.subplots(1, 1)
-
-        ax.plot(X_test.numpy(), samples.numpy().T, color='k', linewidth=0.5)
-
-        # plot the data and the true latent function
-        ax.plot(X_holl, y_holl, "o", color="#f4a582", ms=4, label="Observed (Holland)")
-        ax.plot(X_mo, y_mo, "o", color="#b2182b", ms=4, label="Observed (Motyka)")
-        ax.plot(X_ices, y_ices, "o", color="#92c5de", ms=4, label="Observed (ICES)")
-        ax.plot(X_omg, y_omg, "o", color="#2166ac", ms=4, label="Observed (OMG)")
-
-        ax.set_xlabel("Time")
-        ax.set_ylabel("Temperature (Celsius)")
-        ax.set_xlim(1980, 2021)
-        ax.set_ylim(0, 5)
-        plt.legend()
-        fig.savefig(
-            "disko-bay-temps.pdf"
+        samples = f_pred.sample(
+            sample_shape=torch.Size(
+                [
+                    n_samples,
+                ]
+            )
         )
 
+    # Initialize plot
+    fig, ax = plt.subplots(1, 1)
 
+    ax.plot(X_test.numpy(), samples.numpy().T, color="k", linewidth=0.5)
 
-        for s, temperate in enumerate(samples.numpy()):
-            theta_ocean = temperate - melting_point_temperature(depth, salinity)
-            ofile = f"illulisat_fjord_theta_ocean_{s}_1980_2020.nc"
-            create_nc(ofile, theta_ocean, grid_spacing, time_dict)
+    # plot the data and the true latent function
+    ax.plot(X_ices, y_ices, "o", color="#08519c", ms=4, mec="k", mew=0.1, label="ICES (Disko Bay)")
+    ax.plot(X_ginr, y_ginr, "o", color="#6baed6", ms=4, mec="k", mew=0.1, label="GINR Station 26 (Disko Bay)")
+    # ax.plot(X_xctd_db, y_xctd_db, "o", color="#c6dbef", mec="k", mew=0.1, ms=4, label="Mooring (Disko Bay)")
+    ax.plot(X_xctd_if, y_xctd_if, "o", color="#a50f15", ms=4, mec="k", mew=0.1, label="XCTD (Ilulissat Fjord)")
+    ax.plot(X_omg, y_omg, "o", color="#fb6a4a", ms=4, mec="k", mew=0.1, label="OMG (Ilulissat Fjord)")
 
+    ax.set_xlabel("Time")
+    ax.set_ylabel("Temperature (Celsius)")
+    ax.set_xlim(1980, 2021)
+    ax.set_ylim(0, 5)
+    plt.legend()
+    fig.savefig("ilulissat_fjord_temps.pdf")
+
+    for s, temperate in enumerate(samples.numpy()):
+        theta_ocean = temperate - melting_point_temperature(depth, salinity)
+        ofile = f"ilulissat_fjord_theta_ocean_{s}_1980_2020.nc"
+        create_nc(ofile, theta_ocean, grid_spacing, time_dict)
