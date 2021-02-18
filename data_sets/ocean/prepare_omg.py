@@ -4,7 +4,6 @@
 from datetime import datetime
 import numpy as np
 import pandas as pd
-import pylab as plt
 from glob import glob
 from netCDF4 import Dataset as NC
 import os
@@ -13,13 +12,13 @@ from functools import partial
 from multiprocessing import Pool
 
 
-def toDecimalYear(date):
+def to_decimal_year(date):
     year = date.year
-    startOfThisYear = datetime(year=year, month=1, day=1)
-    startOfNextYear = datetime(year=year + 1, month=1, day=1)
-    yearElapsed = (date - startOfThisYear).total_seconds()
-    yearDuration = (startOfNextYear - startOfThisYear).total_seconds()
-    fraction = yearElapsed / yearDuration
+    start_of_this_year = datetime(year=year, month=1, day=1)
+    start_of_next_year = datetime(year=year + 1, month=1, day=1)
+    year_elapsed = (date - start_of_this_year).total_seconds()
+    year_duration = (start_of_next_year - start_of_this_year).total_seconds()
+    fraction = year_elapsed / year_duration
 
     return date.year + fraction
 
@@ -32,10 +31,8 @@ def process_file(m_file):
 
     geospatial_lat_min = float(nc.geospatial_lat_min)
     geospatial_lat_max = float(nc.geospatial_lat_max)
-    geospatial_lat_units = nc.geospatial_lat_units
     geospatial_lon_min = float(nc.geospatial_lon_min)
     geospatial_lon_max = float(nc.geospatial_lon_max)
-    geospatial_lon_units = nc.geospatial_lon_units
 
     lat = (geospatial_lat_max + geospatial_lat_min) / 2
     lon = (geospatial_lon_max + geospatial_lon_min) / 2
@@ -65,13 +62,13 @@ def process_file(m_file):
         ),
         columns=[
             f"Density [{density.units}]",
-            f"Depth [{depth.units}]",
-            f"Temperature [Celsius]",
-            f"Salinity [{salinity.units}]",
+            "Depth [m]",
+            "Temperature [Celsius]",
+            "Salinity [g/kg]",
         ],
     )
     df["Date"] = start_date.tz_convert(None) + pd.to_timedelta(time_nd[:], unit=time_units)
-    s_time = [toDecimalYear(d) for d in df["Date"]]
+    s_time = [to_decimal_year(d) for d in df["Date"]]
     df["Year"] = s_time
     n = len(df)
     df["Longitude [degrees_east]"] = np.repeat(lon, n).reshape(-1, 1)
@@ -87,8 +84,9 @@ if __name__ == "__main__":
     """
     Process OMG data from
     https://podaac-tools.jpl.nasa.gov/drive/files/allData/omg/L2/CTD/AXCTD/
-    downloaded 
-    $ wget -R -nc --user user --password pw -r  -np -nd  -A "*.nc" https://podaac-tools.jpl.nasa.gov/drive/files/allData/omg/L2/CTD/AXCTD 
+    downloaded
+    $ wget -R -nc --user user --password pw -r  -np -nd  -A "*.nc" \
+      https://podaac-tools.jpl.nasa.gov/drive/files/allData/omg/L2/CTD/AXCTD
     where user, pw are your Earthdata login username and password.
 
     """

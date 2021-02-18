@@ -4,17 +4,16 @@
 from datetime import datetime
 import numpy as np
 import pandas as pd
-import pylab as plt
 from scipy.io import loadmat
 
 
-def toDecimalYear(date):
+def to_decimal_year(date):
     year = date.year
-    startOfThisYear = datetime(year=year, month=1, day=1)
-    startOfNextYear = datetime(year=year + 1, month=1, day=1)
-    yearElapsed = (date - startOfThisYear).total_seconds()
-    yearDuration = (startOfNextYear - startOfThisYear).total_seconds()
-    fraction = yearElapsed / yearDuration
+    start_of_this_year = datetime(year=year, month=1, day=1)
+    start_of_next_year = datetime(year=year + 1, month=1, day=1)
+    year_elapsed = (date - start_of_this_year).total_seconds()
+    year_duration = (start_of_next_year - start_of_this_year).total_seconds()
+    fraction = year_elapsed / year_duration
 
     return date.year + fraction
 
@@ -33,9 +32,9 @@ if __name__ == "__main__":
         columns=["Time Elapsed [days since 2009-01-01]", "Depth [m]", "Temperature [Celsius]"],
     )
     df["Date"] = pd.to_datetime("2009-01-01") + pd.to_timedelta(
-        df[f"Time Elapsed [days since 2009-01-01]"], unit="days"
+        df["Time Elapsed [days since 2009-01-01]"], unit="days"
     )
-    time = [toDecimalYear(d) for d in df["Date"]]
+    time = [to_decimal_year(d) for d in df["Date"]]
     df["Year"] = time
     df = df.sort_values(by="Date")
     n = len(df)

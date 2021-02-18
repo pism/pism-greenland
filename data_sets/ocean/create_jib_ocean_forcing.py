@@ -3,7 +3,6 @@
 
 from cftime import utime
 from dateutil import rrule
-from dateutil.parser import parse
 from datetime import datetime
 from netCDF4 import Dataset as NC
 import gpytorch
@@ -12,17 +11,15 @@ import numpy as np
 import pandas as pd
 import pylab as plt
 from pyproj import Proj
-import time
-import os
 
 
-def toDecimalYear(date):
+def to_decimal_year(date):
     year = date.year
-    startOfThisYear = datetime(year=year, month=1, day=1)
-    startOfNextYear = datetime(year=year + 1, month=1, day=1)
-    yearElapsed = (date - startOfThisYear).total_seconds()
-    yearDuration = (startOfNextYear - startOfThisYear).total_seconds()
-    fraction = yearElapsed / yearDuration
+    start_of_this_year = datetime(year=year, month=1, day=1)
+    start_of_next_year = datetime(year=year + 1, month=1, day=1)
+    year_elapsed = (date - start_of_this_year).total_seconds()
+    year_duration = (start_of_next_year - start_of_this_year).total_seconds()
+    fraction = year_elapsed / year_duration
 
     return date.year + fraction
 
@@ -70,11 +67,11 @@ def create_nc(nc_outfile, theta_ocean, grid_spacing, time_dict):
     n1 -= grid_spacing / 2
 
     de = dn = grid_spacing  # m
-    M = int((e1 - e0) / de) + 1
-    N = int((n1 - n0) / dn) + 1
+    m = int((e1 - e0) / de) + 1
+    n = int((n1 - n0) / dn) + 1
 
-    easting = np.linspace(e0, e1, M)
-    northing = np.linspace(n0, n1, N)
+    easting = np.linspace(e0, e1, m)
+    northing = np.linspace(n0, n1, n)
     ee, nn = np.meshgrid(easting, northing)
 
     # Set up EPSG 3413 (NSIDC north polar stereo) projection
@@ -89,9 +86,9 @@ def create_nc(nc_outfile, theta_ocean, grid_spacing, time_dict):
     grid_corner_dim_name = "nv4"
 
     # array holding x-component of grid corners
-    gc_easting = np.zeros((M, grid_corners))
+    gc_easting = np.zeros((m, grid_corners))
     # array holding y-component of grid corners
-    gc_northing = np.zeros((N, grid_corners))
+    gc_northing = np.zeros((n, grid_corners))
     # array holding the offsets from the cell centers
     # in x-direction (counter-clockwise)
     de_vec = np.array([-de / 2, de / 2, de / 2, -de / 2])
@@ -99,12 +96,12 @@ def create_nc(nc_outfile, theta_ocean, grid_spacing, time_dict):
     # in y-direction (counter-clockwise)
     dn_vec = np.array([-dn / 2, -dn / 2, dn / 2, dn / 2])
     # array holding lat-component of grid corners
-    gc_lat = np.zeros((N, M, grid_corners))
+    gc_lat = np.zeros((n, m, grid_corners))
     # array holding lon-component of grid corners
-    gc_lon = np.zeros((N, M, grid_corners))
+    gc_lon = np.zeros((n, m, grid_corners))
 
     for corner in range(0, grid_corners):
-        ## grid_corners in x-direction
+        # grid_corners in x-direction
         gc_easting[:, corner] = easting + de_vec[corner]
         # grid corners in y-direction
         gc_northing[:, corner] = northing + dn_vec[corner]
@@ -201,7 +198,7 @@ def create_nc(nc_outfile, theta_ocean, grid_spacing, time_dict):
     var_out.long_name = "theta_ocean"
     var_out.grid_mapping = "mapping"
     var_out.coordinates = "lon lat"
-    var_out[:] = np.repeat(theta_ocean, M * N).reshape(nt, N, M)
+    var_out[:] = np.repeat(theta_ocean, m * n).reshape(nt, n, m)
 
     mapping = nc.createVariable("mapping", "c")
     mapping.ellipsoid = "WGS84"
@@ -269,7 +266,7 @@ if __name__ == "__main__":
     ices_df["Date"] = ices_time
     ices_df = ices_df.set_index("Date")
     ices_df = ices_df.groupby(pd.Grouper(freq=freq)).mean().dropna()
-    ices_time = [toDecimalYear(d) for d in ices_df.index]
+    ices_time = [to_decimal_year(d) for d in ices_df.index]
     ices_df["Year"] = ices_time
 
     xctd_if_df = pd.read_csv("xctd_fjord/xctd_ilulissat_fjord.csv", parse_dates=["Date"]).dropna()
@@ -278,13 +275,13 @@ if __name__ == "__main__":
     ].reset_index(drop=True)
     xctd_if_df = xctd_if_df.set_index("Date")
     xctd_if_df = xctd_if_df.groupby(pd.Grouper(freq=freq)).mean().dropna()
-    xctd_if_time = [toDecimalYear(d) for d in xctd_if_df.index]
+    xctd_if_time = [to_decimal_year(d) for d in xctd_if_df.index]
     xctd_if_df["Year"] = xctd_if_time
 
     xctd_db_df = pd.read_csv("moorings/xctd_mooring_disko_bay.csv", parse_dates=["Date"])
     xctd_db_df = xctd_db_df.set_index("Date")
     xctd_db_df = xctd_db_df.groupby(pd.Grouper(freq=freq)).mean().dropna()
-    xctd_db_time = [toDecimalYear(d) for d in xctd_db_df.index]
+    xctd_db_time = [to_decimal_year(d) for d in xctd_db_df.index]
     xctd_db_df["Year"] = xctd_db_time
 
     X_ginr = ginr_df["Year"].values.reshape(-1, 1)
