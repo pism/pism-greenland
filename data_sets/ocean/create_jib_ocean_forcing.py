@@ -253,54 +253,62 @@ if __name__ == "__main__":
     step = 1.0 / 12
     decimal_time = np.arange(start_date.year, end_date.year, step)
 
-    ginr_df = pd.read_csv("ginr/ginr_ctd_station_26.csv")
+    ginr = pd.read_csv("ginr/ginr_ctd_station_26.csv")
 
-    omg_df = pd.read_csv("omg/omg_axctd_ilulissat_fjord_10s_mean.csv", parse_dates=["Date"])
-    omg_df = omg_df[(omg_df["Depth [meters]"] <= depth_max) & (omg_df["Depth [meters]"] >= depth_min)]
-    omg_df = omg_df.set_index("Date").drop(columns=["Unnamed: 0"])
-    omg_df = omg_df.groupby(pd.Grouper(freq=freq)).mean().dropna()
+    omg_fjord = pd.read_csv("omg/omg_axctd_ilulissat_fjord_10s_mean.csv", parse_dates=["Date"])
+    omg_fjord = omg_fjord[(omg_fjord["Depth [m]"] <= depth_max) & (omg_fjord["Depth [m]"] >= depth_min)]
+    omg_fjord = omg_fjord.set_index("Date").drop(columns=["Unnamed: 0"])
+    omg_fjord = omg_fjord.groupby(pd.Grouper(freq=freq)).mean().dropna()
 
-    ices_df = pd.read_csv("ices/ices_disko_bay.csv")
-    ices_df = ices_df[(ices_df["Depth [m]"] >= depth_min) & (ices_df["Depth [m]"] <= depth_max)].reset_index(drop=True)
-    ices_time = pd.to_datetime(ices_df.Date, format="%Y/%m/%d %H:%M:%S")
-    ices_df["Date"] = ices_time
-    ices_df = ices_df.set_index("Date")
-    ices_df = ices_df.groupby(pd.Grouper(freq=freq)).mean().dropna()
-    ices_time = [to_decimal_year(d) for d in ices_df.index]
-    ices_df["Year"] = ices_time
+    omg_bay = pd.read_csv("omg/omg_axctd_disko_bay_10s_mean.csv", parse_dates=["Date"])
+    omg_bay = omg_bay[(omg_bay["Depth [m]"] <= depth_max) & (omg_bay["Depth [m]"] >= depth_min)]
+    omg_bay = omg_bay.set_index("Date").drop(columns=["Unnamed: 0"])
+    omg_bay = omg_bay.groupby(pd.Grouper(freq=freq)).mean().dropna()
 
-    xctd_if_df = pd.read_csv("xctd_fjord/xctd_ilulissat_fjord.csv", parse_dates=["Date"]).dropna()
-    xctd_if_df = xctd_if_df[
-        (xctd_if_df["Depth [m]"] >= depth_min) & (xctd_if_df["Depth [m]"] <= depth_max)
-    ].reset_index(drop=True)
-    xctd_if_df = xctd_if_df.set_index("Date")
-    xctd_if_df = xctd_if_df.groupby(pd.Grouper(freq=freq)).mean().dropna()
-    xctd_if_time = [to_decimal_year(d) for d in xctd_if_df.index]
-    xctd_if_df["Year"] = xctd_if_time
+    ices = pd.read_csv("ices/ices_disko_bay.csv")
+    ices = ices[(ices["Depth [m]"] >= depth_min) & (ices["Depth [m]"] <= depth_max)].reset_index(drop=True)
+    ices_time = pd.to_datetime(ices["Date"], format="%Y/%m/%d %H:%M:%S")
+    ices["Date"] = ices_time
+    ices = ices.set_index("Date")
+    ices = ices.groupby(pd.Grouper(freq=freq)).mean().dropna()
+    ices_time = [to_decimal_year(d) for d in ices.index]
+    ices["Year"] = ices_time
 
-    xctd_db_df = pd.read_csv("moorings/xctd_mooring_disko_bay.csv", parse_dates=["Date"])
-    xctd_db_df = xctd_db_df.set_index("Date")
-    xctd_db_df = xctd_db_df.groupby(pd.Grouper(freq=freq)).mean().dropna()
-    xctd_db_time = [to_decimal_year(d) for d in xctd_db_df.index]
-    xctd_db_df["Year"] = xctd_db_time
+    xctd_if = pd.read_csv("xctd_fjord/xctd_ilulissat_fjord.csv", parse_dates=["Date"]).dropna()
+    xctd_if = xctd_if[(xctd_if["Depth [m]"] >= depth_min) & (xctd_if["Depth [m]"] <= depth_max)].reset_index(drop=True)
+    xctd_if = xctd_if.set_index("Date")
+    xctd_if = xctd_if.groupby(pd.Grouper(freq=freq)).mean().dropna()
+    xctd_if_time = [to_decimal_year(d) for d in xctd_if.index]
+    xctd_if["Year"] = xctd_if_time
 
-    X_ginr = ginr_df["Year"].values.reshape(-1, 1)
-    X_ices = ices_df["Year"].values.reshape(-1, 1)
-    X_omg = omg_df["Year"].values.reshape(-1, 1)
-    X_xctd_if = xctd_if_df["Year"].values.reshape(-1, 1)
-    X_xctd_db = xctd_db_df["Year"].values.reshape(-1, 1)
+    xctd_db = pd.read_csv("moorings/xctd_mooring_disko_bay.csv", parse_dates=["Date"])
+    xctd_db = xctd_db.set_index("Date")
+    xctd_db = xctd_db.groupby(pd.Grouper(freq=freq)).mean().dropna()
+    xctd_db_time = [to_decimal_year(d) for d in xctd_db.index]
+    xctd_db["Year"] = xctd_db_time
 
-    y_ginr = ginr_df["Temperature [Celsius]"].values
-    y_ices = ices_df["Temperature [Celsius]"].values
-    y_omg = omg_df["Temperature [Celsius]"].values
-    y_xctd_if = xctd_if_df["Temperature [Celsius]"].values
-    y_xctd_db = xctd_db_df["Temperature [Celsius]"].values
+    X_ginr = ginr["Year"].values.reshape(-1, 1)
+    X_ices = ices["Year"].values.reshape(-1, 1)
+    X_omg_bay = omg_bay["Year"].values.reshape(-1, 1)
+    X_omg_fjord = omg_fjord["Year"].values.reshape(-1, 1)
+    X_xctd_if = xctd_if["Year"].values.reshape(-1, 1)
+    X_xctd_db = xctd_db["Year"].values.reshape(-1, 1)
 
-    all_df = pd.concat([ginr_df, ices_df, omg_df, xctd_if_df])
-    all_df = all_df.sort_values(by="Year")
+    y_ginr = ginr["Temperature [Celsius]"].values
+    y_ices = ices["Temperature [Celsius]"].values
+    y_omg_bay = omg_bay["Temperature [Celsius]"].values
+    y_omg_fjord = omg_fjord["Temperature [Celsius]"].values
+    y_xctd_if = xctd_if["Temperature [Celsius]"].values
+    y_xctd_db = xctd_db["Temperature [Celsius]"].values
 
-    X = all_df["Year"].values.reshape(-1, 1)
-    y = all_df["Temperature [Celsius]"].values
+    # Here we can select which observations are being used for the GP
+    # Only use Disko Bay obs, exluding the moorings at 340m which gives
+    # us an idea of seasonality
+    merged = pd.concat([ginr, ices, omg_bay])
+    merged = merged.sort_values(by="Year")
+
+    X = merged["Year"].values.reshape(-1, 1)
+    y = merged["Temperature [Celsius]"].values
     X_new = decimal_time[:, None]
 
     # We will use the simplest form of GP model, exact inference
@@ -371,9 +379,12 @@ if __name__ == "__main__":
     # plot the data and the true latent function
     ax.plot(X_ices, y_ices, "o", color="#08519c", ms=4, mec="k", mew=0.1, label="ICES (Disko Bay)")
     ax.plot(X_ginr, y_ginr, "o", color="#6baed6", ms=4, mec="k", mew=0.1, label="GINR Station 26 (Disko Bay)")
-    # ax.plot(X_xctd_db, y_xctd_db, "o", color="#c6dbef", mec="k", mew=0.1, ms=4, label="Mooring (Disko Bay)")
+    ax.plot(X_xctd_db, y_xctd_db, "o", color="#c6dbef", mec="k", mew=0.1, ms=4, label="Mooring (Disko Bay)")
+    ax.plot(X_omg_bay, y_omg_bay, "o", color="#006d2c", ms=4, mec="k", mew=0.1, label="OMG Fjord (Disko Bay)")
     ax.plot(X_xctd_if, y_xctd_if, "o", color="#a50f15", ms=4, mec="k", mew=0.1, label="XCTD (Ilulissat Fjord)")
-    ax.plot(X_omg, y_omg, "o", color="#fb6a4a", ms=4, mec="k", mew=0.1, label="OMG (Ilulissat Fjord)")
+    ax.plot(
+        X_omg_fjord, y_omg_fjord, "o", color="#fb6a4a", ms=4, mec="k", mew=0.1, label="OMG Fjord (Ilulissat Fjord)"
+    )
 
     ax.set_xlabel("Time")
     ax.set_ylabel("Temperature (Celsius)")

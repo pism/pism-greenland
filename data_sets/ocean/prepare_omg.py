@@ -112,16 +112,29 @@ if __name__ == "__main__":
     df["Date"] = df.index
     df.to_csv(f"{odir}/omg_axctd_all_10s_mean.csv")
 
+    lon_min = -54.0208
+    lon_max = -50.1
+    lat_min = 68.8608
+    lat_max = 69.321
+
+    df_bay = df[
+        (df["Longitude [degrees_east]"] >= lon_min)
+        & (df["Longitude [degrees_east]"] <= lon_max)
+        & (df["Latitude [degrees_north]"] >= lat_min)
+        & (df["Latitude [degrees_north]"] <= lat_max)
+    ].reset_index(drop=True)
+    df_bay.to_csv(f"{odir}/omg_axctd_disko_bay_10s_mean.csv")
+
     # narrow bounding box for fjord
     lon_min = -50.3
     lon_max = -50.1
     lat_min = 69.1
     lat_max = 69.3
 
-    df_filtered = df[
+    df_fjord = df[
         (df["Longitude [degrees_east]"] >= lon_min)
         & (df["Longitude [degrees_east]"] <= lon_max)
         & (df["Latitude [degrees_north]"] >= lat_min)
         & (df["Latitude [degrees_north]"] <= lat_max)
     ].reset_index(drop=True)
-    df_filtered.to_csv(f"{odir}/omg_axctd_ilulissat_fjord_10s_mean.csv")
+    df_fjord.to_csv(f"{odir}/omg_axctd_ilulissat_fjord_10s_mean.csv")
