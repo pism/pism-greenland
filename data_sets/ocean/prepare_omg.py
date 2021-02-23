@@ -78,6 +78,11 @@ def process_file(m_file):
     return df
 
 
+rho_sea_water = 1.0273
+# depths to average over
+depth_min = 225
+depth_max = 275
+
 if __name__ == "__main__":
     __spec__ = None
 
@@ -105,6 +110,9 @@ if __name__ == "__main__":
         pool.close()
 
     df = pd.concat(dfs).reset_index(drop=True).replace(-9999, np.nan)
+    time = [to_decimal_year(d) for d in df["Date"]]
+    df["Year"] = time
+
     df.to_csv(f"{odir}/omg_axctd_all.csv.gz", compression="gzip")
 
     df = df.set_index("Date")
@@ -125,6 +133,9 @@ if __name__ == "__main__":
     ].reset_index(drop=True)
     df_bay.to_csv(f"{odir}/omg_axctd_disko_bay_10s_mean.csv")
 
+    df_bay = df_bay[(df_bay["Depth [m]"] <= depth_max) & (df_bay["Depth [m]"] >= depth_min)]
+    df_bay.to_csv(f"{odir}/omg_axctd_disko_bay_10s_mean_250m.csv")
+
     # narrow bounding box for fjord
     lon_min = -50.3
     lon_max = -50.1
@@ -138,3 +149,6 @@ if __name__ == "__main__":
         & (df["Latitude [degrees_north]"] <= lat_max)
     ].reset_index(drop=True)
     df_fjord.to_csv(f"{odir}/omg_axctd_ilulissat_fjord_10s_mean.csv")
+
+    df_fjord = df_fjord[(df_fjord["Depth [m]"] <= depth_max) & (df_fjord["Depth [m]"] >= depth_min)]
+    df_fjord.to_csv(f"{odir}/omg_axctd_ilulissat_fjord_10s_mean_250m.csv")

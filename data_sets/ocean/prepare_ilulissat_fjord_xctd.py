@@ -18,18 +18,23 @@ def to_decimal_year(date):
     return date.year + fraction
 
 
+# depths to average over
+depth_min = 225
+depth_max = 275
+
 if __name__ == "__main__":
 
-    data = loadmat("xctd_fjord/JI_Mean_Each_Season.mat")
+    data = loadmat("xctd_fjord/JI_Mean_Each_Season_with_salinity.mat")
     df = pd.DataFrame(
         data=np.hstack(
             [
                 data["days_since20090101"].reshape(-1, 1),
                 data["depth_m"].reshape(-1, 1),
                 data["temperature_mean_resolution_10m"].reshape(-1, 1),
+                data["salinity_mean_resolution_10m"].reshape(-1, 1),
             ]
         ),
-        columns=["Time Elapsed [days since 2009-01-01]", "Depth [m]", "Temperature [Celsius]"],
+        columns=["Time Elapsed [days since 2009-01-01]", "Depth [m]", "Temperature [Celsius]", "Salinity [g/kg]"],
     )
     df["Date"] = pd.to_datetime("2009-01-01") + pd.to_timedelta(
         df["Time Elapsed [days since 2009-01-01]"], unit="days"
@@ -41,5 +46,9 @@ if __name__ == "__main__":
     lon, lat = -50.27644, 69.16999
     df["Longitude [degrees_east]"] = np.repeat(lon, n).reshape(-1, 1)
     df["Latitude [degrees_north]"] = np.repeat(lat, n).reshape(-1, 1)
+    time = [to_decimal_year(d) for d in df["Date"]]
+    df["Year"] = time
 
     df.to_csv("xctd_fjord/xctd_ilulissat_fjord.csv")
+    df = df[(df["Depth [m]"] <= depth_max) & (df["Depth [m]"] >= depth_min)]
+    df.to_csv("xctd_fjord/xctd_ilulissat_fjord_250m.csv")
