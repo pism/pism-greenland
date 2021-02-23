@@ -97,6 +97,7 @@ if __name__ == "__main__":
     xctd_fjord_col = "#9e9ac8"
     ms = 5
     mew = 0.25
+
     fig, ax = plt.subplots(
         2,
         1,

@@ -311,66 +311,189 @@ if __name__ == "__main__":
     y = merged["Temperature [Celsius]"].values
     X_new = decimal_time[:, None]
 
-    # We will use the simplest form of GP model, exact inference
-    class ExactGPModel(gpytorch.models.ExactGP):
-        def __init__(self, train_x, train_y, likelihood, cov):
-            super(ExactGPModel, self).__init__(train_x, train_y, likelihood)
-            self.mean_module = gpytorch.means.ConstantMean()
-            self.covar_module = gpytorch.kernels.ScaleKernel(cov)
+    # # We will use the simplest form of GP model, exact inference
+    # class ExactGPModel(gpytorch.models.ExactGP):
+    #     def __init__(self, train_x, train_y, likelihood, cov):
+    #         super(ExactGPModel, self).__init__(train_x, train_y, likelihood)
+    #         self.mean_module = gpytorch.means.ConstantMean()
+    #         self.covar_module = gpytorch.kernels.ScaleKernel(cov)
 
-        def forward(self, x):
-            mean_x = self.mean_module(x)
-            covar_x = self.covar_module(x)
-            return gpytorch.distributions.MultivariateNormal(mean_x, covar_x)
+    #     def forward(self, x):
+    #         mean_x = self.mean_module(x)
+    #         covar_x = self.covar_module(x)
+    #         return gpytorch.distributions.MultivariateNormal(mean_x, covar_x)
 
     X_train = torch.tensor(X).to(torch.float)
     y_train = torch.tensor(np.squeeze(y)).to(torch.float)
     X_test = torch.tensor(X_new).to(torch.float)
 
-    # initialize likelihood and model
-    noise_prior = gpytorch.priors.NormalPrior(0.2, 0.2)
-    likelihood = gpytorch.likelihoods.GaussianLikelihood(noise_prior=noise_prior)
+    # # initialize likelihood and model
+    # noise_prior = gpytorch.priors.NormalPrior(0.2, 0.2)
+    # likelihood = gpytorch.likelihoods.GaussianLikelihood(noise_prior=noise_prior)
 
-    cov = gpytorch.kernels.RBFKernel
-    model = ExactGPModel(X_train, y_train, likelihood, cov())
+    # cov = gpytorch.kernels.RBFKernel
+    # model = ExactGPModel(X_train, y_train, likelihood, cov())
+
+    # # Find optimal model hyperparameters
+    # model.train()
+    # likelihood.train()
+
+    # # Use the adam optimizer
+    # optimizer = torch.optim.Adam(model.parameters(), lr=0.1)  # Includes GaussianLikelihood parameters
+
+    # # "Loss" for GPs - the marginal log likelihood
+    # mll = gpytorch.mlls.ExactMarginalLogLikelihood(likelihood, model)
+
+    # for i in range(500):
+    #     # Zero gradients from previous iteration
+    #     optimizer.zero_grad()
+    #     # Output from model
+    #     output = model(X_train)
+    #     # Calc loss and backprop gradients
+    #     loss = -mll(output, y_train)
+    #     loss.backward()
+    #     if i % 20 == 0:
+    #         print(i, loss.item(), model.likelihood.noise.item())
+    #     optimizer.step()
+
+    # # Get into evaluation (predictive posterior) mode
+    # model.eval()
+    # likelihood.eval()
+    # with torch.no_grad():  # , gpytorch.settings.fast_pred_var():
+    #     # Draw n_samples
+    #     n_samples = 10
+    #     f_pred = model(X_test)
+    #     samples = f_pred.sample(
+    #         sample_shape=torch.Size(
+    #             [
+    #                 n_samples,
+    #             ]
+    #         )
+    #     )
+
+    # omg_bay_col = "#08519c"
+    # ices_bay_col = "#6baed6"
+    # ginr_bay_col = "#c6dbef"
+    # ginr_ctd26_col = "#74c476"
+
+    # omg_fjord_col = "#54278f"
+    # xctd_fjord_col = "#9e9ac8"
+    # ms = 5
+    # mew = 0.25
+
+    # # Initialize plot
+    # fig, ax = plt.subplots(1, 1)
+
+    # ax.plot(X_test.numpy(), samples.numpy().T, color="k", linewidth=0.5)
+
+    # # plot the data and the true latent function
+    # ax.plot(X_omg_bay, T_omg_bay, "o", color=omg_bay_col, ms=ms, mec="k", mew=mew, label="OMG (Disko Bay)")
+    # ax.plot(X_ices, T_ices, "o", color=ices_bay_col, ms=ms, mec="k", mew=mew, label="ICES (Disko Bay)")
+    # ax.plot(X_ginr, T_ginr, "o", color=ginr_bay_col, ms=ms, mec="k", mew=mew, label="GINR (Disko Bay)")
+    # ax.plot(X_ginr_ctd26, T_ginr_ctd26, "o", color=ginr_ctd26_col, ms=ms, mec="k", mew=mew, label="GINR (Station 26)")
+    # # ax.plot(X_xctd_bay, T_xctd_bay, "o", color="#006d2c", mec="k", mew=mew, ms=ms, label="Mooring (Disko Bay)")
+    # ax.plot(
+    #     X_xctd_fjord, T_xctd_fjord, "o", color=xctd_fjord_col, ms=ms, mec="k", mew=mew, label="XCTD (Ilulissat Fjord)"
+    # )
+    # ax.plot(X_omg_fjord, T_omg_fjord, "o", color=omg_fjord_col, ms=ms, mec="k", mew=mew, label="OMG (Ilulissat Fjord)")
+
+    # ax.set_xlabel("Time")
+    # ax.set_ylabel("Temperature (Celsius)")
+    # ax.set_xlim(1980, 2021)
+    # ax.set_ylim(0, 5)
+    # plt.legend()
+    # fig.savefig("ilulissat_fjord_temps_mod.pdf")
+
+    # for s, temperate in enumerate(samples.numpy()):
+    #     theta_ocean = temperate - melting_point_temperature(depth, salinity)
+    #     ofile = f"ilulissat_fjord_theta_ocean_{s}_1980_2020.nc"
+    #     create_nc(ofile, theta_ocean, grid_spacing, time_dict)
+
+    class MultitaskGPModel(gpytorch.models.ExactGP):
+        def __init__(self, train_x, train_y, likelihood, num_tasks):
+            super(MultitaskGPModel, self).__init__(train_x, train_y, likelihood)
+            self.mean_modules = [gpytorch.means.ConstantMean() for i in range(num_tasks)]
+            self.covar_module = gpytorch.kernels.RBFKernel()
+
+            # Surprisingly the Gram matrix of a rank-1 outer product appears to be sufficient
+            # for parameterizing the inter-task covariance matrix, as increasing the rank
+            # does not improved the fit.
+            self.task_covar_module = gpytorch.kernels.IndexKernel(num_tasks=num_tasks, rank=1)
+
+        def forward(self, x, i):
+            # This is a hack that allows for different means to be queried when there are different task indices
+            mean_x = torch.cat([self.mean_modules[ii](xx) for ii, xx in zip(i, x)])
+
+            # Get input-input covariance
+            covar_x = self.covar_module(x)
+            # Get task-task covariance
+            covar_i = self.task_covar_module(i)
+            # Multiply the two together to get the covariance we want
+            covar = covar_x.mul(covar_i)
+
+            return gpytorch.distributions.MultivariateNormal(mean_x, covar)
+
+    # Noise is just inferred from the data.  This is possible because there are multiple simultaneous
+    # entries for some of the observations, and also because the different tasks are correlated.
+    likelihood = gpytorch.likelihoods.GaussianLikelihood()
+
+    data = {
+        "GINR": {"X": X_ginr, "Y": T_ginr},
+        "ICES": {"X": X_ices, "Y": T_ices},
+        "OMG Bay": {"X": X_omg_bay, "Y": T_omg_bay},
+        "OMG Fjord": {"X": X_omg_fjord, "Y": T_omg_fjord},
+        "XCTD Fjord": {"X": X_xctd_fjord, "Y": T_xctd_fjord},
+    }
+
+    # Put them all together
+    full_train_i = torch.cat(
+        [torch.full_like(torch.tensor(data[d]["X"]), dtype=torch.long, fill_value=i) for i, d in enumerate(data)]
+    )
+    full_train_x = torch.cat([torch.tensor(data[d]["X"]).to(torch.float) for d in data])
+    full_train_y = torch.cat([torch.tensor(data[d]["Y"]).to(torch.float) for d in data])
+
+    # Here we have two iterms that we're passing in as train_inputs
+    num_tasks = len(data)
+    model = MultitaskGPModel((full_train_x, full_train_i), full_train_y, likelihood, num_tasks)
+
+    training_iterations = 100
 
     # Find optimal model hyperparameters
     model.train()
     likelihood.train()
 
     # Use the adam optimizer
-    optimizer = torch.optim.Adam(model.parameters(), lr=0.1)  # Includes GaussianLikelihood parameters
+    optimizer = torch.optim.Adam(
+        [
+            {"params": model.parameters()},  # Includes GaussianLikelihood parameters
+        ],
+        lr=0.1,
+    )
 
     # "Loss" for GPs - the marginal log likelihood
     mll = gpytorch.mlls.ExactMarginalLogLikelihood(likelihood, model)
 
-    for i in range(500):
-        # Zero gradients from previous iteration
+    for i in range(training_iterations):
         optimizer.zero_grad()
-        # Output from model
-        output = model(X_train)
-        # Calc loss and backprop gradients
-        loss = -mll(output, y_train)
+        output = model(full_train_x, full_train_i)
+        loss = -mll(output, full_train_y)
         loss.backward()
-        if i % 20 == 0:
-            print(i, loss.item(), model.likelihood.noise.item())
+        print("Iter %d/50 - Loss: %.3f" % (i + 1, loss.item()))
         optimizer.step()
 
-    # Get into evaluation (predictive posterior) mode
+    # Set into eval mode
     model.eval()
     likelihood.eval()
-    with torch.no_grad():  # , gpytorch.settings.fast_pred_var():
-        # Draw n_samples
-        n_samples = 10
-        f_pred = model(X_test)
-        samples = f_pred.sample(
-            sample_shape=torch.Size(
-                [
-                    n_samples,
-                ]
-            )
-        )
 
+    test_i = {d: torch.full_like(X_test, dtype=torch.long, fill_value=i) for (i, d) in enumerate(data)}
+
+    # Make predictions - one task at a time
+    # We control the task we cae about using the indices
+
+    # The gpytorch.settings.fast_pred_var flag activates LOVE (for fast variances)
+    # See https://arxiv.org/abs/1803.06058
+    with torch.no_grad(), gpytorch.settings.fast_pred_var():
+        Y_pred = {d: likelihood(model(X_test, test_i[d])) for d in test_i}
     omg_bay_col = "#08519c"
     ices_bay_col = "#6baed6"
     ginr_bay_col = "#c6dbef"
@@ -378,33 +501,44 @@ if __name__ == "__main__":
 
     omg_fjord_col = "#54278f"
     xctd_fjord_col = "#9e9ac8"
+
+    col_dict = {
+        "OMG Bay": "#08519c",
+        "ICES": "#6baed6",
+        "GINR": "#c6dbef",
+        "OMG Fjord": "#54278f",
+        "OMG Bay": "#9e9ac8",
+        "XCTD Fjord": "#9e9ac8",
+    }
     ms = 5
     mew = 0.25
 
     # Initialize plot
     fig, ax = plt.subplots(1, 1)
+    fig.set_size_inches(12, 12)
 
-    ax.plot(X_test.numpy(), samples.numpy().T, color="k", linewidth=0.5)
+    for k, v in Y_pred.items():
+        ax.plot(X_test.numpy(), v.mean.numpy().T, color=col_dict[k], linewidth=0.75)
 
-    # plot the data and the true latent function
-    ax.plot(X_omg_bay, T_omg_bay, "o", color=omg_bay_col, ms=ms, mec="k", mew=mew, label="OMG (Disko Bay)")
-    ax.plot(X_ices, T_ices, "o", color=ices_bay_col, ms=ms, mec="k", mew=mew, label="ICES (Disko Bay)")
-    ax.plot(X_ginr, T_ginr, "o", color=ginr_bay_col, ms=ms, mec="k", mew=mew, label="GINR (Disko Bay)")
-    ax.plot(X_ginr_ctd26, T_ginr_ctd26, "o", color=ginr_ctd26_col, ms=ms, mec="k", mew=mew, label="GINR (Station 26)")
-    # ax.plot(X_xctd_bay, T_xctd_bay, "o", color="#006d2c", mec="k", mew=mew, ms=ms, label="Mooring (Disko Bay)")
-    ax.plot(
-        X_xctd_fjord, T_xctd_fjord, "o", color=xctd_fjord_col, ms=ms, mec="k", mew=mew, label="XCTD (Ilulissat Fjord)"
-    )
-    ax.plot(X_omg_fjord, T_omg_fjord, "o", color=omg_fjord_col, ms=ms, mec="k", mew=mew, label="OMG (Ilulissat Fjord)")
+        lower, upper = v.confidence_region()
+        ax.fill_between(X_test.numpy().squeeze(), lower.numpy(), upper.numpy(), color=col_dict[k], alpha=0.15)
+
+        # plot the data and the true latent function
+        ax.plot(data[k]["X"], data[k]["Y"], "o", color=col_dict[k], ms=ms, mec="k", mew=mew, label=k)
+    # ax.plot(X_ices, T_ices, "o", color=ices_bay_col, ms=ms, mec="k", mew=mew, label="ICES (Disko Bay)")
+    # ax.plot(X_ginr, T_ginr, "o", color=ginr_bay_col, ms=ms, mec="k", mew=mew, label="GINR (Disko Bay)")
+    # ax.plot(X_ginr_ctd26, T_ginr_ctd26, "o", color=ginr_ctd26_col, ms=ms, mec="k", mew=mew, label="GINR (Station 26)")
+    # # ax[0].plot(X_xctd_bay, T_xctd_bay, "o", color="#006d2c", mec="k", mew=mew, ms=ms, label="Mooring (Disko Bay)")
+    # ax.plot(
+    #     X_xctd_fjord, T_xctd_fjord, "o", color=xctd_fjord_col, ms=ms, mec="k", mew=mew, label="XCTD (Ilulissat Fjord)"
+    # )
+    # ax.plot(X_omg_fjord, T_omg_fjord, "o", color=omg_fjord_col, ms=ms, mec="k", mew=mew, label="OMG (Ilulissat Fjord)")
+
+    # # ax.plot(X_test.numpy(), samples.numpy().T, color="k", linewidth=0.5)
 
     ax.set_xlabel("Time")
     ax.set_ylabel("Temperature (Celsius)")
     ax.set_xlim(1980, 2021)
-    ax.set_ylim(0, 5)
+    # ax.set_ylim(0, 5)
     plt.legend()
-    fig.savefig("ilulissat_fjord_temps_mod.pdf")
-
-    for s, temperate in enumerate(samples.numpy()):
-        theta_ocean = temperate - melting_point_temperature(depth, salinity)
-        ofile = f"ilulissat_fjord_theta_ocean_{s}_1980_2020.nc"
-        create_nc(ofile, theta_ocean, grid_spacing, time_dict)
+    fig.savefig("ilulissat_fjord_temps.pdf")
