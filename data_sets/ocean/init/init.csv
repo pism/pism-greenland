@@ -1,0 +1,2 @@
+,Date,Pressure [db],Depth [m],Salinity [g/kg],Temperature [Celsius],Potential Temperature [Celsius],Conductivity [],Longitude [degrees_east],Latitude [degrees_north],Cast,Year
+0,1980-01-01 00:00.000000,240.0,250,33.5,0.5,2.068775726773965,3.0237999,-51.491655,69.1833,Forced Initial Condition,1980
