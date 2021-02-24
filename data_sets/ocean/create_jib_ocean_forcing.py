@@ -264,6 +264,8 @@ col_dict = {
     "OMG Fjord": "#54278f",
     "OMG Bay": "#9e9ac8",
     "XCTD Fjord": "#9e9ac8",
+    "Bay": "#9e9ac8",
+    "Fjord": "#6baed6",
 }
 ms = 5
 mew = 0.25
@@ -310,6 +312,8 @@ if __name__ == "__main__":
     X_new = decimal_time[:, None]
     X_test = torch.tensor(X_new).to(torch.float)
 
+    init = pd.read_csv("ices/init.csv", parse_dates=["Date"])
+
     ginr = pd.read_csv("ginr/ginr_disko_bay_250m.csv", parse_dates=["Date"])
     ginr = ginr.set_index("Date").drop(columns=["Unnamed: 0"])
     ginr = ginr.groupby(pd.Grouper(freq=freq)).mean().dropna(subset=["Temperature [Celsius]", "Salinity [g/kg]"])
@@ -342,6 +346,7 @@ if __name__ == "__main__":
         xctd_bay.groupby(pd.Grouper(freq=freq)).mean().dropna(subset=["Temperature [Celsius]", "Salinity [g/kg]"])
     )
 
+    X_init = init["Year"].values.reshape(-1, 1)
     X_ginr = ginr["Year"].values.reshape(-1, 1)
     X_ginr_ctd26 = ginr_ctd26["Year"].values.reshape(-1, 1)
     X_ices = ices["Year"].values.reshape(-1, 1)
@@ -350,6 +355,7 @@ if __name__ == "__main__":
     X_xctd_bay = xctd_bay["Year"].values.reshape(-1, 1)
     X_xctd_fjord = xctd_fjord["Year"].values.reshape(-1, 1)
 
+    T_init = init["Temperature [Celsius]"].values
     T_ginr = ginr["Temperature [Celsius]"].values
     T_ginr_ctd26 = ginr_ctd26["Temperature [Celsius]"].values
     T_ices = ices["Temperature [Celsius]"].values
@@ -358,6 +364,7 @@ if __name__ == "__main__":
     T_xctd_bay = xctd_bay["Temperature [Celsius]"].values
     T_xctd_fjord = xctd_fjord["Temperature [Celsius]"].values
 
+    S_init = init["Salinity [g/kg]"].values
     S_ginr = ginr["Salinity [g/kg]"].values
     S_ices = ices["Salinity [g/kg]"].values
     S_omg_bay = omg_bay["Salinity [g/kg]"].values
@@ -383,6 +390,26 @@ if __name__ == "__main__":
             "OMG Bay": {"X": X_omg_bay, "Y": S_omg_bay},
             "OMG Fjord": {"X": X_omg_fjord, "Y": S_omg_fjord},
             "XCTD Fjord": {"X": X_xctd_fjord, "Y": S_xctd_fjord},
+        },
+    }
+
+    X_bay = np.vstack([X_ginr, X_ices, X_omg_bay])
+    X_fjord = np.vstack([X_xctd_fjord, X_omg_fjord, X_init])
+
+    T_bay = np.hstack([T_ginr, T_ices, T_omg_bay])
+    T_fjord = np.hstack([T_xctd_fjord, T_omg_fjord, T_init])
+
+    S_bay = np.hstack([S_ginr, S_ices, S_omg_bay])
+    S_fjord = np.hstack([S_xctd_fjord, S_omg_fjord, S_init])
+
+    all_data = {
+        "Temperature [Celsius]": {
+            "Bay": {"X": X_bay, "Y": T_bay},
+            "Fjord": {"X": X_fjord, "Y": T_fjord},
+        },
+        "Salinity [g/kg]": {
+            "Bay": {"X": X_bay, "Y": S_bay},
+            "Fjord": {"X": X_fjord, "Y": S_fjord},
         },
     }
 
@@ -468,12 +495,11 @@ if __name__ == "__main__":
             ax[idx].plot(X_test.numpy(), v.mean.numpy().T, color=col_dict[k], linewidth=0.75)
 
             lower, upper = v.confidence_region()
-            ax[idx].fill_between(X_test.numpy().squeeze(), lower.numpy(), upper.numpy(), color=col_dict[k], alpha=0.15)
+            ax[idx].fill_between(X_test.numpy().squeeze(), lower.numpy(), upper.numpy(), color=col_dict[k], alpha=0.20)
 
             # plot the data and the true latent function
             ax[idx].plot(data[k]["X"], data[k]["Y"], "o", color=col_dict[k], ms=ms, mec="k", mew=mew, label=k)
 
-        # # ax.plot(X_test.numpy(), samples.numpy().T, color="k", linewidth=0.5)
         ax[idx].set_ylabel(key)
 
         idx += 1
@@ -481,7 +507,7 @@ if __name__ == "__main__":
     ax[1].set_xlabel("Year")
     ax[1].set_xlim(1980, 2021)
     ax[0].set_ylim(0, 5)
-    ax[1].set_ylim(0, 40)
+    ax[1].set_ylim(32, 36)
     legend = ax[0].legend()
     legend.get_frame().set_linewidth(0.0)
     legend.get_frame().set_alpha(0.0)
@@ -490,7 +516,10 @@ if __name__ == "__main__":
 
     # Just an example, we use "ICES" for testing only
     for s, (temperature, salinity) in enumerate(
-        zip(all_samples["Temperature [Celsius]"]["ICES"].numpy(), all_samples["Temperature [Celsius]"]["ICES"].numpy())
+        zip(
+            all_samples["Temperature [Celsius]"]["Fjord"].numpy(),
+            all_samples["Salinity [g/kg]"]["Fjord"].numpy(),
+        )
     ):
         theta_ocean = temperature - melting_point_temperature(depth, salinity)
         ofile = f"jib_ocean_forcing_{s}_1980_2020.nc"
