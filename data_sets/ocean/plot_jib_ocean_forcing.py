@@ -114,7 +114,7 @@ if __name__ == "__main__":
     ax[0].plot(
         X_ginr_ctd26, T_ginr_ctd26, "o", color=ginr_ctd26_col, ms=ms, mec="k", mew=mew, label="GINR (Station 26)"
     )
-    # ax[0].plot(X_xctd_bay, T_xctd_bay, "o", color="#006d2c", mec="k", mew=mew, ms=ms, label="Mooring (Disko Bay)")
+    ax[0].plot(X_xctd_bay, T_xctd_bay, "o", color="#006d2c", mec="k", mew=mew, ms=ms, label="Mooring (Disko Bay)")
     ax[0].plot(
         X_xctd_fjord, T_xctd_fjord, "o", color=xctd_fjord_col, ms=ms, mec="k", mew=mew, label="XCTD (Ilulissat Fjord)"
     )
@@ -125,7 +125,7 @@ if __name__ == "__main__":
     ax[1].plot(X_omg_bay, S_omg_bay, "o", color=omg_fjord_col, ms=ms, mec="k", mew=mew, label="OMG Fjord (Disko Bay)")
     ax[1].plot(X_ices, S_ices, "o", color=ices_bay_col, ms=ms, mec="k", mew=mew, label="ICES (Disko Bay)")
     ax[1].plot(X_ginr, S_ginr, "o", color=ginr_bay_col, ms=ms, mec="k", mew=mew, label="GINR (Disko Bay)")
-    # ax[1].plot(X_xctd_bay, S_xctd_bay, "o", color="#006d2c", mec="k", mew=mew, ms=ms, label="Mooring (Disko Bay)")
+    ax[1].plot(X_xctd_bay, S_xctd_bay, "o", color="#006d2c", mec="k", mew=mew, ms=ms, label="Mooring (Disko Bay)")
     ax[1].plot(
         X_xctd_fjord, S_xctd_fjord, "o", color=xctd_fjord_col, ms=ms, mec="k", mew=mew, label="XCTD (Ilulissat Fjord)"
     )

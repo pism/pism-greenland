@@ -35,7 +35,7 @@ nc = NC(nc_outfile, "w", format="NETCDF4")
 nc.createDimension("time")
 nc.createDimension("nb", size=2)
 
-time = np.arange(0, 365) + 0.5
+time = np.arange(0, 365, 1) + 0.5
 
 h = 100
 
@@ -65,15 +65,83 @@ winter_a = 300
 winter_e = 90
 spring_e = 105
 
+winter_a = 0
+winter_e = 150
+spring_e = 170
+
+
 MBP = np.zeros(len(time))
 for k, t in enumerate(time):
-    if t < 150:
-        MBP[k] = MBP_max / np.sqrt(150) * np.sqrt(t) * h
-    elif (t > 150) and (t < 200):
-        MBP[k] = MBP_max - MBP_max / np.sqrt(200) * np.sqrt(t) * h
+    if (t < winter_e) and (t > winter_a):
+        MBP[k] = MBP_max / np.sqrt(150) * np.sqrt(np.mod(t, 365))
+    elif (t > winter_e) and (t < spring_e):
+        MBP[k] = MBP_max - (MBP_max / np.sqrt(20)) * np.sqrt(np.mod(t - winter_e, 365))
     else:
         MBP[k] = 0
 
 var_out[:] = np.roll(MBP, -90) * scaling_factor
 
 nc.close()
+
+
+import pylab as plt
+import datetime
+
+
+def set_size(w, h, ax=None):
+    """ w, h: width, height in inches """
+
+    if not ax:
+        ax = plt.gca()
+    l = ax.figure.subplotpars.left
+    r = ax.figure.subplotpars.right
+    t = ax.figure.subplotpars.top
+    b = ax.figure.subplotpars.bottom
+    figw = float(w) / (r - l)
+    figh = float(h) / (t - b)
+    ax.figure.set_size_inches(figw, figh)
+
+
+fontsize = 6
+lw = 0.65
+aspect_ratio = 0.35
+markersize = 2
+fig_width = 3.1  # inch
+fig_height = aspect_ratio * fig_width  # inch
+fig_size = [fig_width, fig_height]
+
+params = {
+    "backend": "ps",
+    "axes.linewidth": 0.25,
+    "lines.linewidth": lw,
+    "axes.labelsize": fontsize,
+    "font.size": fontsize,
+    "xtick.direction": "in",
+    "xtick.labelsize": fontsize,
+    "xtick.major.size": 2.5,
+    "xtick.major.width": 0.25,
+    "ytick.direction": "in",
+    "ytick.labelsize": fontsize,
+    "ytick.major.size": 2.5,
+    "ytick.major.width": 0.25,
+    "legend.fontsize": fontsize,
+    "lines.markersize": markersize,
+    "font.size": fontsize,
+    "figure.figsize": fig_size,
+}
+
+plt.rcParams.update(params)
+
+positions = np.cumsum([0, 31, 30, 31, 31, 28, 31, 30, 31, 30, 31, 31, 30])
+labels = ["Oct", "Nov", "Dec", "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct"]
+fig = plt.figure()
+ax = fig.add_subplot(111)
+ax.plot(time, MBP)
+ax.set_ylim(-0.01, 1)
+ax.set_xlim(0, 365)
+plt.xticks(positions, labels)
+plt.yticks([0, MBP_max], [0, "Max"])
+ax.set_xlabel("Time [months]")
+ax.set_ylabel("Melange pressure\n[N m-1]")
+set_size(3.2, 1.0)
+fig.savefig("jib_mbp.pdf")
