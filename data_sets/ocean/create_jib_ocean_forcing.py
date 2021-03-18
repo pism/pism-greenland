@@ -274,13 +274,14 @@ def create_nc(nc_outfile, theta, salinity, grid_spacing, start_date, end_date, c
 col_dict = {
     "ICES": "#6baed6",
     "GINR": "#c6dbef",
+    "GINR S26": "#006d2c",
     "OMG Fjord": "#54278f",
     "OMG Bay": "#08519c",
     "XCTD Fjord": "#9e9ac8",
     "Fjord": "#9e9ac8",
     "Bay": "#6baed6",
 }
-ms = 4
+ms = 2
 mew = 0.25
 
 fontsize = 6
@@ -318,8 +319,10 @@ if __name__ == "__main__":
     salinity = 34
     grid_spacing = 18000
 
+    training_iterations = 1000
+
     # Choose the temporal averaging window. Using "1W" instead of "1D" produces much smoother results
-    freq = "3D"
+    freq = "1D"
 
     start_date = datetime(1980, 1, 1)
     end_date = datetime(2021, 1, 1)
@@ -332,7 +335,7 @@ if __name__ == "__main__":
     # create list with dates from start_date until end_date with
     # periodicity prule.
     bnds_datelist = list(rrule.rrule(rrule.DAILY, dtstart=start_date, until=end_date_yearly))
-    #    bnds_datelist = list(rrule.rrule(rrule.MONTHLY, dtstart=start_date, until=end_date_yearly))
+    bnds_datelist = list(rrule.rrule(rrule.WEEKLY, dtstart=start_date, until=end_date_yearly))
     bnds_datelist_yearly = list(rrule.rrule(rrule.YEARLY, dtstart=start_date, until=end_date_yearly))
 
     # calculate the days since refdate, including refdate, with time being the
@@ -348,9 +351,8 @@ if __name__ == "__main__":
     }
 
     # Create monthly forcing
-    step = 1.0 / 12
-    decimal_time = np.arange(start_date.year, end_date.year, step)
-    X_new = decimal_time[:, None]
+    dates = pd.date_range(start=start_date, end=end_date, freq="1W")
+    X_new = [to_decimal_year(date) for date in dates]
     X_test = torch.tensor(X_new).to(torch.float)
 
     # We could use "init" to create tie points, in particular, force to a point in 1980-1-1
@@ -427,6 +429,7 @@ if __name__ == "__main__":
     all_data_ind = {
         "Temperature [Celsius]": {
             "GINR": {"X": X_ginr, "Y": T_ginr},
+            "GINR S26": {"X": X_ginr_s26_T, "Y": T_ginr_s26},
             "ICES": {"X": X_ices, "Y": T_ices},
             "OMG Bay": {"X": X_omg_bay, "Y": T_omg_bay},
             "XCTD Fjord": {"X": X_xctd_fjord, "Y": T_xctd_fjord},
@@ -434,6 +437,7 @@ if __name__ == "__main__":
         },
         "Salinity [g/kg]": {
             "GINR": {"X": X_ginr, "Y": S_ginr},
+            "GINR S26": {"X": X_ginr_s26_S, "Y": S_ginr_s26},
             "ICES": {"X": X_ices, "Y": S_ices},
             "OMG Bay": {"X": X_omg_bay, "Y": S_omg_bay},
             "XCTD Fjord": {"X": X_xctd_fjord, "Y": S_xctd_fjord},
@@ -447,9 +451,11 @@ if __name__ == "__main__":
 
     T_bay = np.hstack([T_ginr, T_ginr_s26, T_ices, T_omg_bay, T_init])
     T_fjord = np.hstack([T_xctd_fjord, T_omg_fjord])
+    T = np.hstack([T_bay, T_fjord])
 
     S_bay = np.hstack([S_ginr, S_ginr_s26, S_ices, S_omg_bay, S_init])
     S_fjord = np.hstack([S_xctd_fjord, S_omg_fjord])
+    S = np.hstack([S_bay, S_fjord])
 
     X_bay_S_2009_2020 = X_bay_S[X_bay_S > 2009]
     X_bay_T_2009_2020 = X_bay_T[X_bay_T > 2009]
@@ -463,11 +469,11 @@ if __name__ == "__main__":
     S_bay_2009_2020 = S_bay[X_bay_S.ravel() > 2009]
     S_mean_diff = S_bay_2009_2020.mean() - S_fjord_2009_2020.mean()
 
-    S_bay_n = (S_bay - S_bay.mean()) / S_bay.std()
-    S_fjord_n = (S_fjord - S_fjord.mean()) / S_fjord.std()
+    S_bay_n = (S_bay - S.mean()) / S.std()
+    S_fjord_n = (S_fjord - S.mean()) / S.std()
 
-    T_bay_n = (T_bay - T_bay.mean()) / T_bay.std()
-    T_fjord_n = (T_fjord - T_fjord.mean()) / T_fjord.std()
+    T_bay_n = (T_bay - T.mean()) / T.std()
+    T_fjord_n = (T_fjord - T.mean()) / T.std()
 
     all_data_cat = {
         "Temperature [Celsius]": {
@@ -480,15 +486,20 @@ if __name__ == "__main__":
         },
     }
 
-    norm_cat = {
+    norm_all_data_cat = {
         "Temperature [Celsius]": {
-            "Bay": {"mean": T_bay.mean(), "std": T_bay.std()},
-            "Fjord": {"mean": T_fjord.mean(), "std": T_fjord.std()},
+            "Bay": {"X": X_bay_T, "Y": T_bay_n},
+            "Fjord": {"X": X_fjord, "Y": T_fjord_n},
         },
         "Salinity [g/kg]": {
-            "Bay": {"mean": S_bay.mean(), "std": S_bay.std()},
-            "Fjord": {"mean": S_fjord.mean(), "std": S_fjord.std()},
+            "Bay": {"X": X_bay_S, "Y": S_bay_n},
+            "Fjord": {"X": X_fjord, "Y": S_fjord_n},
         },
+    }
+
+    norm_cat = {
+        "Temperature [Celsius]": {"mean": T.mean(), "std": T.std()},
+        "Salinity [g/kg]": {"mean": S.mean(), "std": S.std()},
     }
 
     fig, ax = plt.subplots(
@@ -505,6 +516,7 @@ if __name__ == "__main__":
     all_samples = {}
     all_Y_pred = {}
     for key, data in all_data_cat.items():
+        print(f"Training {key}")
 
         # Put them all together
         full_train_i = torch.cat(
@@ -516,8 +528,6 @@ if __name__ == "__main__":
         # Here we have two iterms that we're passing in as train_inputs
         num_tasks = len(data)
         model = MultitaskGPModel((full_train_x, full_train_i), full_train_y, likelihood, num_tasks)
-
-        training_iterations = 1000
 
         # Find optimal model hyperparameters
         model.train()
@@ -539,8 +549,8 @@ if __name__ == "__main__":
             output = model(full_train_x, full_train_i)
             loss = -mll(output, full_train_y)
             loss.backward()
-            if i % 50:
-                print(f"Iter %d / {training_iterations} - Loss: %.3f" % (i + 1, loss.item()))
+            if (i % 50) == 0:
+                print(f"  Iter %d / {training_iterations} - Loss: %.3f" % (i + 1, loss.item()))
             optimizer.step()
 
         # Set into eval mode
@@ -564,8 +574,10 @@ if __name__ == "__main__":
         """
         n_samples = 10
         with torch.no_grad(), gpytorch.settings.fast_pred_var():
+            print(f"{key}: calculating mean")
             Y_pred = {d: likelihood(model(X_test, test_i[d])) for d in test_i}
             all_Y_pred[key] = Y_pred
+            print(f"{key}: sampling")
             samples = {
                 d: model(X_test, test_i[d]).sample(
                     sample_shape=torch.Size(
@@ -579,6 +591,7 @@ if __name__ == "__main__":
             all_samples[key] = samples
 
         for k, v in Y_pred.items():
+
             lower, upper = v.confidence_region()
             ax[idx].fill_between(
                 X_test.numpy().squeeze(),
@@ -601,7 +614,13 @@ if __name__ == "__main__":
                 label=f"{k} Observation",
                 alpha=0.75,
             )
-            ax[idx].plot(X_test.numpy(), v.mean.numpy().T, color=col_dict[k], linewidth=1.0, label=f"{k} Sample Mean")
+            ax[idx].plot(
+                X_test.numpy(),
+                v.mean.numpy().T,
+                color=col_dict[k],
+                linewidth=1.0,
+                label=f"{k} Sample Mean",
+            )
 
         ax[idx].set_ylabel(key)
 
@@ -610,11 +629,11 @@ if __name__ == "__main__":
     # Use the Fjord GP for Temperature and Bay for Salinity, but correct using the difference in the 2009-2020 mean
     for s, (temperature, salinity) in enumerate(
         zip(
-            all_samples["Temperature [Celsius]"]["Bay"].numpy(),
-            all_samples["Salinity [g/kg]"]["Bay"].numpy(),
+            all_samples["Temperature [Celsius]"]["Fjord"].numpy(),
+            all_samples["Salinity [g/kg]"]["Fjord"].numpy(),
         )
     ):
-        salinity -= S_mean_diff
+        # salinity -= S_mean_diff
         # temperature -= T_mean_diff
         if s == 0:
             ax[0].plot(X_new, temperature, color=col_dict["Fjord"], linewidth=0.2, label=f"{k} Sample")
@@ -631,7 +650,7 @@ if __name__ == "__main__":
     salinity_mean -= S_mean_diff
     temperature_mean -= 0
     # ax[0].plot(X_new, temperature_mean, color="0", linewidth=1.0)
-    ax[1].plot(X_new, salinity_mean, color=col_dict["Fjord"], linewidth=0.75, linestyle="dashed")
+    # ax[1].plot(X_new, salinity_mean, color=col_dict["Fjord"], linewidth=0.75, linestyle="dashed")
     theta_ocean = temperature - melting_point_temperature(depth, salinity)
     ofile = f"jib_ocean_forcing_ctrl_1980_2020.nc"
     create_nc(ofile, theta_ocean, salinity, grid_spacing, start_date, end_date, calendar, units)
@@ -639,7 +658,7 @@ if __name__ == "__main__":
     ax[1].set_xlabel("Year")
     ax[1].set_xlim(1980, 2021)
     ax[0].set_ylim(0, 5)
-    ax[1].set_ylim(32, 36)
+    ax[1].set_ylim(33, 35)
     handles, labels = ax[0].get_legend_handles_labels()
     m_handles = [handles[2], handles[3], handles[6], handles[4], handles[0], handles[1], handles[5]]
     m_labels = [labels[2], labels[3], labels[6], labels[4], labels[0], labels[1], labels[5]]
@@ -674,7 +693,7 @@ if __name__ == "__main__":
     ax[1].set_xlim(1980, 2021)
     ax[0].set_ylim(0, 5)
     ax[1].set_ylim(33, 35)
-    legend = ax[0].legend(ncol=2)
+    legend = ax[0].legend(loc="upper left", ncol=2)
     legend.get_frame().set_linewidth(0.0)
     legend.get_frame().set_alpha(0.0)
 
