@@ -126,7 +126,7 @@ parser.add_argument(
 parser.add_argument(
     "--stress_balance",
     dest="stress_balance",
-    choices=["sia", "ssa+sia", "ssa"],
+    choices=["sia", "ssa+sia", "ssa", "blatter"],
     help="stress balance solver",
     default="ssa+sia",
 )
@@ -281,10 +281,7 @@ phi_max = 40.0
 topg_min = -700
 topg_max = 700
 
-try:
-    combinations = np.loadtxt(ensemble_file, delimiter=",", skiprows=1)
-except:
-    combinations = np.genfromtxt(ensemble_file, dtype=None, delimiter=",", skip_header=1)
+combinations = np.genfromtxt(ensemble_file, dtype=None, encoding=None, delimiter=",", skip_header=1)
 
 tsstep = "yearly"
 

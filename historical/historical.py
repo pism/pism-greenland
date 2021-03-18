@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# Copyright (C) 2019-20 Andy Aschwanden
+# Copyright (C) 2019-21 Andy Aschwanden
 
 # Historical simulations for ISMIP6
 
@@ -55,16 +55,17 @@ parser.add_argument(
 parser.add_argument(
     "-q", "--queue", dest="queue", choices=list_queues(), help="""queue. default=long.""", default="long"
 )
+parser.add_argument("--options", dest="commandline_options", help="""Here you can add command-line options""")
 parser.add_argument(
     "-d",
     "--domain",
     dest="domain",
-    choices=["gris", "gris_ext", "jib", "jakobshavn", "nw", "ismip6"],
+    choices=["gris", "gris_ext", "jib", "jakobshavn", "nw", "ismip6", "qaamerujup"],
     help="sets the modeling domain",
     default="ismip6",
 )
-parser.add_argument("--exstep", dest="exstep", help="Writing interval for spatial time series", default="yearly")
-parser.add_argument("--tsstep", dest="tsstep", help="Writing interval for scalar time series", default="yearly")
+parser.add_argument("--exstep", dest="exstep", help="Writing interval for spatial time series", default="monthly")
+parser.add_argument("--tsstep", dest="tsstep", help="Writing interval for scalar time series", default="daily")
 parser.add_argument(
     "-f",
     "--o_format",
@@ -134,7 +135,7 @@ parser.add_argument(
 parser.add_argument(
     "--stress_balance",
     dest="stress_balance",
-    choices=["sia", "ssa+sia", "ssa"],
+    choices=["sia", "ssa+sia", "ssa", "blatter"],
     help="stress balance solver",
     default="ssa+sia",
 )
@@ -143,7 +144,7 @@ parser.add_argument(
     dest="version",
     choices=["2", "3", "3a", "4", "1980", "1980a", "1980v3", "1_RAGIS"],
     help="input data set version",
-    default="3a",
+    default="1_RAGIS",
 )
 parser.add_argument(
     "--vertical_velocity_approximation",
@@ -163,6 +164,8 @@ parser.add_argument(
 )
 
 options = parser.parse_args()
+commandline_options = options.commandline_options
+
 start_date = options.start
 end_date = options.end
 
@@ -303,13 +306,8 @@ phi_min = 5.0
 phi_max = 40.0
 topg_min = -700
 topg_max = 700
-try:
-    combinations = np.loadtxt(ensemble_file, delimiter=",", skiprows=1)
-except:
-    try:
-        combinations = np.genfromtxt(ensemble_file, dtype=None, encoding=None, delimiter=",", skip_header=1)
-    except:
-        combinations = np.genfromtxt(ensemble_file, dtype=None, delimiter=",", skip_header=1)
+
+combinations = np.genfromtxt(ensemble_file, dtype=None, encoding=None, delimiter=",", skip_header=1)
 
 scripts = []
 scripts_post = []
@@ -416,6 +414,7 @@ for n, combination in enumerate(combinations):
             "pseudo_plastic_q": ppq,
             "till_effective_fraction_overburden": tefo,
             "vertical_velocity_approximation": vertical_velocity_approximation,
+            "stress_balance.blatter.enhancement_factor": sia_e
             # "fractures": True,
             # "fracture_parameters": "{},{},{},{}".format(FRACRATE, THRESHOLD, HEALRATE, HEALTHRESHOLD),
             # "write_fd_fields": True,
@@ -464,8 +463,9 @@ for n, combination in enumerate(combinations):
             "ocean.th.file": "$input_dir/data_sets/ocean/{}".format(frontal_melt_file),
             "ocean.th.clip_salinity": False,
             "ocean.th.gamma_T": gamma_T,
-            "constants.sea_water.salinity": salinity,
         }
+        if salinity:
+            ocean_parameters["constants.sea_water.salinity"] = salinity
 
         if mbp_file:
             ocean_parameters["ocean.frac_MBP.file"] = "$input_dir/data_sets/melange/{}".format(mbp_file)
@@ -487,7 +487,7 @@ for n, combination in enumerate(combinations):
         except:
             calving_parameters = {
                 "float_kill_calve_near_grounding_line": float_kill_calve_near_grounding_line,
-                "calving.vonmises_calving.threshold_file": "$input_dir/data_sets/calving/{}".format(vcm),
+                "calving.vonmises_calving.threshold_file": f"$input_dir/data_sets/calving/{vcm}"
                 "calving.vonmises_calving.use_custom_flow_law": True,
                 "calving.vonmises_calving.Glen_exponent": 3.0,
             }
@@ -517,6 +517,8 @@ for n, combination in enumerate(combinations):
             all_params_dict = merge_dicts(all_params_dict, spatial_ts_dict)
 
         all_params = " \\\n  ".join(["-{} {}".format(k, v) for k, v in list(all_params_dict.items())])
+        if commandline_options is not None:
+            all_params = f"{all_params} \\\n  {commandline_options[1:-1]}"
 
         if system == "debug":
             redirect = " 2>&1 | tee {jobs}/job.${job_id}"

@@ -44,11 +44,20 @@ def generate_domain(domain):
         pism_exec = """pismr -x_range {x_min},{x_max} -y_range {y_min},{y_max} -bootstrap""".format(
             x_min=x_min, x_max=x_max, y_min=y_min, y_max=y_max
         )
+
     elif domain.lower() in ("jakobshavn", "jib"):
         x_min = -280000.0
         x_max = 320000.0
         y_min = -2410000.0
         y_max = -2020000.0
+        pism_exec = """pismr -regional -x_range {x_min},{x_max} -y_range {y_min},{y_max}  -bootstrap -regional.zero_gradient true -regional.no_model_strip 4.5""".format(
+            x_min=x_min, x_max=x_max, y_min=y_min, y_max=y_max
+        )
+    elif domain.lower() in ("qaamerujup"):
+        x_min = -240000.0
+        x_max = -162000.0
+        y_min = -2066000.0
+        y_max = -2030000.0
         pism_exec = """pismr -regional -x_range {x_min},{x_max} -y_range {y_min},{y_max}  -bootstrap -regional.zero_gradient true -regional.no_model_strip 4.5""".format(
             x_min=x_min, x_max=x_max, y_min=y_min, y_max=y_max
         )
@@ -397,6 +406,30 @@ def generate_grid_description(grid_resolution, domain, restart=False):
             mz = 101
             mzb = 11
 
+    elif domain.lower() in ("qaamerujup"):
+
+        mx_max = 520
+        my_max = 240
+
+        resolution_max = 150
+
+        accepted_resolutions = (150, 300, 450, 600, 900, 1200)
+
+        try:
+            grid_resolution in accepted_resolutions
+            pass
+        except:
+            print(("grid resolution {}m not recognized".format(grid_resolution)))
+
+        if grid_resolution >= 900:
+            skip_max = 200
+            mz = 201
+            mzb = 21
+        else:
+            skip_max = 200
+            mz = 201
+            mzb = 11
+
     elif domain.lower() in ("nw"):
 
         mx_max = 4000
@@ -537,7 +570,7 @@ def generate_stress_balance(stress_balance, additional_params_dict):
     Returns: OrderedDict
     """
 
-    accepted_stress_balances = ("sia", "ssa+sia")
+    accepted_stress_balances = ("sia", "ssa+sia", "blatter")
 
     if stress_balance not in accepted_stress_balances:
         print(("{} not in {}".format(stress_balance, accepted_stress_balances)))
