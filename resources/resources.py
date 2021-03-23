@@ -54,11 +54,11 @@ def generate_domain(domain):
             x_min=x_min, x_max=x_max, y_min=y_min, y_max=y_max
         )
     elif domain.lower() in ("qaamerujup"):
-        x_min = -240000.0
-        x_max = -162000.0
-        y_min = -2066000.0
-        y_max = -2030000.0
-        pism_exec = """pismr -regional -x_range {x_min},{x_max} -y_range {y_min},{y_max}  -bootstrap -regional.zero_gradient true -regional.no_model_strip 4.5""".format(
+        x_min = -249000.0
+        x_max = -153000.0
+        y_min = -2075000.0
+        y_max = -2021000.0
+        pism_exec = """pismr -regional -x_range {x_min},{x_max} -y_range {y_min},{y_max}  -bootstrap -regional.zero_gradient true -regional.no_model_strip 1.5""".format(
             x_min=x_min, x_max=x_max, y_min=y_min, y_max=y_max
         )
     elif domain.lower() in ("nw"):
@@ -620,7 +620,7 @@ def generate_hydrology(hydro, **kwargs):
         params_dict["hydrology"] = "distributed"
         params_dict["basal_yield_stress.add_transportable_water"] = "true"
     else:
-        print(("hydrology {} not recognized, exiting".format(hydro)))
+        print((f"hydrology {hydro} not recognized, exiting"))
         import sys
 
         sys.exit(0)
@@ -636,20 +636,27 @@ def generate_calving(calving, **kwargs):
     """
 
     params_dict = OrderedDict()
-    if calving in ("thickness_calving", "hayhurst_calving"):
+    if calving in ("thickness_calving"):
         params_dict["calving"] = calving
     elif calving in ("vonmises_nofloat_calving"):
-        params_dict["calving"] = "vonmises_calving,float_kill".format(calving)
+        params_dict["calving"] = "vonmises_calving,float_kill"
     elif calving in ("hayhurst_nofloat_calving"):
-        params_dict["calving"] = "hayhurst_calving,float_kill".format(calving)
-    elif calving in ("eigen_calving", "vonmises_calving"):
-        params_dict["calving"] = "{},thickness_calving".format(calving)
+        params_dict["calving"] = "hayhurst_calving,float_kill"
+    elif calving in (
+        "eigen_calving",
+        "eigen_calving,frac_calving_rate",
+        "vonmises_calving",
+        "vonmises_calving,frac_calving_rate",
+        "hayhurst_calving",
+        "hayhurst_calving,frac_calving_rate",
+    ):
+        params_dict["calving"] = f"{calving},thickness_calving"
     elif calving in ("hybrid_calving"):
         params_dict["calving"] = "eigen_calving,vonmises_calving,thickness_calving"
     elif calving in ("float_kill", "float_kill,ocean_kill", "vonmises_calving,ocean_kill", "eigen_calving,ocean_kill"):
         params_dict["calving"] = calving
     else:
-        print(("calving {} not recognized, exiting".format(calving)))
+        print((f"calving {calving} not recognized, exiting"))
         import sys
 
         sys.exit(0)
@@ -724,7 +731,7 @@ def generate_climate(climate, **kwargs):
     elif climate in ("elevation_forcing"):
         params_dict["surface"] = "elevation,forcing"
     else:
-        print(("climate {} not recognized, exiting".format(climate)))
+        print((f"climate {climate} not recognized, exiting"))
         import sys
 
         sys.exit(0)
@@ -775,7 +782,7 @@ def generate_ocean(ocean, **kwargs):
     elif ocean == "th_mbp":
         params_dict["ocean"] = "th,frac_MBP"
     else:
-        print(("ocean {} not recognized, exiting".format(ocean)))
+        print((f"ocean {ocean} not recognized, exiting"))
         import sys
 
         sys.exit(0)

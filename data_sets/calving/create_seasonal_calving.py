@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# Copyright (C) 2020 Andy Aschwanden
+# Copyright (C) 2020-21 Andy Aschwanden
 
 import numpy as np
 from netCDF4 import Dataset as NC
@@ -10,7 +10,7 @@ from argparse import ArgumentParser
 parser = ArgumentParser()
 parser.add_argument("FILE", nargs="*")
 parser.add_argument(
-    "-s", "--scaling_factor", dest="scaling_factor", type=float, help="Scales the maximum back pressure", default=1
+    "-s", "--scaling_factor", dest="scaling_factor", type=float, help="Scales the calving rate", default=1
 )
 
 options = parser.parse_args()
@@ -18,7 +18,7 @@ args = options.FILE
 scaling_factor = options.scaling_factor
 
 if len(args) == 0:
-    nc_outfile = "melange_back_pressure_max.nc"
+    nc_outfile = "seasonal_calving.nc"
 elif len(args) == 1:
     nc_outfile = args[0]
 else:

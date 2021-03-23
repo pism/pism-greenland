@@ -28,20 +28,6 @@ for d in ismip6; do     python historical.py --spatial_ts ismip6 -b wc -d ${d} -
 
 # Hindcasts
 
-odir=2019_07_hind
-n=224
-grid=1000
-for d in ismip6; do     python historical.py --spatial_ts basic --exstep monthly -b wc -d ${d} --o_dir ${odir} --end 2015-1-1 -q long -s pleiades_broadwell -w 12:00:00 -n ${n} -g ${grid} -e ../uncertainty_qunatification/historical_discharge_given.csv ../../pism-gris/calibration/2017_06_vc/state/gris_g900m_flux_v3a_no_bath_sia_e_1.25_sia_n_3_ssa_n_3.25_ppq_0.6_tefo_0.02_calving_vonmises_calving_0_100.nc; done
-
-odir=2020_05_gimp
-n=240
-grid=900
-for d in gris; do     python historical.py --spatial_ts basic --exstep monthly --tsstep daily -b wc -d ${d} --o_dir ${odir} --start 1980-1-1 --end 1998-1-1 -q t2standard -s chinook -w 60:00:00 -n ${n} -g ${grid} -e ../uncertainty_qunatification/historical_hirham.csv ../../pism-gris/calibration/2017_06_vc/state/gris_g900m_flux_v3a_no_bath_sia_e_1.25_sia_n_3_ssa_n_3.25_ppq_0.6_tefo_0.02_calving_vonmises_calving_0_100.nc; done
-
-odir=2020_05_gimp
-n=240
-grid=900
-for d in gris; do     python historical.py --spatial_ts basic --exstep monthly --tsstep daily -b wc -d ${d} --o_dir ${odir} --start 1998-1-1 --end 2008-1-1 -q t2standard -s chinook -w 60:00:00 -n ${n} -g ${grid} -e ../uncertainty_qunatification/historical_hirham.csv /import/c1/ICESHEET/ICESHEET/crios2pism/historical/2020_05_gimp/state/gris_g900m_v3a_id_HH5-CNRM-CM6-MM-VCM0.70-100M-34S_1980-1-1_1998-1-1.nc; done
 
 # RELAX
 grid=600
@@ -172,81 +158,19 @@ n=120
 grid=600
 for d in jib; do     python historical.py --hydrology routing --spatial_ts standard --exstep monthly --tsstep monthly --dataset_version 1_RAGIS -b wc -d ${d} --o_dir ${odir} --start 1980-1-1 --end 1985-1-1 -q t2standard -s chinook -w 24:00:00 -n ${n} -g ${grid} -e ../uncertainty_qunatification/historical_disko_bay.csv ../../pism-gris/calibration/2020_10_RAGIS/state/gris_g600m_v1_RAGIS_id_0_0_50.nc ; done
 
+
 odir=2020_10_init
 n=120
 grid=450
 for d in jib; do     python historical.py --hydrology routing --spatial_ts standard --exstep monthly --tsstep monthly --dataset_version 1_RAGIS -b wc -d ${d} --o_dir ${odir} --start 1980-1-1 --end 1985-1-1 -q t2standard -s chinook -w 24:00:00 -n ${n} -g ${grid} -e ../uncertainty_qunatification/historical_disko_bay.csv ../../pism-gris/calibration/2020_10_RAGIS/state/gris_g450m_v1_RAGIS_id_0_0_50.nc ; done
 
 
- odir=2020_05_gimp
-n=240
-grid=1000
-for d in ismip6; do     python historical.py --spatial_ts basic --exstep monthly --tsstep daily -b wc -d ${d} --o_dir ${odir} --start 1982-1-1 --end 2008-1-1 -q t2standard -s chinook -w 60:00:00 -n ${n} -g ${grid} -e ../uncertainty_qunatification/historical_hirham.csv ../../pism-gris/calibration/2017_06_vc/state/gris_g900m_flux_v3a_no_bath_sia_e_1.25_sia_n_3_ssa_n_3.25_ppq_0.6_tefo_0.02_calving_vonmises_calving_0_100.nc; done
-
-odir=2020_05_tct
+odir=2021_03_init
 n=120
-grid=600
-for d in jib; do     python historical.py --spatial_ts standard --exstep monthly --tsstep daily --dataset_version 1980 -b wc -d ${d} --o_dir ${odir} --start 1982-1-1 --end 1988-1-1 -q t2standard -s chinook -w 10:00:00 -n ${n} -g ${grid} -e ../uncertainty_qunatification/historical_hirham.csv ../../pism-gris/calibration/2020_05_v1980/state/gris_g900m_v1980_id_001_0_50.nc; done
-
-odir=2020_05_tct
-n=120
-grid=600
-for d in jib; do     python historical.py --spatial_ts standard --exstep monthly --tsstep daily --dataset_version 1980 -b wc -d ${d} --o_dir ${odir} --start 1988-1-1 --end 2008-1-1 -q t2standard -s chinook -w 10:00:00 -n ${n} -g ${grid} -e ../uncertainty_qunatification/historical_hirham.csv 2020_05_tct/state/jib_g600m_v1980_id_HH5-CNRM-CM6-MM-VCM0.80-50M_1982-1-1_1988-1-1.nc; done
-
-odir=2020_05_hind_v2
-n=120
-grid=600
-for d in jib; do     python historical.py --spatial_ts standard --exstep monthly --tsstep daily --dataset_version 1980 -b wc -d ${d} --o_dir ${odir} --start 1980-1-1 --end 1986-1-1 -q t2standard -s chinook -w 10:00:00 -n ${n} -g ${grid} -e ../uncertainty_qunatification/historical_hirham.csv ../../pism-gris/calibration/2020_05_v1980_v2/state/gris_g900m_v1980_id_001_0_50.nc; done
-
-odir=2020_05_reg_v2
-n=360
-grid=900
-for d in gris; do     python historical.py --spatial_ts standard --exstep monthly --tsstep daily --dataset_version 1980 -b wc -d ${d} --o_dir ${odir} --start 1980-1-1 --end 1986-1-1 -q t2standard -s chinook -w 72:00:00 -n ${n} -g ${grid} -e ../uncertainty_qunatification/historical_hirham.csv ../../pism-gris/calibration/2020_05_v1980_v2/state/gris_g900m_v1980_id_001_0_50.nc; done
+grid=450
+for d in jib; do     python historical.py --hydrology routing --spatial_ts standard --exstep monthly --tsstep monthly --dataset_version 1_RAGIS -b wc -d ${d} --o_dir ${odir} --start 1980-1-1 --end 1985-1-1 -q t2standard -s chinook -w 24:00:00 -n ${n} -g ${grid} -e ../uncertainty_qunatification/historical_jib.csv ../../pism-gris/calibration/2020_10_RAGIS/state/gris_g450m_v1_RAGIS_id_0_0_50.nc ; done
 
 
-odir=2020_05_hind_c
-n=120
-grid=600
-for d in jib; do     python historical.py --spatial_ts standard --exstep monthly --tsstep daily --dataset_version 1980 -b wc -d ${d} --o_dir ${odir} --start 1986-1-1 --end 1998-1-1 -q t2standard -s chinook -w 10:00:00 -n ${n} -g ${grid} -e ../uncertainty_qunatification/historical_hirham.csv 2020_05_hind_c/state/jib_g600m_v1980_id_HH5-CNRM-CM6-MM-VCM0.70-100M-34S_1980-1-1_1986-1-1.nc  ; done
-
-odir=2020_05_hind_c
-n=120
-grid=600
-for d in jib; do     python historical.py --spatial_ts standard --exstep monthly --tsstep daily --dataset_version 1980 -b wc -d ${d} --o_dir ${odir} --start 1998-1-1 --end 2008-1-1 -q t2standard -s chinook -w 10:00:00 -n ${n} -g ${grid} -e ../uncertainty_qunatification/historical_hirham.csv 2020_05_hind_c/state/jib_g600m_v1980_id_HH5-CNRM-CM6-MM-VCM0.70-100M-34S_1986-1-1_1998-1-1.nc  ; done
-
-
-odir=2020_05_hind_v2
-n=120
-grid=600
-
-for d in jib; do     python historical.py --spatial_ts standard --exstep monthly --tsstep daily --dataset_version 1980 -b wc -d ${d} --o_dir ${odir} --start 1998-1-1 --end 2008-1-1 -q t2standard -s chinook -w 10:00:00 -n ${n} -g ${grid} -e ../uncertainty_qunatification/historical_hirham.csv  2020_05_hind/state/jib_g600m_v1980_id_HH5-CNRM-CM6-MM-VCM0.80-50M-34S_1982-1-1_1998-1-1.nc ; done
-
-odir=2020_05_hind_c
-n=240
-grid=900
-for d in gris; do     python historical.py --spatial_ts standard --exstep monthly --tsstep daily --dataset_version 1980 -b wc -d ${d} --o_dir ${odir} --start 1980-1-1 --end 1998-1-1 -q t2standard -s chinook -w 60:00:00 -n ${n} -g ${grid} -e ../uncertainty_qunatification/historical_hirham.csv /import/c1/ICESHEET/ICESHEET/crios2pism/historical/2020_05_reg_v2/state/gris_g900m_v1980_id_HH5-CNRM-CM6-MM-VCM0.70-100M-34S_1980-1-1_1986-1-1.nc  ; done
-
-odir=2020_05_hind_c
-n=240
-grid=900
-
-for d in gris; do     python historical.py --spatial_ts standard --exstep monthly --tsstep daily --dataset_version 1980 -b wc -d ${d} --o_dir ${odir} --start 1998-1-1 --end 2008-1-1 -q t2standard -s chinook -w 24:00:00 -n ${n} -g ${grid} -e ../uncertainty_qunatification/historical_hirham.csv  /import/c1/ICESHEET/ICESHEET/crios2pism/historical/2020_05_hind_c/state/gris_g900m_v1980_id_HH5-CNRM-CM6-MM-VCM0.70-100M-34S_1980-1-1_1998-1-1.nc ; done
-
-
-
-/import/c1/ICESHEET/ICESHEET/crios2pism/historical/2020_05_reg_v2/state/gris_g900m_v1980_id_HH5-CNRM-CM6-MM-VCM0.70-100M-34S_1980-1-1_1986-1-1.nc
-
-odir=2020_08_fd
-n=240
-grid=900
-
-for d in gris; do     python historical.py --spatial_ts standard --exstep monthly --tsstep daily  -b wc -d ${d} --o_dir ${odir} --start 1980-1-1 --end 2015-1-1 -q t2standard -s chinook -w 24:00:00 -n ${n} -g ${grid} -e ../uncertainty_qunatification/historical_hirham.csv ../../pism-gris/calibration/2017_06_vc/state/gris_g900m_flux_v3a_no_bath_sia_e_1.25_sia_n_3_ssa_n_3.25_ppq_0.6_tefo_0.02_calving_vonmises_calving_0_100.nc ; done
-
-odir=2020_08_fem
-n=240
-grid=900
-
-for d in gris; do     python historical.py --spatial_ts standard --exstep monthly --tsstep daily  -b wc -d ${d} --o_dir ${odir} --start 1980-1-1 --end 2015-1-1 -q t2standard -s chinook -w 24:00:00 -n ${n} -g ${grid} -e ../uncertainty_qunatification/historical_hirham.csv ../../pism-gris/calibration/2017_06_vc/state/gris_g900m_flux_v3a_no_bath_sia_e_1.25_sia_n_3_ssa_n_3.25_ppq_0.6_tefo_0.02_calving_vonmises_calving_0_100.nc ; done
 
 
 odir=2021_02_blatter
@@ -280,11 +204,11 @@ for d in ismip6; do     python historical.py --stress_balance ssa+sia --spatial_
 python historical.py --stress_balance blatter -d jib --start 1980-1-1 --end 1981-1-1 --o_dir 2021_02_blatter -e ../uncertainty_qunatification/ctrl.csv -g 9000 -n 24 -w 1:00:00 -s chinook -q debug 2020_10_init/state/jib_g600m_v1_RAGIS_id_HH5-CNRM-CM6-MM-VCM0.60-100M-34S-0_1980-1-1_1985-1-1.nc
 
 
-odir=2021_02_q
-n=24
+odir=2021_03_q
+n=48
 grid=150
 
-for d in qaamerujup; do     python historical.py --stress_balance ssa+sia --spatial_ts none --dataset_version 3a -b wc -d ${d} --o_dir ${odir} --start 2008-1-1 --end 2015-1-1 -q debug -s chinook -w 1:00:00 -n ${n} -g ${grid} -e ../uncertainty_qunatification/ctrl.csv ../../pism-gris/calibration/2017_06_vc/state/gris_g900m_flux_v3a_no_bath_sia_e_1.25_sia_n_3_ssa_n_3.25_ppq_0.6_tefo_0.02_calving_vonmises_calving_0_100.nc; done
+for d in qaamerujup; do     python historical.py --stress_balance ssa+sia --spatial_ts none --dataset_version 4 -b wc -d ${d} --o_dir ${odir} --start 2008-1-1 --end 2015-1-1 -q t2small -s chinook -w 8:00:00 -n ${n} -g ${grid} -e ../uncertainty_qunatification/ctrl.csv ../../pism-gris/calibration/2017_06_vc/state/gris_g900m_flux_v3a_no_bath_sia_e_1.25_sia_n_3_ssa_n_3.25_ppq_0.6_tefo_0.02_calving_vonmises_calving_0_100.nc; done
 
 
 python historical.py --stress_balance blatter --spatial_ts none --dataset_version 3a -b wc -d gris --o_dir 2021_03_blatter --start 2008-1-1 --end 2015-1-1 -q debug -s chinook -w 1:00:00 -n 24 -g 9000 -e ../uncertainty_qunatification/ctrl.csv ../../pism-gris/calibration/2017_06_vc/state/gris_g9000m_flux_v3a_no_bath_sia_e_1.25_sia_n_3_ssa_n_3.25_ppq_0.6_tefo_0.02_calving_vonmises_calving_0_100.nc

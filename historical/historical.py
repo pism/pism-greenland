@@ -184,7 +184,6 @@ system = options.system
 spatial_ts = options.spatial_ts
 
 bed_type = options.bed_type
-calving = options.calving
 exstep = options.exstep
 tsstep = options.tsstep
 float_kill_calve_near_grounding_line = options.float_kill_calve_near_grounding_line
@@ -328,7 +327,7 @@ for n, combination in enumerate(combinations):
         climate_file,
         runoff_file,
         frontal_melt_file,
-        mbp_file,
+        calving_rate_scaling_file,
         fm_a,
         fm_b,
         fm_alpha,
@@ -442,38 +441,30 @@ for n, combination in enumerate(combinations):
         hydro_params_dict = generate_hydrology(hydrology, **hydrology_parameters)
 
         if frontal_melt == "discharge_routing":
-            hydrology_parameters["hydrology.surface_input.file"] = "$input_dir/data_sets/ismip6/{}".format(
-                frontal_melt_file
-            )
+            hydrology_parameters["hydrology.surface_input.file"] = f"$input_dir/data_sets/ismip6/{frontal_melt_file}"
 
             frontalmelt_parameters = {
                 "frontal_melt": "routing",
-                "frontal_melt.routing.file": "$input_dir/data_sets/ocean/{}".format(frontal_melt_file),
+                "frontal_melt.routing.file": f"$input_dir/data_sets/ocean/{frontal_melt_file}",
             }
         else:
             frontalmelt_parameters = {
                 "frontal_melt": "discharge_given",
-                "frontal_melt.discharge_given.file": "$input_dir/data_sets/ocean/{}".format(frontal_melt_file),
+                "frontal_melt.discharge_given.file": f"$input_dir/data_sets/ocean/{frontal_melt_file}",
             }
 
         frontalmelt_params_dict = frontalmelt_parameters
 
         # Need to add salinity first
         ocean_parameters = {
-            "ocean.th.file": "$input_dir/data_sets/ocean/{}".format(frontal_melt_file),
+            "ocean.th.file": f"$input_dir/data_sets/ocean/{frontal_melt_file}",
             "ocean.th.clip_salinity": False,
             "ocean.th.gamma_T": gamma_T,
         }
         if salinity:
             ocean_parameters["constants.sea_water.salinity"] = salinity
 
-        if mbp_file:
-            ocean_parameters["ocean.frac_MBP.file"] = "$input_dir/data_sets/melange/{}".format(mbp_file)
-            ocean_parameters["ocean.frac_MBP.period"] = 1
-            ocean_parameters["ocean.melange_back_pressure_fraction"] = 1.0
-            ocean_params_dict = generate_ocean("th_mbp", **ocean_parameters)
-        else:
-            ocean_params_dict = generate_ocean("th", **ocean_parameters)
+        ocean_params_dict = generate_ocean("th", **ocean_parameters)
 
         try:
             vcm = float(vcm)
@@ -487,10 +478,16 @@ for n, combination in enumerate(combinations):
         except:
             calving_parameters = {
                 "float_kill_calve_near_grounding_line": float_kill_calve_near_grounding_line,
-                "calving.vonmises_calving.threshold_file": f"$input_dir/data_sets/calving/{vcm}"
+                "calving.vonmises_calving.threshold_file": f"$input_dir/data_sets/calving/{vcm}",
                 "calving.vonmises_calving.use_custom_flow_law": True,
                 "calving.vonmises_calving.Glen_exponent": 3.0,
             }
+        if calving_rate_scaling_file:
+            calving = f"{options.calving},frac_calving_rate"
+            calving_parameters[
+                "calving.rate_scaling.file"
+            ] = f"$input_dir/data_sets/calving/{calving_rate_scaling_file}"
+            calving_parameters["calving.rate_scaling.period"] = 1
         calving_params_dict = generate_calving(calving, **calving_parameters)
 
         scalar_ts_dict = generate_scalar_ts(outfile, tsstep, odir=dirs["scalar"])
