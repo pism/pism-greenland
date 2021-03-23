@@ -120,11 +120,10 @@ if __name__ == "__main__":
     df["Date"] = df.index
     df.to_csv(f"{odir}/omg_axctd_all_10s_mean.csv")
 
-    lon_min = -54.0208
     lon_min = -52.5
     lon_max = -50.1
-    lat_min = 68.8608
-    lat_max = 69.321
+    lat_min = 68.85
+    lat_max = 69.32
 
     df_bay = df[
         (df["Longitude [degrees_east]"] >= lon_min)

@@ -267,7 +267,7 @@ def create_nc(nc_outfile, theta, salinity, grid_spacing, start_date, end_date, c
     mapping.straight_vertical_longitude_from_pole = -45.0
 
     # writing global attributes
-    nc.Conventions = "CF 1.5"
+    nc.Conventions = "CF-1.7"
     nc.close()
 
 
