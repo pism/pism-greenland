@@ -54,11 +54,11 @@ def generate_domain(domain):
             x_min=x_min, x_max=x_max, y_min=y_min, y_max=y_max
         )
     elif domain.lower() in ("qaamerujup"):
-        x_min = -249000.0
+        x_min = -250000.0
         x_max = -153000.0
         y_min = -2075000.0
         y_max = -2021000.0
-        pism_exec = """pismr -regional -x_range {x_min},{x_max} -y_range {y_min},{y_max}  -bootstrap -regional.zero_gradient true -regional.no_model_strip 1.5""".format(
+        pism_exec = """pismr -regional -x_range {x_min},{x_max} -y_range {y_min},{y_max}  -bootstrap -regional.zero_gradient true -regional.no_model_strip 4.5""".format(
             x_min=x_min, x_max=x_max, y_min=y_min, y_max=y_max
         )
     elif domain.lower() in ("nw"):
@@ -644,11 +644,8 @@ def generate_calving(calving, **kwargs):
         params_dict["calving"] = "hayhurst_calving,float_kill"
     elif calving in (
         "eigen_calving",
-        "eigen_calving,frac_calving_rate",
         "vonmises_calving",
-        "vonmises_calving,frac_calving_rate",
         "hayhurst_calving",
-        "hayhurst_calving,frac_calving_rate",
     ):
         params_dict["calving"] = f"{calving},thickness_calving"
     elif calving in ("hybrid_calving"):

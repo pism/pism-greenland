@@ -204,14 +204,31 @@ for d in ismip6; do     python historical.py --stress_balance ssa+sia --spatial_
 python historical.py --stress_balance blatter -d jib --start 1980-1-1 --end 1981-1-1 --o_dir 2021_02_blatter -e ../uncertainty_qunatification/ctrl.csv -g 9000 -n 24 -w 1:00:00 -s chinook -q debug 2020_10_init/state/jib_g600m_v1_RAGIS_id_HH5-CNRM-CM6-MM-VCM0.60-100M-34S-0_1980-1-1_1985-1-1.nc
 
 
-odir=2021_03_q
+odir=2021_03_qaamerujup_h
 n=48
 grid=150
 
-for d in qaamerujup; do     python historical.py --stress_balance ssa+sia --spatial_ts none --dataset_version 4 -b wc -d ${d} --o_dir ${odir} --start 2008-1-1 --end 2015-1-1 -q t2small -s chinook -w 8:00:00 -n ${n} -g ${grid} -e ../uncertainty_qunatification/ctrl.csv ../../pism-gris/calibration/2017_06_vc/state/gris_g900m_flux_v3a_no_bath_sia_e_1.25_sia_n_3_ssa_n_3.25_ppq_0.6_tefo_0.02_calving_vonmises_calving_0_100.nc; done
+export PISM_PREFIX=~/pism-regional/bin; for d in qaamerujup; do     python historical.py -r 2 --stress_balance ssa+sia --spatial_ts basic --exstep monthly --dataset_version 4 -b wc -d ${d} --o_dir ${odir} --start 2008-1-1 --end 2009-1-1 -q t2small -s chinook -w 8:00:00 -n ${n} -g ${grid} -e ../uncertainty_qunatification/ctrl.csv ../../pism-gris/calibration/2017_06_vc/state/gris_g900m_flux_v3a_no_bath_sia_e_1.25_sia_n_3_ssa_n_3.25_ppq_0.6_tefo_0.02_calving_vonmises_calving_0_100.nc; done
+
+export PISM_PREFIX=~/pism-regional/bin; for d in qaamerujup; do     python historical.py -r 2  --stress_balance ssa+sia --spatial_ts basic --exstep monthly --dataset_version 4 -b wc -d ${d} --o_dir ${odir} --start 2008-1-1 --end 2009-1-1 -q t2small -s chinook -w 8:00:00 -n ${n} -g ${grid} -e ../uncertainty_qunatification/ctrl.csv 2021_03_qaamerujup/state/qaamerujup_g150m_v4_id_CTRL_2008-1-1_2015-1-1.nc ; done
+
+export PISM_PREFIX=~/pism-regional/bin; for d in qaamerujup; do     python historical.py -r 2  --stress_balance ssa+sia --spatial_ts basic --exstep 0:0.000001:0.0001 --dataset_version 4 -b wc -d ${d} --o_dir ${odir} --start 2008-1-1 --end 2008-1-3 -q t2small -s chinook -w 8:00:00 -n ${n} -g ${grid} -e ../uncertainty_qunatification/ctrl.csv 2021_03_qaamerujup/state/qaamerujup_g150m_v4_id_CTRL_2008-1-1_2015-1-1.nc ; done
 
 
 python historical.py --stress_balance blatter --spatial_ts none --dataset_version 3a -b wc -d gris --o_dir 2021_03_blatter --start 2008-1-1 --end 2015-1-1 -q debug -s chinook -w 1:00:00 -n 24 -g 9000 -e ../uncertainty_qunatification/ctrl.csv ../../pism-gris/calibration/2017_06_vc/state/gris_g9000m_flux_v3a_no_bath_sia_e_1.25_sia_n_3_ssa_n_3.25_ppq_0.6_tefo_0.02_calving_vonmises_calving_0_100.nc
 
 
 python historical.py --options "'pc_type mg -stress_balance.blatter.Mz  65'" --stress_balance blatter --spatial_ts none --dataset_version 3a -b wc -d gris --o_dir 2021_03_blatter --start 2008-1-1 --end 2015-1-1 -q debug -s debug -w 1:00:00 -n 1 -g 18000 -e ../uncertainty_qunatification/ctrl.csv ../../pism-gris/calibration/2017_06_vc/state/gris_g9000m_flux_v3a_no_bath_sia_e_1.25_sia_n_3_ssa_n_3.25_ppq_0.6_tefo_0.02_calving_vonmises_calving_0_100.nc
+
+odir=2021_03_init
+n=120
+grid=450
+for d in jib; do     python historical.py --hydrology routing --spatial_ts standard --exstep daily --tsstep daily --dataset_version 1_RAGIS -b wc -d ${d} --o_dir ${odir} --start 1980-1-1 --end 1985-1-1 -q t2standard -s chinook -w 24:00:00 -n ${n} -g ${grid} -e ../uncertainty_qunatification/historical_jib.csv ../../pism-gris/calibration/2020_10_RAGIS/state/gris_g450m_v1_RAGIS_id_0_0_50.nc ; done
+
+
+odir=2021_03_melange
+n=120
+grid=450
+for d in jib; do     python historical.py --hydrology routing --spatial_ts standard --exstep daily --tsstep daily --dataset_version 1_RAGIS -b wc -d ${d} --o_dir ${odir} --start 1980-1-1 --end 1985-1-1 -q t2standard -s chinook -w 24:00:00 -n ${n} -g ${grid} -e ../uncertainty_qunatification/historical_jib.csv jib_g450m_v1_RAGIS_id_CTRL_1980-1-1_1985-1-1.nc ; done
+
+

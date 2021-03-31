@@ -84,6 +84,14 @@ parser.add_argument(
 parser.add_argument(
     "-g", "--grid", dest="grid", type=int, choices=grid_choices, help="horizontal grid resolution", default=9000
 )
+parser.add_argument(
+    "-r",
+    "--refinement_factor",
+    dest="refinement_factor",
+    type=int,
+    help="Horizontal grid refinement factor. For regional models only",
+    default=None,
+)
 parser.add_argument("--i_dir", dest="input_dir", help="input directory", default=abspath(join(script_directory, "..")))
 parser.add_argument("--o_dir", dest="output_dir", help="output directory", default="test_dir")
 parser.add_argument(
@@ -189,6 +197,12 @@ tsstep = options.tsstep
 float_kill_calve_near_grounding_line = options.float_kill_calve_near_grounding_line
 grid = options.grid
 hydrology = options.hydrology
+refinement_factor = options.refinement_factor
+if refinement_factor > 1:
+    grid_resolution = int(grid / refinement_factor)
+else:
+    grid_resolution = grid
+
 stress_balance = options.stress_balance
 vertical_velocity_approximation = options.vertical_velocity_approximation
 version = options.version
@@ -290,7 +304,7 @@ try:
 except OSError:
     pass
 
-periodicity = "monthly"
+periodicity = "daily"
 cmd = ["create_timeline.py", "-a", start_date, "-e", end_date, "-p", periodicity, "-d", "2008-01-01", pism_timefile]
 sub.call(cmd)
 
@@ -361,7 +375,7 @@ for n, combination in enumerate(combinations):
         ]
     )
 
-    script = join(scripts_dir, "{}_g{}m_{}.sh".format(domain, grid, experiment))
+    script = join(scripts_dir, f"{domain}_g{grid_resolution}m_{experiment}.sh")
     scripts.append(script)
 
     for filename in script:
@@ -375,19 +389,22 @@ for n, combination in enumerate(combinations):
         f.write(batch_header)
         f.write(run_header)
 
-        outfile = "{domain}_g{grid}m_{experiment}.nc".format(domain=domain.lower(), grid=grid, experiment=experiment)
-
         pism = generate_prefix_str(pism_exec)
 
         general_params_dict = {
             "profile": join(dirs["performance"], "profile_${job_id}.py".format(**batch_system)),
             "time_file": pism_timefile,
-            "o": join(dirs["state"], outfile),
             "o_format": oformat,
             "output.compression_level": compression_level,
             "config_override": "$config",
         }
 
+        if "-regional" in pism and refinement_factor > 1:
+            general_params_dict["refinement_factor"] = refinement_factor
+
+        outfile = f"{domain}_g{grid_resolution}m_{experiment}.nc"
+
+        general_params_dict["o"] = join(dirs["state"], outfile)
         general_params_dict["bootstrap"] = ""
         general_params_dict["i"] = pism_dataname
         general_params_dict["regrid_file"] = input_file
@@ -483,11 +500,12 @@ for n, combination in enumerate(combinations):
                 "calving.vonmises_calving.Glen_exponent": 3.0,
             }
         if calving_rate_scaling_file:
-            calving = f"{options.calving},frac_calving_rate"
             calving_parameters[
                 "calving.rate_scaling.file"
             ] = f"$input_dir/data_sets/calving/{calving_rate_scaling_file}"
             calving_parameters["calving.rate_scaling.period"] = 1
+        else:
+            calving = options.calving
         calving_params_dict = generate_calving(calving, **calving_parameters)
 
         scalar_ts_dict = generate_scalar_ts(outfile, tsstep, odir=dirs["scalar"])

@@ -1,10 +1,13 @@
 #!/usr/bin/env python
 # Copyright (C) 2020-21 Andy Aschwanden
 
+from argparse import ArgumentParser
+from calendar import isleap
+from cftime import utime
+from dateutil import rrule
+from datetime import datetime
 import numpy as np
 from netCDF4 import Dataset as NC
-from argparse import ArgumentParser
-
 
 # set up the option parser
 parser = ArgumentParser()
@@ -28,36 +31,46 @@ else:
 
     sys.exit(0)
 
+start_year = 1980
+end_year = 2021
+time_calendar = "standard"
+time_units = f"days since {start_year}-1-1"
+cdftime = utime(time_units, time_calendar)
+bnds_datelist = list(rrule.rrule(rrule.DAILY, dtstart=datetime(start_year, 1, 1), until=datetime(end_year, 1, 1)))
+
+# calculate the days since refdate, including refdate, with time being the
+bnds_interval_since_refdate = cdftime.date2num(bnds_datelist)
+
+# mid-point value:
+# time[n] = (bnds[n] + bnds[n+1]) / 2
+time_interval_since_refdate = bnds_interval_since_refdate[0:-1] + np.diff(bnds_interval_since_refdate) / 2
+
+nt = len(time_interval_since_refdate)
 
 # Create netCDF file
-nc = NC(nc_outfile, "w", format="NETCDF4")
+nc = NC(nc_outfile, "w", format="NETCDF4", compression_level=2)
 
 nc.createDimension("time")
 nc.createDimension("nb", size=2)
-
-time = np.arange(0, 365, 1) + 0.5
-
-h = 100
 
 var = "time"
 var_out = nc.createVariable(var, "d", dimensions=("time"))
 var_out.axis = "T"
 var_out.units = "days since 1980-1-1"
-var_out.calendar = "365_day"
 var_out.long_name = "time"
 var_out.bounds = "time_bounds"
-var_out[:] = time
+var_out[:] = time_interval_since_refdate
 
 var = "time_bounds"
 var_out = nc.createVariable(var, "d", dimensions=("time", "nb"))
 var_out.bounds = "time_bounds"
-var_out[:, 0] = time - 0.5
-var_out[:, 1] = time + 0.5
+var_out[:, 0] = bnds_interval_since_refdate[0:-1]
+var_out[:, 1] = bnds_interval_since_refdate[1::]
 
 
-var = "frac_frac_calving_rate"
+var = "frac_calving_rate"
 var_out = nc.createVariable(var, "f", dimensions=("time"))
-var_out.units = "N m-1"
+var_out.units = "1"
 
 frac_calving_rate_max = 1
 
@@ -69,28 +82,28 @@ winter_a = 0
 winter_e = 150
 spring_e = 170
 
+year_length = 365
 
-frac_calving_rate = np.zeros(len(time))
-for k, t in enumerate(time):
-    if (t < winter_e) and (t > winter_a):
-        frac_calving_rate[k] = frac_calving_rate_max / np.sqrt(150) * np.sqrt(np.mod(t, 365))
-    elif (t > winter_e) and (t < spring_e):
-        frac_calving_rate[k] = frac_calving_rate_max - (frac_calving_rate_max / np.sqrt(20)) * np.sqrt(
-            np.mod(t - winter_e, 365)
-        )
+idx = 0
+for year in range(start_year, end_year):
+    print(f"Preparing Year {year}")
+    if isleap(year):
+        year_length = 366
     else:
-        frac_calving_rate[k] = 0
+        year_length = 365
+    frac_calving_rate = np.zeros(year_length)
+    for k, t in enumerate(range(year_length)):
+        if (t < winter_e) and (t > winter_a):
+            frac_calving_rate[k] = frac_calving_rate_max - frac_calving_rate_max / np.sqrt(150) * np.sqrt(
+                np.mod(t, year_length)
+            )
+        elif (t > winter_e) and (t < spring_e):
+            frac_calving_rate[k] = (frac_calving_rate_max / np.sqrt(20)) * np.sqrt(np.mod(t - winter_e, year_length))
+        else:
+            frac_calving_rate[k] = 1
 
-
-for k, t in enumerate(time):
-    if (t < winter_e) and (t > winter_a):
-        frac_calving_rate[k] = frac_calving_rate_max - frac_calving_rate_max / np.sqrt(150) * np.sqrt(np.mod(t, 365))
-    elif (t > winter_e) and (t < spring_e):
-        frac_calving_rate[k] = (frac_calving_rate_max / np.sqrt(20)) * np.sqrt(np.mod(t - winter_e, 365))
-    else:
-        frac_calving_rate[k] = 1
-
-var_out[:] = np.roll(frac_calving_rate, -90) * scaling_factor
+    var_out[idx::] = np.roll(frac_calving_rate, -90) * scaling_factor
+    idx += year_length
 
 nc.close()
 
@@ -147,9 +160,9 @@ positions = np.cumsum([0, 31, 30, 31, 31, 28, 31, 30, 31, 30, 31, 31, 30])
 labels = ["Oct", "Nov", "Dec", "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct"]
 fig = plt.figure()
 ax = fig.add_subplot(111)
-ax.plot(time, frac_calving_rate)
+ax.plot(range(len(frac_calving_rate)), frac_calving_rate)
 ax.set_ylim(-0.01, 1.1)
-ax.set_xlim(0, 365)
+ax.set_xlim(0, len(frac_calving_rate))
 plt.xticks(positions, labels)
 plt.yticks([0, frac_calving_rate_max], [0, "Max"])
 ax.set_xlabel("Time [months]")
