@@ -198,7 +198,7 @@ float_kill_calve_near_grounding_line = options.float_kill_calve_near_grounding_l
 grid = options.grid
 hydrology = options.hydrology
 refinement_factor = options.refinement_factor
-if refinement_factor > 1:
+if refinement_factor is not None:
     grid_resolution = int(grid / refinement_factor)
 else:
     grid_resolution = grid
@@ -399,7 +399,7 @@ for n, combination in enumerate(combinations):
             "config_override": "$config",
         }
 
-        if "-regional" in pism and refinement_factor > 1:
+        if "-regional" in pism and refinement_factor is not None:
             general_params_dict["refinement_factor"] = refinement_factor
 
         outfile = f"{domain}_g{grid_resolution}m_{experiment}.nc"
@@ -503,7 +503,7 @@ for n, combination in enumerate(combinations):
             calving_parameters[
                 "calving.rate_scaling.file"
             ] = f"$input_dir/data_sets/calving/{calving_rate_scaling_file}"
-            calving_parameters["calving.rate_scaling.period"] = 1
+            calving_parameters["calving.rate_scaling.period"] = 0
         else:
             calving = options.calving
         calving_params_dict = generate_calving(calving, **calving_parameters)

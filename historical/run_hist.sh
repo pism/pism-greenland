@@ -229,6 +229,9 @@ for d in jib; do     python historical.py --hydrology routing --spatial_ts stand
 odir=2021_03_melange
 n=120
 grid=450
-for d in jib; do     python historical.py --hydrology routing --spatial_ts standard --exstep daily --tsstep daily --dataset_version 1_RAGIS -b wc -d ${d} --o_dir ${odir} --start 1980-1-1 --end 1985-1-1 -q t2standard -s chinook -w 24:00:00 -n ${n} -g ${grid} -e ../uncertainty_qunatification/historical_jib.csv jib_g450m_v1_RAGIS_id_CTRL_1980-1-1_1985-1-1.nc ; done
+for d in jib; do     python historical.py --hydrology routing --spatial_ts standard --exstep daily --tsstep daily --dataset_version 1_RAGIS -b wc -d ${d} --o_dir ${odir} --start 1980-1-1 --end 1985-1-1 -q t2standard -s chinook -w 24:00:00 -n ${n} -g ${grid} -e ../uncertainty_qunatification/historical_jib.csv 2021_03_init/state/jib_g450m_v1_RAGIS_id_CTRL_1980-1-1_1985-1-1.nc  ; done
 
-
+for file in ex_*; do
+    ncks -O -L 2 -4 -d x,-208000.,-180000. -d y,-2285000.,-2255000. $file sm_$file;
+    cdo -P 8 runmean,11 -fldmean sm_$file runmean_11days_fldmean_sm_$file;
+done
