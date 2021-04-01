@@ -43,12 +43,12 @@ def set_size(w, h, ax=None):
 
     if not ax:
         ax = plt.gca()
-    l = ax.figure.subplotpars.left
-    r = ax.figure.subplotpars.right
-    t = ax.figure.subplotpars.top
-    b = ax.figure.subplotpars.bottom
-    figw = float(w) / (r - l)
-    figh = float(h) / (t - b)
+    left = ax.figure.subplotpars.left
+    right = ax.figure.subplotpars.right
+    top = ax.figure.subplotpars.top
+    bottom = ax.figure.subplotpars.bottom
+    figw = float(w) / (right - left)
+    figh = float(h) / (top - bottom)
     ax.figure.set_size_inches(figw, figh)
 
 
@@ -319,10 +319,12 @@ if __name__ == "__main__":
     salinity = 34
     grid_spacing = 18000
 
+    # How many training iterations
     training_iterations = 1000
-
-    # Choose the temporal averaging window. Using "1W" instead of "1D" produces much smoother results
+    # The temporal averaging window
     freq = "1D"
+    # The number of samples to draw from the distribution
+    n_samples = 10
 
     start_date = datetime(1980, 1, 1)
     end_date = datetime(2021, 1, 1)
@@ -333,14 +335,17 @@ if __name__ == "__main__":
     cdftime_days = utime(units, calendar)
 
     # create list with dates from start_date until end_date with
-    # periodicity prule.
-    bnds_datelist = list(rrule.rrule(rrule.DAILY, dtstart=start_date, until=end_date_yearly))
-    bnds_datelist = list(rrule.rrule(rrule.WEEKLY, dtstart=start_date, until=end_date_yearly))
-    bnds_datelist_yearly = list(rrule.rrule(rrule.YEARLY, dtstart=start_date, until=end_date_yearly))
+    # periodicity prule for netCDF file
+    # and use data_range for pytorch X_new.
+    # TODO: Unify
+    sampling_interval = "daily"
+    dates = pd.date_range(start=start_date, end=end_date, freq="1D")
 
+    rd = {"daily": rrule.DAILY, "weekly": rrule.WEEKLY, "monthly": rrule.MONTHLY, "yearly": rrule.YEARLY}
+
+    bnds_datelist = list(rrule.rrule(rd[sampling_interval], dtstart=start_date, until=end_date_yearly))
     # calculate the days since refdate, including refdate, with time being the
     bnds_interval_since_refdate = cdftime_days.date2num(bnds_datelist)
-    bnds_interval_since_refdate_yearly = cdftime_days.date2num(bnds_datelist_yearly)
     time_interval_since_refdate = bnds_interval_since_refdate[0:-1] + np.diff(bnds_interval_since_refdate) / 2
 
     time_dict = {
@@ -350,19 +355,10 @@ if __name__ == "__main__":
         "time_bnds": bnds_interval_since_refdate,
     }
 
-    # Create monthly forcing
-    dates = pd.date_range(start=start_date, end=end_date, freq="1W")
-    X_new = [to_decimal_year(date) for date in dates]
-    X_test = torch.tensor(X_new).to(torch.float)
-
-    # We could use "init" to create tie points, in particular, force to a point in 1980-1-1
-    init = pd.read_csv("init/init.csv", parse_dates=["Date"])
-
     ginr = pd.read_csv("ginr/ginr_disko_bay_250m.csv", parse_dates=["Date"])
     ginr = ginr.set_index("Date").drop(columns=["Unnamed: 0"])
     ginr = ginr.groupby(pd.Grouper(freq=freq)).mean().dropna(subset=["Temperature [Celsius]", "Salinity [g/kg]"])
 
-    ginr_ctd26 = pd.read_csv("ginr/ginr_ctd_station_26.csv").dropna()
     ginr_s26_S = pd.read_csv("ginr/GINR-S26-Salinity.csv", names=["Year", "Salinity [g/kg]"])
     ginr_s26_T = pd.read_csv("ginr/GINR-S26-Temperature.csv", names=["Year", "Temperature [Celsius]"])
 
@@ -386,46 +382,29 @@ if __name__ == "__main__":
         xctd_fjord.groupby(pd.Grouper(freq=freq)).mean().dropna(subset=["Temperature [Celsius]", "Salinity [g/kg]"])
     )
 
-    xctd_bay = pd.read_csv("moorings/xctd_mooring_disko_bay.csv", parse_dates=["Date"])
-    xctd_bay = xctd_bay.set_index("Date")
-    xctd_bay = (
-        xctd_bay.groupby(pd.Grouper(freq=freq)).mean().dropna(subset=["Temperature [Celsius]", "Salinity [g/kg]"])
-    )
-
-    X_init = init["Year"].values.reshape(-1, 1)
     X_ginr = ginr["Year"].values.reshape(-1, 1)
-    X_ginr_ctd26 = ginr_ctd26["Year"].values.reshape(-1, 1)
     X_ginr_s26_S = ginr_s26_S["Year"].values.reshape(-1, 1)
     X_ginr_s26_T = ginr_s26_T["Year"].values.reshape(-1, 1)
     X_ices = ices["Year"].values.reshape(-1, 1)
     X_omg_bay = omg_bay["Year"].values.reshape(-1, 1)
     X_omg_fjord = omg_fjord["Year"].values.reshape(-1, 1)
-    X_xctd_bay = xctd_bay["Year"].values.reshape(-1, 1)
     X_xctd_fjord = xctd_fjord["Year"].values.reshape(-1, 1)
 
-    T_init = init["Temperature [Celsius]"].values
     T_ginr = ginr["Temperature [Celsius]"].values
-    T_ginr_ctd26 = ginr_ctd26["Temperature [Celsius]"].values
     T_ginr_s26 = ginr_s26_T["Temperature [Celsius]"].values
     T_ices = ices["Temperature [Celsius]"].values
     T_omg_bay = omg_bay["Temperature [Celsius]"].values
     T_omg_fjord = omg_fjord["Temperature [Celsius]"].values
-    T_xctd_bay = xctd_bay["Temperature [Celsius]"].values
     T_xctd_fjord = xctd_fjord["Temperature [Celsius]"].values
 
-    S_init = init["Salinity [g/kg]"].values
     S_ginr = ginr["Salinity [g/kg]"].values
     S_ginr_s26 = ginr_s26_S["Salinity [g/kg]"].values
     S_ices = ices["Salinity [g/kg]"].values
     S_omg_bay = omg_bay["Salinity [g/kg]"].values
     S_omg_fjord = omg_fjord["Salinity [g/kg]"].values
-    S_xctd_bay = xctd_bay["Salinity [g/kg]"].values
     S_xctd_fjord = xctd_fjord["Salinity [g/kg]"].values
 
-    # Noise is just inferred from the data.  This is possible because there are multiple simultaneous
-    # entries for some of the observations, and also because the different tasks are correlated.
-    likelihood = gpytorch.likelihoods.GaussianLikelihood()
-
+    # Arange by "data set" (for plotting)
     all_data_ind = {
         "Temperature [Celsius]": {
             "GINR": {"X": X_ginr, "Y": T_ginr},
@@ -445,18 +424,24 @@ if __name__ == "__main__":
         },
     }
 
-    X_bay_S = np.vstack([X_ginr, X_ginr_s26_S, X_ices, X_omg_bay, X_init])
-    X_bay_T = np.vstack([X_ginr, X_ginr_s26_T, X_ices, X_omg_bay, X_init])
+    X_bay_S = np.vstack([X_ginr, X_ginr_s26_S, X_ices, X_omg_bay])
+    X_bay_T = np.vstack([X_ginr, X_ginr_s26_T, X_ices, X_omg_bay])
     X_fjord = np.vstack([X_xctd_fjord, X_omg_fjord])
 
-    T_bay = np.hstack([T_ginr, T_ginr_s26, T_ices, T_omg_bay, T_init])
+    T_bay = np.hstack([T_ginr, T_ginr_s26, T_ices, T_omg_bay])
     T_fjord = np.hstack([T_xctd_fjord, T_omg_fjord])
     T = np.hstack([T_bay, T_fjord])
+    T_mean = np.mean(T)
+    T_std = np.std(T)
 
-    S_bay = np.hstack([S_ginr, S_ginr_s26, S_ices, S_omg_bay, S_init])
+    S_bay = np.hstack([S_ginr, S_ginr_s26, S_ices, S_omg_bay])
     S_fjord = np.hstack([S_xctd_fjord, S_omg_fjord])
     S = np.hstack([S_bay, S_fjord])
+    S_mean = np.mean(S)
+    S_std = np.std(S)
 
+    # This is just to calculate the 2010-2020 means
+    # of temperature and salinity in the Bay and Fjord
     X_bay_S_2009_2020 = X_bay_S[X_bay_S > 2009]
     X_bay_T_2009_2020 = X_bay_T[X_bay_T > 2009]
     X_fjord_2009_2020 = X_fjord[X_fjord > 2009]
@@ -469,37 +454,27 @@ if __name__ == "__main__":
     S_bay_2009_2020 = S_bay[X_bay_S.ravel() > 2009]
     S_mean_diff = S_bay_2009_2020.mean() - S_fjord_2009_2020.mean()
 
-    S_bay_n = (S_bay - S.mean()) / S.std()
-    S_fjord_n = (S_fjord - S.mean()) / S.std()
+    X_new = [to_decimal_year(date) for date in dates]
+    X_test = torch.tensor(X_new).to(torch.float)
 
-    T_bay_n = (T_bay - T.mean()) / T.std()
-    T_fjord_n = (T_fjord - T.mean()) / T.std()
+    normalize = False
 
+    if normalize:
+        T_bay = (T_bay - T_mean) / T_std
+        T_fjord = (T_fjord - T_mean) / T_std
+        S_bay = (S_bay - S_mean) / S_std
+        S_fjord = (S_fjord - S_mean) / S_std
+
+    # Arange by "Bay" vs "Fjord" (for GP)
     all_data_cat = {
         "Temperature [Celsius]": {
-            "Bay": {"X": X_bay_T, "Y": T_bay},
-            "Fjord": {"X": X_fjord, "Y": T_fjord},
+            "Bay": {"X": X_bay_T, "Y": T_bay, "Y_mean": T_mean, "Y_std": T_std},
+            "Fjord": {"X": X_fjord, "Y": T_fjord, "Y_mean": T_mean, "Y_std": T_std},
         },
         "Salinity [g/kg]": {
-            "Bay": {"X": X_bay_S, "Y": S_bay},
-            "Fjord": {"X": X_fjord, "Y": S_fjord},
+            "Bay": {"X": X_bay_S, "Y": S_bay, "Y_mean": S_mean, "Y_std": S_std},
+            "Fjord": {"X": X_fjord, "Y": S_fjord, "Y_mean": S_mean, "Y_std": S_std},
         },
-    }
-
-    norm_all_data_cat = {
-        "Temperature [Celsius]": {
-            "Bay": {"X": X_bay_T, "Y": T_bay_n},
-            "Fjord": {"X": X_fjord, "Y": T_fjord_n},
-        },
-        "Salinity [g/kg]": {
-            "Bay": {"X": X_bay_S, "Y": S_bay_n},
-            "Fjord": {"X": X_fjord, "Y": S_fjord_n},
-        },
-    }
-
-    norm_cat = {
-        "Temperature [Celsius]": {"mean": T.mean(), "std": T.std()},
-        "Salinity [g/kg]": {"mean": S.mean(), "std": S.std()},
     }
 
     fig, ax = plt.subplots(
@@ -512,12 +487,15 @@ if __name__ == "__main__":
     )
     fig.subplots_adjust(hspace=0.1)
 
+    # Noise is just inferred from the data.  This is possible because there are multiple simultaneous
+    # entries for some of the observations, and also because the different tasks are correlated.
+    likelihood = gpytorch.likelihoods.GaussianLikelihood()
+
     idx = 0
     all_samples = {}
     all_Y_pred = {}
     for key, data in all_data_cat.items():
         print(f"Training {key}")
-
         # Put them all together
         full_train_i = torch.cat(
             [torch.full_like(torch.tensor(data[d]["X"]), dtype=torch.long, fill_value=i) for i, d in enumerate(data)]
@@ -550,7 +528,9 @@ if __name__ == "__main__":
             loss = -mll(output, full_train_y)
             loss.backward()
             if (i % 50) == 0:
-                print(f"  Iter %d / {training_iterations} - Loss: %.3f" % (i + 1, loss.item()))
+                print(
+                    f"  Iter {i+1} / {training_iterations} - Loss: {loss.item():.3f} - Lengthscale {model.covar_module.lengthscale.item():.3f} - Noise {model.likelihood.noise.item():.3f}"
+                )
             optimizer.step()
 
         # Set into eval mode
@@ -565,38 +545,46 @@ if __name__ == "__main__":
         # The gpytorch.settings.fast_pred_var flag activates LOVE (for fast variances)
         # See https://arxiv.org/abs/1803.06058
 
-        # The sampling from the model produces:
-        """
-        NumericalWarning: Runtime Error when computing Cholesky decomposition: 
-        Matrix not positive definite after repeatedly adding jitter up to 1.0e-04. 
-        Original error on first attempt: cholesky_cpu: U(5,5) is zero, singular U.
-        Using RootDecomposition.
-        """
-        n_samples = 10
         with torch.no_grad(), gpytorch.settings.fast_pred_var():
-            print(f"{key}: calculating mean")
+            print(f"{key}: calculating sample mean")
             Y_pred = {d: likelihood(model(X_test, test_i[d])) for d in test_i}
             all_Y_pred[key] = Y_pred
-            print(f"{key}: sampling")
+            print(f"{key}: sampling from distribution")
             samples = {
-                d: model(X_test, test_i[d]).sample(
+                d: model(X_test, test_i[d])
+                .sample(
                     sample_shape=torch.Size(
                         [
                             n_samples,
                         ]
                     )
                 )
+                .numpy()
                 for d in test_i
             }
+
             all_samples[key] = samples
 
         for k, v in Y_pred.items():
 
             lower, upper = v.confidence_region()
+            if normalize:
+                lower = lower.numpy() * all_data_cat[key][k]["Y_std"] + all_data_cat[key][k]["Y_mean"]
+                upper = upper.numpy() * all_data_cat[key][k]["Y_std"] + all_data_cat[key][k]["Y_mean"]
+                x = data[k]["X"]
+                y = data[k]["Y"] * all_data_cat[key][k]["Y_std"] + all_data_cat[key][k]["Y_mean"]
+                mean = v.mean.numpy().T * all_data_cat[key][k]["Y_std"] + all_data_cat[key][k]["Y_mean"]
+            else:
+                lower = lower.numpy()
+                upper = upper.numpy()
+                x = data[k]["X"]
+                y = data[k]["Y"]
+                mean = v.mean.numpy().T
+
             ax[idx].fill_between(
                 X_test.numpy().squeeze(),
-                lower.numpy(),
-                upper.numpy(),
+                lower,
+                upper,
                 color=col_dict[k],
                 alpha=0.40,
                 linewidth=0.25,
@@ -604,8 +592,8 @@ if __name__ == "__main__":
             )
             # plot the data and the true latent function
             ax[idx].plot(
-                data[k]["X"],
-                data[k]["Y"],
+                x,
+                y,
                 "o",
                 color=col_dict[k],
                 ms=ms,
@@ -616,7 +604,7 @@ if __name__ == "__main__":
             )
             ax[idx].plot(
                 X_test.numpy(),
-                v.mean.numpy().T,
+                mean,
                 color=col_dict[k],
                 linewidth=1.0,
                 label=f"{k} Sample Mean",
@@ -629,12 +617,14 @@ if __name__ == "__main__":
     # Use the Fjord GP for Temperature and Bay for Salinity, but correct using the difference in the 2009-2020 mean
     for s, (temperature, salinity) in enumerate(
         zip(
-            all_samples["Temperature [Celsius]"]["Fjord"].numpy(),
-            all_samples["Salinity [g/kg]"]["Fjord"].numpy(),
+            all_samples["Temperature [Celsius]"]["Fjord"],
+            all_samples["Salinity [g/kg]"]["Fjord"],
         )
     ):
-        # salinity -= S_mean_diff
-        # temperature -= T_mean_diff
+        if normalize:
+            temperature = temperature * T_std + T_mean
+            salinity = salinity * S_std + S_mean
+
         if s == 0:
             ax[0].plot(X_new, temperature, color=col_dict["Fjord"], linewidth=0.2, label=f"{k} Sample")
             ax[1].plot(X_new, salinity, color=col_dict["Fjord"], linewidth=0.2, label=f"{k} Sample")
@@ -643,22 +633,12 @@ if __name__ == "__main__":
             ax[1].plot(X_new, salinity, color=col_dict["Fjord"], linewidth=0.2)
         theta_ocean = temperature - melting_point_temperature(depth, salinity)
         ofile = f"jib_ocean_forcing_{s}_1980_2020.nc"
-        create_nc(ofile, theta_ocean, salinity, grid_spacing, start_date, end_date, calendar, units)
-
-    salinity_mean = all_Y_pred["Salinity [g/kg]"]["Bay"].mean.numpy()
-    temperature_mean = all_Y_pred["Temperature [Celsius]"]["Fjord"].mean.numpy()
-    salinity_mean -= S_mean_diff
-    temperature_mean -= 0
-    # ax[0].plot(X_new, temperature_mean, color="0", linewidth=1.0)
-    # ax[1].plot(X_new, salinity_mean, color=col_dict["Fjord"], linewidth=0.75, linestyle="dashed")
-    theta_ocean = temperature - melting_point_temperature(depth, salinity)
-    ofile = f"jib_ocean_forcing_ctrl_1980_2020.nc"
-    create_nc(ofile, theta_ocean, salinity, grid_spacing, start_date, end_date, calendar, units)
+        # create_nc(ofile, theta_ocean, salinity, grid_spacing, start_date, end_date, calendar, units)
 
     ax[1].set_xlabel("Year")
     ax[1].set_xlim(1980, 2021)
-    ax[0].set_ylim(0, 5)
-    ax[1].set_ylim(33, 35)
+    # ax[0].set_ylim(0, 5)
+    # ax[1].set_ylim(33, 35)
     handles, labels = ax[0].get_legend_handles_labels()
     m_handles = [handles[2], handles[3], handles[6], handles[4], handles[0], handles[1], handles[5]]
     m_labels = [labels[2], labels[3], labels[6], labels[4], labels[0], labels[1], labels[5]]
@@ -667,35 +647,40 @@ if __name__ == "__main__":
     l1.get_frame().set_alpha(0.0)
 
     set_size(3.35, 3.35)
-    fig.savefig("jib_ocean_forcing_1980_2020.pdf")
+    if normalize:
+        ofile = "jib_ocean_forcing_1980_2020_normalized.pdf"
+    else:
+        ofile = "jib_ocean_forcing_1980_2020.pdf"
+    fig.savefig(ofile)
 
-    fig, ax = plt.subplots(
-        2,
-        1,
-        sharex="col",
-        figsize=[6.2, 6.2],
-        num="prognostic_all",
-        clear=True,
-    )
-    fig.subplots_adjust(hspace=0.1)
+    # fig, ax = plt.subplots(
+    #     2,
+    #     1,
+    #     sharex="col",
+    #     figsize=[6.2, 6.2],
+    #     num="prognostic_all",
+    #     clear=True,
+    # )
+    # fig.subplots_adjust(hspace=0.1)
 
-    idx = 0
-    for key, data in all_data_ind.items():
+    # idx = 0
+    # # Loop over all indiviual data sets
+    # for key, data in all_data_ind.items():
 
-        for k, v in data.items():
+    #     for k, v in data.items():
 
-            ax[idx].plot(data[k]["X"], data[k]["Y"], "o", color=col_dict[k], ms=ms, mec="k", mew=mew, label=k)
-            ax[idx].set_ylabel(key)
+    #         ax[idx].plot(data[k]["X"], data[k]["Y"], "o", color=col_dict[k], ms=ms, mec="k", mew=mew, label=k)
+    #         ax[idx].set_ylabel(key)
 
-        idx += 1
+    #     idx += 1
 
-    ax[1].set_xlabel("Year")
-    ax[1].set_xlim(1980, 2021)
-    ax[0].set_ylim(0, 5)
-    ax[1].set_ylim(33, 35)
-    legend = ax[0].legend(loc="upper left", ncol=2)
-    legend.get_frame().set_linewidth(0.0)
-    legend.get_frame().set_alpha(0.0)
+    # ax[1].set_xlabel("Year")
+    # ax[1].set_xlim(1980, 2021)
+    # ax[0].set_ylim(0, 5)
+    # ax[1].set_ylim(33, 35)
+    # legend = ax[0].legend(loc="upper left", ncol=2)
+    # legend.get_frame().set_linewidth(0.0)
+    # legend.get_frame().set_alpha(0.0)
 
-    set_size(3.35, 3.35)
-    fig.savefig("jib_ocean_observation_1980_2020.pdf")
+    # set_size(3.35, 3.35)
+    # fig.savefig("jib_ocean_observation_1980_2020.pdf")

@@ -143,8 +143,21 @@ if __name__ == "__main__":
 
     T_1980_1996_mean = np.mean(T_1980_1996)
     T_1997_2015_mean = np.mean(T_1997_2015)
+    print(
+        f"Temperature difference between 1980-1996 mean and 1997-2015 mean: {T_1997_2015_mean - T_1980_1996_mean} Celsius"
+    )
 
-    print(T_1997_2015_mean - T_1980_1996_mean)
+    df = pd.concat(
+        [
+            pd.DataFrame(
+                data=np.hstack([v["Y"].reshape(-1, 1), np.repeat(k, len(v["Y"])).reshape(-1, 1)]),
+                index=v["X"].ravel(),
+                columns=["Temperature [Celsius]", "Dataset"],
+            )
+            for k, v in all_data_ind.items()
+        ]
+    )
+    df.to_csv("jib_observations.csv")
 
     fig, ax = plt.subplots(
         1,

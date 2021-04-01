@@ -82,8 +82,6 @@ winter_a = 0
 winter_e = 150
 spring_e = 170
 
-year_length = 365
-
 idx = 0
 for year in range(start_year, end_year):
     print(f"Preparing Year {year}")
@@ -91,18 +89,24 @@ for year in range(start_year, end_year):
         year_length = 366
     else:
         year_length = 365
+
     frac_calving_rate = np.zeros(year_length)
-    for k, t in enumerate(range(year_length)):
-        if (t < winter_e) and (t > winter_a):
-            frac_calving_rate[k] = frac_calving_rate_max - frac_calving_rate_max / np.sqrt(150) * np.sqrt(
+    for t in range(year_length):
+        if (t <= winter_e) and (t >= winter_a):
+            frac_calving_rate[t] = frac_calving_rate_max - frac_calving_rate_max / np.sqrt(winter_e) * np.sqrt(
                 np.mod(t, year_length)
             )
+            print(t)
         elif (t > winter_e) and (t < spring_e):
-            frac_calving_rate[k] = (frac_calving_rate_max / np.sqrt(20)) * np.sqrt(np.mod(t - winter_e, year_length))
+            frac_calving_rate[t] = (frac_calving_rate_max / np.sqrt(spring_e - winter_e)) * np.sqrt(
+                np.mod(t - winter_e, year_length)
+            )
         else:
-            frac_calving_rate[k] = 1
+            frac_calving_rate[t] = 1
 
-    var_out[idx::] = np.roll(frac_calving_rate, -90) * scaling_factor
+    print(frac_calving_rate)
+    frac_calving_rate = np.roll(frac_calving_rate, -90) * scaling_factor
+    var_out[idx::] = frac_calving_rate
     idx += year_length
 
 nc.close()
@@ -160,7 +164,7 @@ positions = np.cumsum([0, 31, 30, 31, 31, 28, 31, 30, 31, 30, 31, 31, 30])
 labels = ["Oct", "Nov", "Dec", "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct"]
 fig = plt.figure()
 ax = fig.add_subplot(111)
-ax.plot(range(len(frac_calving_rate)), frac_calving_rate)
+ax.plot(range(len(frac_calving_rate)), np.roll(frac_calving_rate, -90))
 ax.set_ylim(-0.01, 1.1)
 ax.set_xlim(0, len(frac_calving_rate))
 plt.xticks(positions, labels)
