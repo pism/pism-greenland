@@ -68,25 +68,15 @@ def melting_point_temperature(depth, salinity):
     return a[0] * salinity + a[1] + a[2] * depth
 
 
-def create_nc(nc_outfile, theta, salinity, grid_spacing, start_date, end_date, calendar, untis):
+def create_nc(nc_outfile, theta, salinity, grid_spacing, time_dict):
     """
     Generate netCDF file
     """
 
-    cdftime_days = utime(units, calendar)
-
-    # create list with dates from start_date until end_date with
-    # periodicity prule.
-    bnds_datelist = list(rrule.rrule(rrule.MONTHLY, dtstart=start_date, until=end_date_yearly))
-
-    # calculate the days since refdate, including refdate, with time being the
-    bnds_interval_since_refdate = cdftime_days.date2num(bnds_datelist)
-    time_interval_since_refdate = bnds_interval_since_refdate[0:-1] + np.diff(bnds_interval_since_refdate) / 2
-
-    time_units = units
-    time_calendar = calendar
-    time = time_interval_since_refdate
-    time_bnds = bnds_interval_since_refdate
+    time_units = time_dict["units"]
+    time_calendar = time_dict["calendar"]
+    time = time_dict["time"]
+    time_bnds = time_dict["time_bnds"]
 
     nt = len(theta)
     xdim = "x"
@@ -320,7 +310,7 @@ if __name__ == "__main__":
     grid_spacing = 18000
 
     # How many training iterations
-    training_iterations = 1000
+    training_iterations = 5000
     # The temporal averaging window
     freq = "1D"
     # The number of samples to draw from the distribution
@@ -355,6 +345,8 @@ if __name__ == "__main__":
         "time_bnds": bnds_interval_since_refdate,
     }
 
+    init = pd.read_csv("init/init.csv")
+
     ginr = pd.read_csv("ginr/ginr_disko_bay_250m.csv", parse_dates=["Date"])
     ginr = ginr.set_index("Date").drop(columns=["Unnamed: 0"])
     ginr = ginr.groupby(pd.Grouper(freq=freq)).mean().dropna(subset=["Temperature [Celsius]", "Salinity [g/kg]"])
@@ -382,6 +374,7 @@ if __name__ == "__main__":
         xctd_fjord.groupby(pd.Grouper(freq=freq)).mean().dropna(subset=["Temperature [Celsius]", "Salinity [g/kg]"])
     )
 
+    X_init = init["Year"].values.reshape(-1, 1)
     X_ginr = ginr["Year"].values.reshape(-1, 1)
     X_ginr_s26_S = ginr_s26_S["Year"].values.reshape(-1, 1)
     X_ginr_s26_T = ginr_s26_T["Year"].values.reshape(-1, 1)
@@ -397,7 +390,9 @@ if __name__ == "__main__":
     T_omg_fjord = omg_fjord["Temperature [Celsius]"].values
     T_xctd_fjord = xctd_fjord["Temperature [Celsius]"].values
 
+    S_init = init["Salinity [g/kg]"].values
     S_ginr = ginr["Salinity [g/kg]"].values
+    X_ginr = ginr["Year"].values.reshape(-1, 1)
     S_ginr_s26 = ginr_s26_S["Salinity [g/kg]"].values
     S_ices = ices["Salinity [g/kg]"].values
     S_omg_bay = omg_bay["Salinity [g/kg]"].values
@@ -424,7 +419,7 @@ if __name__ == "__main__":
         },
     }
 
-    X_bay_S = np.vstack([X_ginr, X_ginr_s26_S, X_ices, X_omg_bay])
+    X_bay_S = np.vstack([X_ginr, X_ginr_s26_S, X_ices, X_omg_bay, X_init])
     X_bay_T = np.vstack([X_ginr, X_ginr_s26_T, X_ices, X_omg_bay])
     X_fjord = np.vstack([X_xctd_fjord, X_omg_fjord])
 
@@ -434,7 +429,7 @@ if __name__ == "__main__":
     T_mean = np.mean(T)
     T_std = np.std(T)
 
-    S_bay = np.hstack([S_ginr, S_ginr_s26, S_ices, S_omg_bay])
+    S_bay = np.hstack([S_ginr, S_ginr_s26, S_ices, S_omg_bay, S_init])
     S_fjord = np.hstack([S_xctd_fjord, S_omg_fjord])
     S = np.hstack([S_bay, S_fjord])
     S_mean = np.mean(S)
@@ -489,11 +484,13 @@ if __name__ == "__main__":
 
     # Noise is just inferred from the data.  This is possible because there are multiple simultaneous
     # entries for some of the observations, and also because the different tasks are correlated.
-    likelihood = gpytorch.likelihoods.GaussianLikelihood()
+    likelihood = gpytorch.likelihoods.GaussianLikelihood(noise_prior=gpytorch.priors.NormalPrior(loc=0.1, scale=0.1))
 
     idx = 0
     all_samples = {}
     all_Y_pred = {}
+    ctrl = {}
+
     for key, data in all_data_cat.items():
         print(f"Training {key}")
         # Put them all together
@@ -516,22 +513,22 @@ if __name__ == "__main__":
             [
                 {"params": model.parameters()},  # Includes GaussianLikelihood parameters
             ],
-            lr=0.1,
+            lr=0.01,
         )
 
         # "Loss" for GPs - the marginal log likelihood
         mll = gpytorch.mlls.ExactMarginalLogLikelihood(likelihood, model)
 
         for i in range(training_iterations):
-            optimizer.zero_grad()
             output = model(full_train_x, full_train_i)
             loss = -mll(output, full_train_y)
             loss.backward()
-            if (i % 50) == 0:
+            if (i % 100) == 0:
                 print(
                     f"  Iter {i+1} / {training_iterations} - Loss: {loss.item():.3f} - Lengthscale {model.covar_module.lengthscale.item():.3f} - Noise {model.likelihood.noise.item():.3f}"
                 )
             optimizer.step()
+            optimizer.zero_grad()
 
         # Set into eval mode
         model.eval()
@@ -549,6 +546,8 @@ if __name__ == "__main__":
             print(f"{key}: calculating sample mean")
             Y_pred = {d: likelihood(model(X_test, test_i[d])) for d in test_i}
             all_Y_pred[key] = Y_pred
+            means = {d: likelihood(model(X_test, test_i[d])).mean.numpy() for d in test_i}
+            ctrl[key] = means
             print(f"{key}: sampling from distribution")
             samples = {
                 d: model(X_test, test_i[d])
@@ -618,27 +617,34 @@ if __name__ == "__main__":
     for s, (temperature, salinity) in enumerate(
         zip(
             all_samples["Temperature [Celsius]"]["Fjord"],
-            all_samples["Salinity [g/kg]"]["Fjord"],
+            all_samples["Salinity [g/kg]"]["Bay"],
         )
     ):
         if normalize:
             temperature = temperature * T_std + T_mean
             salinity = salinity * S_std + S_mean
-
+        salinity_corrected = salinity - S_mean_diff
         if s == 0:
             ax[0].plot(X_new, temperature, color=col_dict["Fjord"], linewidth=0.2, label=f"{k} Sample")
-            ax[1].plot(X_new, salinity, color=col_dict["Fjord"], linewidth=0.2, label=f"{k} Sample")
+            ax[1].plot(X_new, salinity, color=col_dict["Bay"], linewidth=0.2, label=f"{k} Sample")
+            ax[1].plot(X_new, salinity_corrected, color=col_dict["Fjord"], linewidth=0.2, label=f"{k} Sample")
         else:
             ax[0].plot(X_new, temperature, color=col_dict["Fjord"], linewidth=0.2)
-            ax[1].plot(X_new, salinity, color=col_dict["Fjord"], linewidth=0.2)
+            ax[1].plot(X_new, salinity, color=col_dict["Bay"], linewidth=0.2)
+            ax[1].plot(X_new, salinity_corrected, color=col_dict["Fjord"], linewidth=0.2)
         theta_ocean = temperature - melting_point_temperature(depth, salinity)
         ofile = f"jib_ocean_forcing_{s}_1980_2020.nc"
-        # create_nc(ofile, theta_ocean, salinity, grid_spacing, start_date, end_date, calendar, units)
+        # create_nc(ofile, theta_ocean, salinity, grid_spacing, time_dict)
+
+    theta_ocean_mean = ctrl["Temperature [Celsius]"]["Fjord"]
+    salinity_mean = ctrl["Salinity [g/kg]"]["Bay"] - S_mean_diff
+    ofile = f"jib_ocean_forcing_ctrl_1980_2020.nc"
+    # create_nc(ofile, theta_ocean_mean, salinity_mean, grid_spacing, time_dict)
 
     ax[1].set_xlabel("Year")
     ax[1].set_xlim(1980, 2021)
     # ax[0].set_ylim(0, 5)
-    # ax[1].set_ylim(33, 35)
+    ax[1].set_ylim(33, 35)
     handles, labels = ax[0].get_legend_handles_labels()
     m_handles = [handles[2], handles[3], handles[6], handles[4], handles[0], handles[1], handles[5]]
     m_labels = [labels[2], labels[3], labels[6], labels[4], labels[0], labels[1], labels[5]]
