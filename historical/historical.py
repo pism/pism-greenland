@@ -413,7 +413,7 @@ for n, combination in enumerate(combinations):
         if osize != "custom":
             general_params_dict["o_size"] = osize
         else:
-            general_params_dict["output.sizes.medium"] = "sftgif,velsurf_mag,mask,usurf"
+            general_params_dict["output.sizes.medium"] = "sftgif,velsurf_mag,mask,usurf,bmelt"
 
         grid_params_dict = generate_grid_description(grid, domain)
 
@@ -504,8 +504,7 @@ for n, combination in enumerate(combinations):
                 "calving.rate_scaling.file"
             ] = f"$input_dir/data_sets/calving/{calving_rate_scaling_file}"
             calving_parameters["calving.rate_scaling.period"] = 0
-        else:
-            calving = options.calving
+        calving = options.calving
         calving_params_dict = generate_calving(calving, **calving_parameters)
 
         scalar_ts_dict = generate_scalar_ts(outfile, tsstep, odir=dirs["scalar"])

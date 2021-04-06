@@ -110,8 +110,7 @@ spatial_ts_vars["basic"] = [
 
 spatial_ts_vars["standard"] = [
     "bmelt",
-    "basal_melt_rate_floating",
-    "basal_melt_rate_grounded",
+    "basal_mass_flux_floating",
     "beta",
     "bwat",
     "dHdt",

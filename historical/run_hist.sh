@@ -235,3 +235,31 @@ for file in ex_*; do
     ncks -O -L 2 -4 -d x,-208000.,-180000. -d y,-2285000.,-2255000. $file sm_$file;
     cdo -P 8 runmean,11 -fldmean sm_$file runmean_11days_fldmean_sm_$file;
 done
+
+
+odir=2021_04_calib_1985
+n=96
+grid=600
+for d in jib; do     python historical.py --hydrology routing --spatial_ts standard --exstep monthly --tsstep daily --dataset_version 1_RAGIS -b wc -d ${d} --o_dir ${odir} --start 1980-1-1 --end 1985-1-1 -q t2standard -s chinook -w 24:00:00 -n ${n} -g ${grid} -e ../uncertainty_qunatification/historical_jib.csv ../../pism-gris/calibration/2020_05_v1980_v3/state/gris_g900m_v1980v3_id_001_0_50.nc  ; done
+
+
+
+odir=2021_04_calib
+n=96
+grid=600
+for d in jib; do     python historical.py --hydrology routing --spatial_ts standard --exstep monthly --tsstep daily --dataset_version 1_RAGIS -b wc -d ${d} --o_dir ${odir} --start 1980-1-1 --end 1981-1-1 -q t2standard -s chinook -w 4:00:00 -n ${n} -g ${grid} -e ../uncertainty_qunatification/historical_jib.csv 2021_04_init/state/jib_g600m_v1_RAGIS_id_INIT_1980-1-1_1985-1-1.nc ; done
+
+
+odir=2021_04_calib_1985
+mkdir -p $odir/glaciers/scalar
+cd $odir/spatial
+for file in ex_jib*.nc; do
+python ~/base/gris-analysis/basins/extract_glacier.py --ugid 0 --epsg 3413 --o_dir ../glaciers --shape_file ~/Google\ Drive/My\ Drive/Projects/jib-breakup/data/tongue_main.shp $file
+done
+cd ../glaciers
+for id in INIT1 INIT2 INIT3 INIT4; do
+cdo -L -O expr,"subshelf_melt_rate=basal_mass_flux_floating/-1000.0" -fldmean -ifthen ugid_0_JIB_tongue_ex_jib_g600m_v1_RAGIS_id_${id}_1985-1-1/ugid_0_JIB_tongue_ex_jib_g600m_v1_RAGIS_id_${id}_1985-1-1.nc ugid_0_JIB_tongue_ex_jib_g600m_v1_RAGIS_id_${id}_1985-1-1/ugid_0_JIB_tongue_ex_jib_g600m_v1_RAGIS_id_${id}_1985-1-1.nc scalar/subshelf_melt_rate_ugid_0_JIB_tongue_ex_jib_g600m_v1_RAGIS_id_${id}_1985-1-1.nc    
+done
+
+
+cdo -L -O expr,"subshelf_melt_rate=basal_mass_flux_floating/-1000.0" -fldmean -ifthen ugid_0_JIB_tongue_ex_jib_g600m_v1_RAGIS_id_INIT1_1985-1-1/ugid_0_JIB_tongue_ex_jib_g600m_v1_RAGIS_id_INIT1_1985-1-1.nc ugid_0_JIB_tongue_ex_jib_g600m_v1_RAGIS_id_INIT1_1985-1-1/ugid_0_JIB_tongue_ex_jib_g600m_v1_RAGIS_id_INIT1_1985-1-1.nc scalar/subshelf_melt_rate_ugid_0_JIB_tongue_ex_jib_g600m_v1_RAGIS_id_INIT1_1985-1-1.nc
