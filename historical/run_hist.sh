@@ -237,17 +237,26 @@ for file in ex_*; do
 done
 
 
-odir=2021_04_calib_1985
+odir=2021_04_theta
 n=96
 grid=600
-for d in jib; do     python historical.py --hydrology routing --spatial_ts standard --exstep monthly --tsstep daily --dataset_version 1_RAGIS -b wc -d ${d} --o_dir ${odir} --start 1980-1-1 --end 1985-1-1 -q t2standard -s chinook -w 24:00:00 -n ${n} -g ${grid} -e ../uncertainty_qunatification/historical_jib.csv ../../pism-gris/calibration/2020_05_v1980_v3/state/gris_g900m_v1980v3_id_001_0_50.nc  ; done
+for d in jib; do     python historical.py --hydrology routing --spatial_ts standard --exstep monthly --tsstep daily --dataset_version 1_RAGIS -b wc -d ${d} --o_dir ${odir} --start 1980-1-1 --end 1985-1-1 -q t2standard -s chinook -w 24:00:00 -n ${n} -g ${grid} -e ../uncertainty_qunatification/historical_jib.csv ../../pism-gris/calibration/2020_05_v1980_v3/state/gris_g900m_v1980v3_id_001_0_50.nc  ;
+done
 
 
+odir=2021_04_init
+n=72
+grid=900
+for d in jib; do     python historical.py --hydrology routing --spatial_ts standard --exstep monthly --tsstep daily --dataset_version 1_RAGIS -b wc -d ${d} --o_dir ${odir} --start 1980-1-1 --end 1988-1-1 -q t2standard -s chinook -w 24:00:00 -n ${n} -g ${grid} -e ../uncertainty_qunatification/historical_jib.csv ../../pism-gris/calibration/2020_05_v1980_v3/state/gris_g${grid}m_v1980v3_id_001_0_50.nc;
+done
 
-odir=2021_04_calib
-n=96
-grid=600
-for d in jib; do     python historical.py --hydrology routing --spatial_ts standard --exstep monthly --tsstep daily --dataset_version 1_RAGIS -b wc -d ${d} --o_dir ${odir} --start 1980-1-1 --end 1981-1-1 -q t2standard -s chinook -w 4:00:00 -n ${n} -g ${grid} -e ../uncertainty_qunatification/historical_jib.csv 2021_04_init/state/jib_g600m_v1_RAGIS_id_INIT_1980-1-1_1985-1-1.nc ; done
+
+odir=2021_04_hind
+n=72
+grid=900
+for d in jib; do     python historical.py --hydrology routing --spatial_ts standard --exstep monthly --tsstep daily --dataset_version 1_RAGIS -b wc -d ${d} --o_dir ${odir} --start 1980-1-1 --end 1981-1-1 -q t2standard -s chinook -w 24:00:00 -n ${n} -g ${grid} -e ../uncertainty_qunatification/historical_jib.csv 2021_04_init/state/jib_g900m_v1_RAGIS_id_INIT-0.4-100-1.5_1980-1-1_1988-1-1.nc;
+done
+
 
 
 odir=2021_04_calib_1985
