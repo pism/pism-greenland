@@ -623,27 +623,28 @@ if __name__ == "__main__":
         if normalize:
             temperature = temperature * T_std + T_mean
             salinity = salinity * S_std + S_mean
-        salinity_corrected = salinity - S_mean_diff
+        salinity_fjord_corrected = salinity - S_mean_diff
         if s == 0:
             ax[0].plot(X_new, temperature, color=col_dict["Fjord"], linewidth=0.2, label=f"{k} Sample")
             ax[1].plot(X_new, salinity, color=col_dict["Bay"], linewidth=0.2, label=f"{k} Sample")
-            ax[1].plot(X_new, salinity_corrected, color=col_dict["Fjord"], linewidth=0.2, label=f"{k} Sample")
+            ax[1].plot(X_new, salinity_fjord_corrected, color=col_dict["Fjord"], linewidth=0.2, label=f"{k} Sample")
         else:
             ax[0].plot(X_new, temperature, color=col_dict["Fjord"], linewidth=0.2)
             ax[1].plot(X_new, salinity, color=col_dict["Bay"], linewidth=0.2)
-            ax[1].plot(X_new, salinity_corrected, color=col_dict["Fjord"], linewidth=0.2)
-        theta_ocean = temperature - melting_point_temperature(depth, salinity)
+            ax[1].plot(X_new, salinity_fjord_corrected, color=col_dict["Fjord"], linewidth=0.2)
+        theta_ocean = temperature - melting_point_temperature(depth, salinity_fjord_corrected)
         ofile = f"jib_ocean_forcing_{s}_1980_2020.nc"
-        # create_nc(ofile, theta_ocean, salinity, grid_spacing, time_dict)
+        create_nc(ofile, theta_ocean, salinity, grid_spacing, time_dict)
 
-    theta_ocean_mean = ctrl["Temperature [Celsius]"]["Fjord"]
-    salinity_mean = ctrl["Salinity [g/kg]"]["Bay"] - S_mean_diff
+    salinity_fjord_mean_corrected = ctrl["Salinity [g/kg]"]["Bay"] - S_mean_diff
+    theta_ocean_fjord_mean = ctrl["Temperature [Celsius]"]["Fjord"] - melting_point_temperature(
+        depth, salinity_fjord_mean_corrected
+    )
     ofile = f"jib_ocean_forcing_ctrl_1980_2020.nc"
-    # create_nc(ofile, theta_ocean_mean, salinity_mean, grid_spacing, time_dict)
+    create_nc(ofile, theta_ocean_fjord_mean, salinity_fjord_mean_corrected, grid_spacing, time_dict)
 
     ax[1].set_xlabel("Year")
     ax[1].set_xlim(1980, 2021)
-    # ax[0].set_ylim(0, 5)
     ax[1].set_ylim(33, 35)
     handles, labels = ax[0].get_legend_handles_labels()
     m_handles = [handles[2], handles[3], handles[6], handles[4], handles[0], handles[1], handles[5]]

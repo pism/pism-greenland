@@ -105,9 +105,11 @@ for GRID in 1000; do
     outfile=${outfile_prefix}.nc
     outfile_ctrl=${outfile_prefix}_ctrl.nc
     outfile_nb=${outfile_prefix}_wc.nc
+    outfile_rm=${outfile_prefix}_rm.nc
     outfile_sm_prefix=pism_Greenland_${GRID}m_mcb_jpl_v${ver}
     outfile_sm_ctrl=${outfile_sm_prefix}_ctrl.nc
     outfile_sm_nb=${outfile_sm_prefix}_wc.nc
+    outfile_sm_rm=${outfile_sm_prefix}_rm.nc
     
     for var in "bed"; do
         rm -f g${GRID}m_${var}_v${ver}.tif g${GRID}m_${var}_v${ver}.nc
@@ -136,7 +138,7 @@ for GRID in 1000; do
     done
         
     # This is not needed, but it can be used by PISM to calculate correct cell volumes, and for remapping scripts"
-    ncatted -a proj4,global,o,c,"epsg:3413" $outfile
+    ncatted -a proj,global,o,c,"epsg:3413" $outfile
 
     # Add IBCAO bathymetry for the outer part of the domain
     gdalwarp $CUT -overwrite -r bilinear -t_srs EPSG:3413 -te $xmin $ymin $xmax $ymax -tr $GRID $GRID -of GTiff ${ibcaofile}_tif/${ibcaofile}.tif ${ibcaofile}_epsg3413_g${GRID}m.tif
@@ -183,6 +185,7 @@ for GRID in 1000; do
     ncks -A -C -v $var g${GRID}m_nb_${var}_v${ver}.nc $outfile_nb
     ncatted -a _FillValue,bed,d,, -a _FillValue,thickness,d,, $outfile_nb
     ncap2 -O -s "where(bed==-9999) {mask=0; surface=0; thickness=0;};"  $outfile_nb  $outfile_nb
+    nccopy $outfile_nc $outfile_rm
 
 done
 
