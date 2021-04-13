@@ -247,16 +247,74 @@ done
 odir=2021_04_init
 n=72
 grid=900
-for d in jib; do     python historical.py --hydrology routing --spatial_ts standard --exstep monthly --tsstep daily --dataset_version 1_RAGIS -b wc -d ${d} --o_dir ${odir} --start 1980-1-1 --end 1988-1-1 -q t2standard -s chinook -w 24:00:00 -n ${n} -g ${grid} -e ../uncertainty_qunatification/historical_jib.csv ../../pism-gris/calibration/2020_05_v1980_v3/state/gris_g${grid}m_v1980v3_id_001_0_50.nc;
+for d in jib; do     python historical.py --hydrology routing --spatial_ts standard --exstep monthly --tsstep daily --dataset_version 1_RAGIS -b wc -d ${d} --o_dir ${odir} --start 1980-1-1 --end 1988-1-1 -q t2standard -s chinook -w 24:00:00 -n ${n} -g ${grid} -e ../uncertainty_qunatification/historical_jib.csv ../../pism-gris/calibration/2020_10_RAGIS/state/gris_g${grid}m_v1_RAGIS_id_0_0_50.nc;
+done
+
+odir=2021_04_init
+n=72
+grid=900
+for d in jib; do     python historical.py --hydrology routing --spatial_ts standard --exstep monthly --tsstep daily -b rm --dataset_version 1_RAGIS -b wc -d ${d} --o_dir ${odir} --start 1980-1-1 --end 1988-1-1 -q t2standard -s chinook -w 24:00:00 -n ${n} -g ${grid} -e ../uncertainty_qunatification/historical_jib.csv ../../pism-gris/calibration/2020_10_RAGIS/state/gris_g${grid}m_v1_RAGIS_id_0_0_50.nc;
+done
+
+odir=2021_04_rm
+n=72
+grid=900
+for d in jib; do     python historical.py --hydrology routing --spatial_ts standard --exstep monthly --tsstep daily -b rm --dataset_version 1_RAGIS -b rm -d ${d} --o_dir ${odir} --start 1988-1-1 --end 1995-1-1 -q t2standard -s chinook -w 24:00:00 -n ${n} -g ${grid} -e ../uncertainty_qunatification/historical_jib.csv ../../pism-gris/calibration/2020_10_RAGIS/state/gris_g${grid}m_v1_RAGIS_id_0_0_50.nc;
+done
+
+odir=2021_04_rm
+n=72
+grid=900
+for d in jib; do     python historical.py --hydrology routing --spatial_ts standard --exstep monthly --tsstep daily -b rm --dataset_version 1_RAGIS -b rm -d ${d} --o_dir ${odir} --start 1988-1-1 --end 1995-1-1 -q t2standard -s chinook -w 24:00:00 -n ${n} -g ${grid} -e ../uncertainty_qunatification/historical_jib.csv 2021_04_rm/state/jib_g900m_v1_RAGIS_id_INIT-0.4-100-1.5_1980-1-1_1988-1-1.nc ;
+done
+
+
+
+odir=2021_04_rm
+n=120
+grid=450
+for d in jib; do     python historical.py --hydrology routing --spatial_ts standard --exstep monthly --tsstep daily -b rm --dataset_version 1_RAGIS -b rm -d ${d} --o_dir ${odir} --start 1980-1-1 --end 1988-1-1 -q t2standard -s chinook -w 24:00:00 -n ${n} -g ${grid} -e ../uncertainty_qunatification/historical_jib.csv ../../pism-gris/calibration/2020_10_RAGIS/state/gris_g${grid}m_v1_RAGIS_id_0_0_50.nc;
 done
 
 
 odir=2021_04_hind
 n=72
 grid=900
-for d in jib; do     python historical.py --hydrology routing --spatial_ts standard --exstep monthly --tsstep daily --dataset_version 1_RAGIS -b wc -d ${d} --o_dir ${odir} --start 1980-1-1 --end 1981-1-1 -q t2standard -s chinook -w 24:00:00 -n ${n} -g ${grid} -e ../uncertainty_qunatification/historical_jib.csv 2021_04_init/state/jib_g900m_v1_RAGIS_id_INIT-0.4-100-1.5_1980-1-1_1988-1-1.nc;
+for d in jib; do     python historical.py --hydrology routing --spatial_ts standard --exstep monthly --tsstep daily --dataset_version 1_RAGIS -b wc -d ${d} --o_dir ${odir} --start 1980-1-1 --end 1986-1-1 -q t2standard -s chinook -w 24:00:00 -n ${n} -g ${grid} -e ../uncertainty_qunatification/historical_jib.csv 2021_04_init/state/jib_g900m_v1_RAGIS_id_INIT-0.4-100-1.5_1980-1-1_1988-1-1.nc;
 done
 
+odir=2021_04_calib
+n=72
+grid=900
+for d in jib; do     python historical.py --hydrology routing --spatial_ts standard --exstep monthly --tsstep daily -b rm --dataset_version 1_RAGIS -b rm -d ${d} --o_dir ${odir} --start 1980-1-1 --end 1990-1-1 -q t2standard -s chinook -w 24:00:00 -n ${n} -g ${grid} -e ../uncertainty_qunatification/init_jib.csv ../../pism-gris/calibration/2020_10_RAGIS/state/gris_g${grid}m_v1_RAGIS_id_0_0_50.nc;
+done
+
+
+odir=2021_04_hc
+n=120
+grid=450
+for d in jib; do     python historical.py --hydrology routing --spatial_ts standard --exstep monthly --tsstep daily -b rm --dataset_version 1_RAGIS -b rm -d ${d} --o_dir ${odir} --start 1980-1-1 --end 2015-1-1 -q t2standard -s chinook -w 72:00:00 -n ${n} -g ${grid} -e ../uncertainty_qunatification/init_jib.csv ../../pism-gris/calibration/2020_10_RAGIS/state/gris_g${grid}m_v1_RAGIS_id_0_0_50.nc;
+done
+
+odir=2021_04_calib
+n=120
+grid=450
+for d in jib; do     python historical.py --hydrology routing --spatial_ts standard --exstep monthly --tsstep daily -b rm --dataset_version 1_RAGIS -b rm -d ${d} --o_dir ${odir} --start 1980-1-1 --end 1990-1-1 -q t2standard -s chinook -w 24:00:00 -n ${n} -g ${grid} -e ../uncertainty_qunatification/init_jib.csv ../../pism-gris/calibration/2020_10_RAGIS/state/gris_g${grid}m_v1_RAGIS_id_0_0_50.nc;
+done
+
+
+odir=2021_04_calib_wc
+n=120
+grid=450
+for d in jib; do     python historical.py --hydrology routing --spatial_ts standard --exstep monthly --tsstep daily -b wc --dataset_version 1_RAGIS -b wc -d ${d} --o_dir ${odir} --start 1980-1-1 --end 1990-1-1 -q t2standard -s chinook -w 24:00:00 -n ${n} -g ${grid} -e ../uncertainty_qunatification/init_jib.csv ../../pism-gris/calibration/2020_10_RAGIS/state/gris_g${grid}m_v1_RAGIS_id_0_0_50.nc;
+done
+
+
+odir=2021_04_calib_rm
+n=120
+grid=450
+for d in jib; do     python historical.py --hydrology routing --spatial_ts standard --exstep monthly --tsstep daily -b rm --dataset_version 1_RAGIS -b wc -d ${d} --o_dir ${odir} --start 1980-1-1 --end 1990-1-1 -q t2standard -s chinook -w 24:00:00 -n ${n} -g ${grid} -e ../uncertainty_qunatification/init_jib.csv ../../pism-gris/calibration/2020_10_RAGIS/state/gris_g${grid}m_v1_RAGIS_id_0_0_50.nc;
+done
 
 
 odir=2021_04_calib_1985
