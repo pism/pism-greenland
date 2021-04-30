@@ -120,10 +120,10 @@ if __name__ == "__main__":
     df["Date"] = df.index
     df.to_csv(f"{odir}/omg_axctd_all_10s_mean.csv")
 
-    lon_min = -52.5
-    lon_max = -50.1
-    lat_min = 68.85
-    lat_max = 69.32
+    lon_min = -52.75
+    lon_max = -51.05
+    lat_min = 68.50
+    lat_max = 69.50
 
     df_bay = df[
         (df["Longitude [degrees_east]"] >= lon_min)
@@ -137,10 +137,10 @@ if __name__ == "__main__":
     df_bay.to_csv(f"{odir}/omg_axctd_disko_bay_10s_mean_250m.csv")
 
     # narrow bounding box for fjord
-    lon_min = -50.3
-    lon_max = -50.1
-    lat_min = 69.1
-    lat_max = 69.3
+    lon_min = -51.00
+    lon_max = -49.50
+    lat_min = 69.00
+    lat_max = 69.35
 
     df_fjord = df[
         (df["Longitude [degrees_east]"] >= lon_min)
