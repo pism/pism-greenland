@@ -1,16 +1,49 @@
-#!/usr/bin/env python
-# Copyright (C) 2020-21 Andy Aschwanden
+#!/usr/bin/env python3
+# Copyright (C) 2020-21 Andy Aschwanden, Douglas C Brinkerhoff
+#
+# Generate time-series of ocean temperature and salinity
+# Jakobshavn Fjord
+# for Fjord and Bay measurements
 
 from cftime import utime
 from dateutil import rrule
 from datetime import datetime
 from netCDF4 import Dataset as NC
-import gpytorch
-import torch
 import numpy as np
 import pandas as pd
 import pylab as plt
 from pyproj import Proj
+import pytorch_lightning as pl
+
+import gpytorch
+from pytorch_lightning.callbacks import LearningRateMonitor
+from pytorch_lightning.callbacks.early_stopping import EarlyStopping
+from torch.optim.lr_scheduler import ReduceLROnPlateau
+from pytorch_lightning.loggers import TensorBoardLogger
+import torch
+from torch.utils.data import DataLoader, TensorDataset
+
+torch.manual_seed(0)
+np.random.seed(0)
+
+
+class DataModule(pl.LightningDataModule):
+    """Data module to load train/val/test dataloaders."""
+
+    def __init__(self, train_x, train_y, train_i):
+        """Initialze variables."""
+        super().__init__()
+
+        self.train_x = train_x
+        self.train_y = train_y
+        self.train_i = train_i
+        # For GPs the batch_size must be the entire dataset
+        self.batch_size = len(self.train_x)
+
+    def train_dataloader(self, *args, **kwargs):
+        """Create train dataloader."""
+        training_data = TensorDataset(self.train_x, self.train_y, self.train_i)
+        return DataLoader(dataset=training_data, batch_size=self.batch_size)
 
 
 class MultitaskGPModel(gpytorch.models.ExactGP):
@@ -36,6 +69,44 @@ class MultitaskGPModel(gpytorch.models.ExactGP):
         covar = covar_x.mul(covar_i)
 
         return gpytorch.distributions.MultivariateNormal(mean_x, covar)
+
+
+class PLMultitaskGPModel(pl.LightningModule):
+    """batch independent multioutput exact gp model."""
+
+    def __init__(self, full_train_x, full_train_y, full_train_i, num_tasks):
+        """Initialize gp model with mean and covar."""
+        super().__init__()
+
+        # Noise is just inferred from the data.  This is possible because there are multiple simultaneous
+        # entries for some of the observations, and also because the different tasks are correlated.
+        self.likelihood = gpytorch.likelihoods.GaussianLikelihood()
+
+        self.model = MultitaskGPModel((full_train_x, full_train_i), full_train_y, self.likelihood, num_tasks)
+
+        self.mll = gpytorch.mlls.ExactMarginalLogLikelihood(self.likelihood, self.model)
+
+    def forward(self, train_x, train_i):
+        """Compute prediction."""
+        return self.model(train_x, train_i)
+
+    def training_step(self, batch, batch_idx):
+        """Compute training loss."""
+        train_x, train_y, train_i = batch
+        output = self.model(train_x, train_i)
+        loss = -self.mll(output, train_y)
+        self.log("loss", loss, on_step=True, on_epoch=True, prog_bar=True)
+
+        return loss
+
+    def configure_optimizers(self):
+        optimizer = torch.optim.Adam(self.parameters(), lr=0.1, weight_decay=0.0)
+        scheduler = {
+            "scheduler": ReduceLROnPlateau(optimizer),
+            "reduce_on_plateau": True,
+            "monitor": "loss",
+        }
+        return [optimizer], [scheduler]
 
 
 def set_size(w, h, ax=None):
@@ -268,8 +339,8 @@ col_dict = {
     "OMG Fjord": "#54278f",
     "OMG Bay": "#08519c",
     "XCTD Fjord": "#9e9ac8",
-    "Fjord": "#9e9ac8",
-    "Bay": "#6baed6",
+    "Fjord": "#2171b5",
+    "Bay": "#525252",
 }
 ms = 2
 mew = 0.25
@@ -300,17 +371,21 @@ params = {
 plt.rcParams.update(params)
 
 if __name__ == "__main__":
+    __spec__ = None
+
+    torch.manual_seed(0)
+    np.random.seed(0)
 
     # depths to average over
     depth_min = 225
     depth_max = 275
     # depth for freezing point calculation
     depth = 250
-    salinity = 34
     grid_spacing = 18000
 
     # How many training iterations
     training_iterations = 5000
+    max_epochs = 5000
     # The temporal averaging window
     freq = "1D"
     # The number of samples to draw from the distribution
@@ -327,7 +402,6 @@ if __name__ == "__main__":
     # create list with dates from start_date until end_date with
     # periodicity prule for netCDF file
     # and use data_range for pytorch X_new.
-    # TODO: Unify
     sampling_interval = "daily"
     dates = pd.date_range(start=start_date, end=end_date, freq="1D")
 
@@ -452,7 +526,7 @@ if __name__ == "__main__":
     X_new = [to_decimal_year(date) for date in dates]
     X_test = torch.tensor(X_new).to(torch.float)
 
-    normalize = False
+    normalize = True
 
     if normalize:
         T_bay = (T_bay - T_mean) / T_std
@@ -482,10 +556,6 @@ if __name__ == "__main__":
     )
     fig.subplots_adjust(hspace=0.1)
 
-    # Noise is just inferred from the data.  This is possible because there are multiple simultaneous
-    # entries for some of the observations, and also because the different tasks are correlated.
-    likelihood = gpytorch.likelihoods.GaussianLikelihood(noise_prior=gpytorch.priors.NormalPrior(loc=0.1, scale=0.1))
-
     idx = 0
     all_samples = {}
     all_Y_pred = {}
@@ -500,39 +570,18 @@ if __name__ == "__main__":
         full_train_x = torch.cat([torch.tensor(data[d]["X"]).to(torch.float) for d in data])
         full_train_y = torch.cat([torch.tensor(data[d]["Y"]).to(torch.float) for d in data])
 
-        # Here we have two iterms that we're passing in as train_inputs
+        batch_size = 32
+        training_data = DataModule(full_train_x, full_train_y, full_train_i)
+
+        logger = TensorBoardLogger("tb_logs", name="ocean_forcing")
         num_tasks = len(data)
-        model = MultitaskGPModel((full_train_x, full_train_i), full_train_y, likelihood, num_tasks)
-
-        # Find optimal model hyperparameters
-        model.train()
-        likelihood.train()
-
-        # Use the adam optimizer
-        optimizer = torch.optim.Adam(
-            [
-                {"params": model.parameters()},  # Includes GaussianLikelihood parameters
-            ],
-            lr=0.01,
+        model = PLMultitaskGPModel(full_train_x, full_train_y, full_train_i, num_tasks)
+        lr_monitor = LearningRateMonitor(logging_interval="step")
+        early_stop_callback = EarlyStopping(
+            monitor="loss", min_delta=0.00, patience=100, verbose=False, mode="min", strict=True
         )
-
-        # "Loss" for GPs - the marginal log likelihood
-        mll = gpytorch.mlls.ExactMarginalLogLikelihood(likelihood, model)
-
-        for i in range(training_iterations):
-            output = model(full_train_x, full_train_i)
-            loss = -mll(output, full_train_y)
-            loss.backward()
-            if (i % 100) == 0:
-                print(
-                    f"  Iter {i+1} / {training_iterations} - Loss: {loss.item():.3f} - Lengthscale {model.covar_module.lengthscale.item():.3f} - Noise {model.likelihood.noise.item():.3f}"
-                )
-            optimizer.step()
-            optimizer.zero_grad()
-
-        # Set into eval mode
-        model.eval()
-        likelihood.eval()
+        trainer = pl.Trainer(max_epochs=max_epochs, callbacks=[lr_monitor, early_stop_callback], logger=logger)
+        trainer.fit(model, datamodule=training_data)
 
         test_i = {d: torch.full_like(X_test, dtype=torch.long, fill_value=i) for (i, d) in enumerate(data)}
 
@@ -541,16 +590,18 @@ if __name__ == "__main__":
 
         # The gpytorch.settings.fast_pred_var flag activates LOVE (for fast variances)
         # See https://arxiv.org/abs/1803.06058
-
         with torch.no_grad(), gpytorch.settings.fast_pred_var():
+            model.eval()
+
             print(f"{key}: calculating sample mean")
-            Y_pred = {d: likelihood(model(X_test, test_i[d])) for d in test_i}
+            Y_pred = {d: model.likelihood(model.forward(X_test, test_i[d])) for d in test_i}
             all_Y_pred[key] = Y_pred
-            means = {d: likelihood(model(X_test, test_i[d])).mean.numpy() for d in test_i}
+            # Extract mean for the ctrl run
+            means = {d: model.likelihood(model.forward(X_test, test_i[d])).mean.numpy() for d in test_i}
             ctrl[key] = means
             print(f"{key}: sampling from distribution")
             samples = {
-                d: model(X_test, test_i[d])
+                d: model.forward(X_test, test_i[d])
                 .sample(
                     sample_shape=torch.Size(
                         [
@@ -613,38 +664,42 @@ if __name__ == "__main__":
 
         idx += 1
 
-    # Use the Fjord GP for Temperature and Bay for Salinity, but correct using the difference in the 2009-2020 mean
+        del model
+
     for s, (temperature, salinity) in enumerate(
         zip(
             all_samples["Temperature [Celsius]"]["Fjord"],
-            all_samples["Salinity [g/kg]"]["Bay"],
+            all_samples["Salinity [g/kg]"]["Fjord"],
         )
     ):
         if normalize:
             temperature = temperature * T_std + T_mean
             salinity = salinity * S_std + S_mean
-        salinity_fjord_corrected = salinity - S_mean_diff
         if s == 0:
             ax[0].plot(X_new, temperature, color=col_dict["Fjord"], linewidth=0.2, label=f"{k} Sample")
-            ax[1].plot(X_new, salinity, color=col_dict["Bay"], linewidth=0.2, label=f"{k} Sample")
-            ax[1].plot(X_new, salinity_fjord_corrected, color=col_dict["Fjord"], linewidth=0.2, label=f"{k} Sample")
+            ax[1].plot(X_new, salinity, color=col_dict["Fjord"], linewidth=0.2, label=f"{k} Sample")
         else:
             ax[0].plot(X_new, temperature, color=col_dict["Fjord"], linewidth=0.2)
-            ax[1].plot(X_new, salinity, color=col_dict["Bay"], linewidth=0.2)
-            ax[1].plot(X_new, salinity_fjord_corrected, color=col_dict["Fjord"], linewidth=0.2)
-        theta_ocean = temperature - melting_point_temperature(depth, salinity_fjord_corrected)
-        ofile = f"jib_ocean_forcing_{s}_1980_2020.nc"
+            ax[1].plot(X_new, salinity, color=col_dict["Fjord"], linewidth=0.2)
+        theta_ocean = temperature - melting_point_temperature(depth, salinity)
+        ofile = f"jib_ocean_forcing_id_{s}_1980_2020.nc"
         create_nc(ofile, theta_ocean, salinity, grid_spacing, time_dict)
 
-    salinity_fjord_mean_corrected = ctrl["Salinity [g/kg]"]["Bay"] - S_mean_diff
+    salinity_fjord_mean = ctrl["Salinity [g/kg]"]["Fjord"]
     theta_ocean_fjord_mean = ctrl["Temperature [Celsius]"]["Fjord"] - melting_point_temperature(
-        depth, salinity_fjord_mean_corrected
+        depth, salinity_fjord_mean
     )
-    ofile = f"jib_ocean_forcing_ctrl_1980_2020.nc"
-    create_nc(ofile, theta_ocean_fjord_mean, salinity_fjord_mean_corrected, grid_spacing, time_dict)
+    ofile = "jib_ocean_forcing_id_ctrl_1980_2020.nc"
+    create_nc(ofile, theta_ocean_fjord_mean, salinity_fjord_mean, grid_spacing, time_dict)
+
+    theta_ocean_fjord_timmean = np.mean(theta_ocean_fjord_mean) + np.zeros_like(theta_ocean_fjord_mean)
+    salinity_fjord_timmean = np.mean(salinity_fjord_mean) + np.zeros_like(salinity_fjord_mean)
+    ofile = "jib_ocean_forcing_id_tm_1980_2020.nc"
+    create_nc(ofile, theta_ocean_fjord_timmean, salinity_fjord_timmean, grid_spacing, time_dict)
 
     ax[1].set_xlabel("Year")
     ax[1].set_xlim(1980, 2021)
+    ax[0].set_ylim(0, 5)
     ax[1].set_ylim(33, 35)
     handles, labels = ax[0].get_legend_handles_labels()
     m_handles = [handles[2], handles[3], handles[6], handles[4], handles[0], handles[1], handles[5]]
@@ -660,34 +715,38 @@ if __name__ == "__main__":
         ofile = "jib_ocean_forcing_1980_2020.pdf"
     fig.savefig(ofile)
 
-    # fig, ax = plt.subplots(
-    #     2,
-    #     1,
-    #     sharex="col",
-    #     figsize=[6.2, 6.2],
-    #     num="prognostic_all",
-    #     clear=True,
-    # )
-    # fig.subplots_adjust(hspace=0.1)
+    # Observations only
+    fig, ax = plt.subplots(
+        2,
+        1,
+        sharex="col",
+        figsize=[3.4, 3.4],
+        num="Observations",
+        clear=True,
+    )
+    fig.subplots_adjust(hspace=0.1)
 
-    # idx = 0
-    # # Loop over all indiviual data sets
-    # for key, data in all_data_ind.items():
+    T = all_data_cat["Temperature [Celsius]"]
+    S = all_data_cat["Salinity [g/kg]"]
 
-    #     for k, v in data.items():
+    for location in ["Bay", "Fjord"]:
+        data = T[location]
+        X = data["X"]
+        Y = data["Y"] * T_std + T_mean
+        ax[0].plot(X, Y, "o", color=col_dict[location], ms=ms, mec="k", mew=mew, label=location)
+        data = S[location]
+        X = data["X"]
+        Y = data["Y"] * S_std + S_mean
+        ax[1].plot(X, Y, "o", color=col_dict[location], ms=ms, mec="k", mew=mew)
+    ax[0].set_ylabel("Temperature [Celsius]")
+    ax[1].set_ylabel("Salinity [g/kg]")
+    ax[1].set_xlabel("Year")
+    ax[1].set_xlim(1980, 2021)
+    ax[0].set_ylim(0, 5)
+    ax[1].set_ylim(33, 35)
+    legend = ax[0].legend(loc="upper left", ncol=2)
+    legend.get_frame().set_linewidth(0.0)
+    legend.get_frame().set_alpha(0.0)
 
-    #         ax[idx].plot(data[k]["X"], data[k]["Y"], "o", color=col_dict[k], ms=ms, mec="k", mew=mew, label=k)
-    #         ax[idx].set_ylabel(key)
-
-    #     idx += 1
-
-    # ax[1].set_xlabel("Year")
-    # ax[1].set_xlim(1980, 2021)
-    # ax[0].set_ylim(0, 5)
-    # ax[1].set_ylim(33, 35)
-    # legend = ax[0].legend(loc="upper left", ncol=2)
-    # legend.get_frame().set_linewidth(0.0)
-    # legend.get_frame().set_alpha(0.0)
-
-    # set_size(3.35, 3.35)
-    # fig.savefig("jib_ocean_observation_1980_2020.pdf")
+    set_size(3.35, 3.35)
+    fig.savefig("jib_ocean_observation_categorical_1980_2020.pdf")

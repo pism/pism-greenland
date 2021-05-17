@@ -9,6 +9,8 @@
 # e.g. run with
 # sh preprocess_mc_bed.sh 4
 
+# Update Source for DEM for RAGIS
+
 set -x -e
 
 export HDF5_USE_FILE_LOCKING=FALSE
