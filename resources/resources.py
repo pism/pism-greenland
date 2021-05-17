@@ -580,7 +580,7 @@ def generate_stress_balance(stress_balance, additional_params_dict):
 
     params_dict = OrderedDict()
     params_dict["stress_balance"] = stress_balance
-    if stress_balance in ("ssa+sia"):
+    if stress_balance in ("ssa+sia", "blatter"):
         params_dict["options_left"] = ""
         params_dict["cfbc"] = ""
         params_dict["kill_icebergs"] = ""

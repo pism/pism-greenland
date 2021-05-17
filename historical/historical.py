@@ -397,6 +397,20 @@ for n, combination in enumerate(combinations):
             "o_format": oformat,
             "output.compression_level": compression_level,
             "config_override": "$config",
+            "stress_balance.blatter.coarsening_factor": 4,
+            "blatter_Mz": 17,
+            "bp_ksp_type": "gmres",
+            "bp_pc_type": "mg",
+            "bp_pc_mg_levels": 3,
+            "bp_mg_levels_ksp_type": "richardson",
+            "bp_mg_levels_pc_type": "sor",
+            "bp_mg_coarse_ksp_type": "preonly",
+            "bp_mg_coarse_pc_type": "lu",
+            "bp_snes_monitor_ratio": "",
+            "bp_ksp_monitor": "",
+            "bp_snes_ksp_ew": "",
+            "bp_snes_ksp_ew_version": 3,
+            "stress_balance.ice_free_thickness_standard": 50,
         }
 
         if "-regional" in pism and refinement_factor is not None:
@@ -530,7 +544,11 @@ for n, combination in enumerate(combinations):
 
             all_params_dict = merge_dicts(all_params_dict, spatial_ts_dict)
 
+        if stress_balance == "blatter":
+            del all_params_dict["skip"]
+
         all_params = " \\\n  ".join(["-{} {}".format(k, v) for k, v in list(all_params_dict.items())])
+
         if commandline_options is not None:
             all_params = f"{all_params} \\\n  {commandline_options[1:-1]}"
 
