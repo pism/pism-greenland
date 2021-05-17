@@ -9,17 +9,19 @@ from cftime import utime
 from dateutil import rrule
 from datetime import datetime
 from netCDF4 import Dataset as NC
-import gpytorch
-import torch
 import numpy as np
 import pandas as pd
 import pylab as plt
 from pyproj import Proj
 import pytorch_lightning as pl
+
+import gpytorch
 from pytorch_lightning.callbacks import LearningRateMonitor
 from pytorch_lightning.callbacks.early_stopping import EarlyStopping
 from torch.optim.lr_scheduler import ReduceLROnPlateau
 from pytorch_lightning.loggers import TensorBoardLogger
+import torch
+from torch.utils.data import DataLoader, TensorDataset
 
 torch.manual_seed(0)
 np.random.seed(0)
@@ -67,10 +69,6 @@ class MultitaskGPModel(gpytorch.models.ExactGP):
         covar = covar_x.mul(covar_i)
 
         return gpytorch.distributions.MultivariateNormal(mean_x, covar)
-
-
-class PLMultitaskGPModel(pl.LightningModule):
-    """batch independent multioutput exact gp model."""
 
 
 class PLMultitaskGPModel(pl.LightningModule):
@@ -341,8 +339,8 @@ col_dict = {
     "OMG Fjord": "#54278f",
     "OMG Bay": "#08519c",
     "XCTD Fjord": "#9e9ac8",
-    "Fjord": "#9e9ac8",
-    "Bay": "#6baed6",
+    "Fjord": "#2171b5",
+    "Bay": "#525252",
 }
 ms = 2
 mew = 0.25
@@ -383,7 +381,6 @@ if __name__ == "__main__":
     depth_max = 275
     # depth for freezing point calculation
     depth = 250
-    salinity = 34
     grid_spacing = 18000
 
     # How many training iterations
@@ -405,7 +402,6 @@ if __name__ == "__main__":
     # create list with dates from start_date until end_date with
     # periodicity prule for netCDF file
     # and use data_range for pytorch X_new.
-    # TODO: Unify
     sampling_interval = "daily"
     dates = pd.date_range(start=start_date, end=end_date, freq="1D")
 
@@ -574,8 +570,6 @@ if __name__ == "__main__":
         full_train_x = torch.cat([torch.tensor(data[d]["X"]).to(torch.float) for d in data])
         full_train_y = torch.cat([torch.tensor(data[d]["Y"]).to(torch.float) for d in data])
 
-        from torch.utils.data import DataLoader, TensorDataset
-
         batch_size = 32
         training_data = DataModule(full_train_x, full_train_y, full_train_i)
 
@@ -681,26 +675,27 @@ if __name__ == "__main__":
         if normalize:
             temperature = temperature * T_std + T_mean
             salinity = salinity * S_std + S_mean
-        salinity_fjord_corrected = salinity - S_mean_diff
         if s == 0:
             ax[0].plot(X_new, temperature, color=col_dict["Fjord"], linewidth=0.2, label=f"{k} Sample")
             ax[1].plot(X_new, salinity, color=col_dict["Fjord"], linewidth=0.2, label=f"{k} Sample")
-            # ax[1].plot(X_new, salinity_fjord_corrected, color=col_dict["Fjord"], linewidth=0.2, label=f"{k} Sample")
         else:
             ax[0].plot(X_new, temperature, color=col_dict["Fjord"], linewidth=0.2)
             ax[1].plot(X_new, salinity, color=col_dict["Fjord"], linewidth=0.2)
-            # ax[1].plot(X_new, salinity_fjord_corrected, color=col_dict["Fjord"], linewidth=0.2)
-        theta_ocean = temperature - melting_point_temperature(depth, salinity_fjord_corrected)
+        theta_ocean = temperature - melting_point_temperature(depth, salinity)
         ofile = f"jib_ocean_forcing_id_{s}_1980_2020.nc"
         create_nc(ofile, theta_ocean, salinity, grid_spacing, time_dict)
 
-    salinity_fjord_mean_corrected = ctrl["Salinity [g/kg]"]["Bay"] - S_mean_diff
     salinity_fjord_mean = ctrl["Salinity [g/kg]"]["Fjord"]
     theta_ocean_fjord_mean = ctrl["Temperature [Celsius]"]["Fjord"] - melting_point_temperature(
         depth, salinity_fjord_mean
     )
-    ofile = f"jib_ocean_forcing_id_ctrl_1980_2020.nc"
+    ofile = "jib_ocean_forcing_id_ctrl_1980_2020.nc"
     create_nc(ofile, theta_ocean_fjord_mean, salinity_fjord_mean, grid_spacing, time_dict)
+
+    theta_ocean_fjord_timmean = np.mean(theta_ocean_fjord_mean) + np.zeros_like(theta_ocean_fjord_mean)
+    salinity_fjord_timmean = np.mean(salinity_fjord_mean) + np.zeros_like(salinity_fjord_mean)
+    ofile = "jib_ocean_forcing_id_tm_1980_2020.nc"
+    create_nc(ofile, theta_ocean_fjord_timmean, salinity_fjord_timmean, grid_spacing, time_dict)
 
     ax[1].set_xlabel("Year")
     ax[1].set_xlim(1980, 2021)
@@ -720,34 +715,38 @@ if __name__ == "__main__":
         ofile = "jib_ocean_forcing_1980_2020.pdf"
     fig.savefig(ofile)
 
-    # fig, ax = plt.subplots(
-    #     2,
-    #     1,
-    #     sharex="col",
-    #     figsize=[6.2, 6.2],
-    #     num="prognostic_all",
-    #     clear=True,
-    # )
-    # fig.subplots_adjust(hspace=0.1)
+    # Observations only
+    fig, ax = plt.subplots(
+        2,
+        1,
+        sharex="col",
+        figsize=[3.4, 3.4],
+        num="Observations",
+        clear=True,
+    )
+    fig.subplots_adjust(hspace=0.1)
 
-    # idx = 0
-    # # Loop over all indiviual data sets
-    # for key, data in all_data_ind.items():
+    T = all_data_cat["Temperature [Celsius]"]
+    S = all_data_cat["Salinity [g/kg]"]
 
-    #     for k, v in all_data_cat.items():
+    for location in ["Bay", "Fjord"]:
+        data = T[location]
+        X = data["X"]
+        Y = data["Y"] * T_std + T_mean
+        ax[0].plot(X, Y, "o", color=col_dict[location], ms=ms, mec="k", mew=mew, label=location)
+        data = S[location]
+        X = data["X"]
+        Y = data["Y"] * S_std + S_mean
+        ax[1].plot(X, Y, "o", color=col_dict[location], ms=ms, mec="k", mew=mew)
+    ax[0].set_ylabel("Temperature [Celsius]")
+    ax[1].set_ylabel("Salinity [g/kg]")
+    ax[1].set_xlabel("Year")
+    ax[1].set_xlim(1980, 2021)
+    ax[0].set_ylim(0, 5)
+    ax[1].set_ylim(33, 35)
+    legend = ax[0].legend(loc="upper left", ncol=2)
+    legend.get_frame().set_linewidth(0.0)
+    legend.get_frame().set_alpha(0.0)
 
-    #         ax[idx].plot(data[k]["X"], data[k]["Y"], "o", color=col_dict[k], ms=ms, mec="k", mew=mew, label=k)
-    #         ax[idx].set_ylabel(key)
-
-    #     idx += 1
-
-    # ax[1].set_xlabel("Year")
-    # ax[1].set_xlim(1980, 2021)
-    # ax[0].set_ylim(0, 5)
-    # ax[1].set_ylim(33, 35)
-    # legend = ax[0].legend(loc="upper left", ncol=2)
-    # legend.get_frame().set_linewidth(0.0)
-    # legend.get_frame().set_alpha(0.0)
-
-    # set_size(3.35, 3.35)
-    # fig.savefig("jib_ocean_observation_categorical_1980_2020.pdf")
+    set_size(3.35, 3.35)
+    fig.savefig("jib_ocean_observation_categorical_1980_2020.pdf")
