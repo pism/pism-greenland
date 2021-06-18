@@ -317,11 +317,94 @@ for d in jib; do     python historical.py --hydrology routing --spatial_ts stand
 done
 
 
+odir=2021_04_init_rm
+n=120
+grid=450
+for d in jib; do     python historical.py --hydrology routing --spatial_ts standard --exstep monthly --tsstep daily -b rm --dataset_version 1_RAGIS -d ${d} --o_dir ${odir} --start 1980-1-1 --end 1990-1-1 -q t2standard -s chinook -w 24:00:00 -n ${n} -g ${grid} -e ../uncertainty_qunatification/init_jib.csv ../../pism-gris/calibration/2020_10_RAGIS/state/gris_g${grid}m_v1_RAGIS_id_0_0_50.nc;
+done
+
+odir=2021_04_init_rumpel
+n=120
+grid=450
+for d in jib; do     python historical.py --hydrology routing --spatial_ts standard --exstep monthly --tsstep daily -b rm --dataset_version 1_RAGIS -d ${d} --o_dir ${odir} --start 1980-1-1 --end 1990-1-1 -q t2standard -s chinook -w 24:00:00 -n ${n} -g ${grid} -e ../uncertainty_qunatification/init_jib.csv ../../pism-gris/calibration/2020_10_RAGIS/state/gris_g${grid}m_v1_RAGIS_id_0_0_50.nc;
+done
+
+odir=2021_04_calib_rumpel_0.75
+n=120
+grid=450
+for d in jib; do     python historical.py --hydrology routing --spatial_ts standard --exstep monthly --tsstep daily -b rm --dataset_version 1_RAGIS -d ${d} --o_dir ${odir} --start 1980-1-1 --end 2010-1-1 -q t2standard -s chinook -w 24:00:00 -n ${n} -g ${grid} -e ../uncertainty_qunatification/calib_jib.csv 2021_04_init_rumpel/state/jib_g450m_v1_RAGIS_id_INIT-0.8-100-0.75_1980-1-1_1990-1-1.nc ;
+done
+
+odir=2021_04_calib_rumpel_1.00
+n=120
+grid=450
+for d in jib; do     python historical.py --hydrology routing --spatial_ts standard --exstep monthly --tsstep daily -b rm --dataset_version 1_RAGIS -d ${d} --o_dir ${odir} --start 1980-1-1 --end 2010-1-1 -q t2standard -s chinook -w 24:00:00 -n ${n} -g ${grid} -e ../uncertainty_qunatification/calib_jib.csv 2021_04_init_rumpel/state/jib_g450m_v1_RAGIS_id_INIT-0.8-100-1.00_1980-1-1_1990-1-1.nc ;
+done
+
+
+odir=2021_05_init
+n=48
+grid=600
+for d in jib; do     python historical.py --hydrology routing --spatial_ts standard --exstep monthly --tsstep daily -b rm --dataset_version 1_RAGIS -d ${d} --o_dir ${odir} --start 1980-1-1 --end 1990-1-1 -q t2small -s chinook -w 36:00:00 -n ${n} -g ${grid} -e ../uncertainty_qunatification/init_jib.csv ../../pism-gris/calibration/2020_10_RAGIS/state/gris_g${grid}m_v1_RAGIS_id_0_0_50.nc;
+done
+
+odir=2021_05_calib_1.00
+n=48
+grid=600
+for d in jib; do     python historical.py --hydrology routing --spatial_ts standard --exstep monthly --tsstep daily -b rm --dataset_version 1_RAGIS -d ${d} --o_dir ${odir} --start 1980-1-1 --end 2010-1-1 -q t2small -s chinook -w 28:00:00 -n ${n} -g ${grid} -e ../uncertainty_qunatification/calib_jib.csv 2021_05_init/state/jib_g600m_v1_RAGIS_id_INIT-0.8-100-1.00_1980-1-1_1990-1-1.nc  ;
+done
+
+
+odir=2021_05_calib_0.50
+n=48
+grid=600
+for d in jib; do     python historical.py --hydrology routing --spatial_ts standard --exstep monthly --tsstep daily -b rm --dataset_version 1_RAGIS -d ${d} --o_dir ${odir} --start 1980-1-1 --end 2010-1-1 -q t2small -s chinook -w 28:00:00 -n ${n} -g ${grid} -e ../uncertainty_qunatification/calib_jib.csv 2021_05_init/state/jib_g600m_v1_RAGIS_id_INIT-0.8-100-0.50_1980-1-1_1990-1-1.nc  ;
+done
+
+odir=2021_05_calib_1.00_blatter
+n=48
+grid=600
+for d in jib; do     python historical.py --stress_balance blatter --hydrology routing --spatial_ts standard --exstep monthly --tsstep daily -b rm --dataset_version 1_RAGIS -d ${d} --o_dir ${odir} --start 1980-1-1 --end 2010-1-1 -q t2small -s chinook -w 28:00:00 -n ${n} -g ${grid} -e ../uncertainty_qunatification/calib_jib.csv 2021_05_init/state/jib_g600m_v1_RAGIS_id_INIT-0.8-100-1.00_1980-1-1_1990-1-1.nc  ;
+done
+
+
+odir=2021_02_blatter
+n=96
+grid=9000
+
+for d in gris; do     python historical.py --stress_balance blatter --spatial_ts none --dataset_version 3a -b wc -d ${d} --o_dir ${odir} --start 2008-1-1 --end 2009-1-1 -q t2standard -s chinook -w 1:00:00 -n ${n} -g ${grid} -e ../uncertainty_qunatification/ctrl.csv ../../pism-gris/calibration/2017_06_vc/state/gris_g9000m_flux_v3a_no_bath_sia_e_1.25_sia_n_3_ssa_n_3.25_ppq_0.6_tefo_0.02_calving_vonmises_calving_0_100.nc; done
+
+odir=2021_05_blatter
+n=24
+grid=9000
+
+for d in gris; do     python historical.py --stress_balance blatter --spatial_ts none --dataset_version 3a -b wc -d ${d} --o_dir ${odir} --start 2008-1-1 --end 2009-1-1 -q t2small -s chinook -w 1:00:00 -n ${n} -g ${grid} -e ../uncertainty_qunatification/ctrl.csv ../../pism-gris/calibration/2017_06_vc/state/gris_g9000m_flux_v3a_no_bath_sia_e_1.25_sia_n_3_ssa_n_3.25_ppq_0.6_tefo_0.02_calving_vonmises_calving_0_100.nc; done
+
+odir=2021_05_ocean
+n=48
+grid=600
+for d in jib; do     python historical.py --hydrology routing --spatial_ts standard --exstep monthly --tsstep daily -b rm --dataset_version 1_RAGIS -d ${d} --o_dir ${odir} --start 1980-1-1 --end 2010-1-1 -q t2small -s chinook -w 28:00:00 -n ${n} -g ${grid} -e ../uncertainty_qunatification/jib_ocean_variability.csv 2021_05_init/state/jib_g600m_v1_RAGIS_id_INIT-0.8-100-1.00_1980-1-1_1990-1-1.nc  ;
+done
+
+odir=2021_05_ocean_variability
+n=48
+grid=600
+for d in jib; do
+    python historical.py --hydrology routing --spatial_ts standard --exstep monthly --tsstep daily -b rm --dataset_version 1_RAGIS -d ${d} --o_dir ${odir} --start 1980-1-1 --end 1985-1-1 -q t2small -s chinook -w 4:00:00 -n ${n} -g ${grid} -e ../uncertainty_qunatification/jib_ocean_variability.csv 2021_05_init/state/jib_g600m_v1_RAGIS_id_INIT-0.8-100-1.00_1980-1-1_1990-1-1.nc  ;
+    for id in {0..9} CTRL TM; do
+        sbatch /import/c1/ICESHEET/ICESHEET/crios2pism/historical/2021_05_ocean_variability/run_scripts/jib_g600m_v1_RAGIS_id_OCEAN-VAR-${id}_1980-1-1_1985-1-1.sh
+        python historical.py --hydrology routing --spatial_ts standard --exstep monthly --tsstep daily -b rm --dataset_version 1_RAGIS -d ${d} --o_dir ${odir} --start 1980-1-1 --end 2010-1-1 -q t2small -s chinook -w 12:00:00 -n ${n} -g ${grid} -e ../uncertainty_qunatification/jib_ocean_variability.csv 2021_05_ocean/state/jib_g600m_v1_RAGIS_id_OCEAN-VAR-${id}_1980-1-1_1985-1-1.nc  ;
+    done
+done
+
+
+
+
 odir=2021_04_calib_1985
 mkdir -p $odir/glaciers/scalar
 cd $odir/spatial
 for file in ex_jib*.nc; do
-python ~/base/gris-analysis/basins/extract_glacier.py --ugid 0 --epsg 3413 --o_dir ../glaciers --shape_file ~/Google\ Drive/My\ Drive/Projects/jib-breakup/data/tongue_main.shp $file
+ python ~/base/gris-analysis/basins/extract_glacier.py --ugid 225 --epsg 3413 --o_dir ../glaciers --shape_file ~/base/gris-analysis/basins/Greenland_Basins_PS_v1.4.2_1980.shp ex_jib_g600m_v1_RAGIS_id_OCEAN-VAR-0_1980-1-1_2010-1-1.nc  $file
 done
 cd ../glaciers
 for id in INIT1 INIT2 INIT3 INIT4; do
@@ -330,3 +413,23 @@ done
 
 
 cdo -L -O expr,"subshelf_melt_rate=basal_mass_flux_floating/-1000.0" -fldmean -ifthen ugid_0_JIB_tongue_ex_jib_g600m_v1_RAGIS_id_INIT1_1985-1-1/ugid_0_JIB_tongue_ex_jib_g600m_v1_RAGIS_id_INIT1_1985-1-1.nc ugid_0_JIB_tongue_ex_jib_g600m_v1_RAGIS_id_INIT1_1985-1-1/ugid_0_JIB_tongue_ex_jib_g600m_v1_RAGIS_id_INIT1_1985-1-1.nc scalar/subshelf_melt_rate_ugid_0_JIB_tongue_ex_jib_g600m_v1_RAGIS_id_INIT1_1985-1-1.nc
+
+
+odir=2021_05_ocean
+mkdir -p $odir/glaciers/scalar
+cd $odir/spatial
+for file in ex_jib*.nc; do
+ python ~/base/gris-analysis/basins/extract_glacier.py --ugid 225 --epsg 3413 --o_dir ../glaciers --shape_file ~/base/gris-analysis/basins/Greenland_Basins_PS_v1.4.2_1980.shp $file
+done
+# cd ../glaciers
+for id in {0..9}; do
+cdo -L -O setattribute,subshelf_melt_rate@units="m yr-1" -aexpr,"subshelf_melt_rate=basal_mass_flux_floating/-1000.0" -fldmean -ifthen ugid_225_Jakobshavn_Isbrae_ex_jib_g600m_v1_RAGIS_id_OCEAN-VAR-${id}_1980-1-1_2010-1-1/ugid_225_Jakobshavn_Isbrae_ex_jib_g600m_v1_RAGIS_id_OCEAN-VAR-${id}_1980-1-1_2010-1-1.nc ugid_225_Jakobshavn_Isbrae_ex_jib_g600m_v1_RAGIS_id_OCEAN-VAR-${id}_1980-1-1_2010-1-1/ugid_225_Jakobshavn_Isbrae_ex_jib_g600m_v1_RAGIS_id_OCEAN-VAR-${id}_1980-1-1_2010-1-1.nc scalar/fldmean_ugid_225_Jakobshavn_Isbrae_ex_jib_g600m_v1_RAGIS_id_OCEAN-VAR-${id}_1980-1-1_2010-1-1.nc
+done
+for id in {0..9}; do
+cdo -L -O setattribute,subshelf_melt_rate@units="m yr-1" -aexpr,"subshelf_melt_rate=basal_mass_flux_floating/-1000.0" -fldsum -ifthen ugid_225_Jakobshavn_Isbrae_ex_jib_g600m_v1_RAGIS_id_OCEAN-VAR-${id}_1980-1-1_2010-1-1/ugid_225_Jakobshavn_Isbrae_ex_jib_g600m_v1_RAGIS_id_OCEAN-VAR-${id}_1980-1-1_2010-1-1.nc ugid_225_Jakobshavn_Isbrae_ex_jib_g600m_v1_RAGIS_id_OCEAN-VAR-${id}_1980-1-1_2010-1-1/ugid_225_Jakobshavn_Isbrae_ex_jib_g600m_v1_RAGIS_id_OCEAN-VAR-${id}_1980-1-1_2010-1-1.nc scalar/fldsum_ugid_225_Jakobshavn_Isbrae_ex_jib_g600m_v1_RAGIS_id_OCEAN-VAR-${id}_1980-1-1_2010-1-1.nc
+done
+
+
+for id in {0..9}; do
+extract_profiles.py -v velsurf_mag --srs epsg:3413 ~/Google\ Drive/My\ Drive/Projects/jib-breakup/data/shape_files/joughin-gps-points.shp ugid_225_Jakobshavn_Isbrae_ex_jib_g600m_v1_RAGIS_id_OCEAN-VAR-${id}_1980-1-1_2010-1-1/ugid_225_Jakobshavn_Isbrae_ex_jib_g600m_v1_RAGIS_id_OCEAN-VAR-${id}_1980-1-1_2010-1-1.nc gps_ugid_225_Jakobshavn_Isbrae_ex_jib_g600m_v1_RAGIS_id_OCEAN-VAR-${id}_1980-1-1_2010-1-1.nc
+done
