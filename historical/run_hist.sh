@@ -391,9 +391,10 @@ n=48
 grid=600
 for d in jib; do
     python historical.py --hydrology routing --spatial_ts standard --exstep monthly --tsstep daily -b rm --dataset_version 1_RAGIS -d ${d} --o_dir ${odir} --start 1980-1-1 --end 1985-1-1 -q t2small -s chinook -w 4:00:00 -n ${n} -g ${grid} -e ../uncertainty_qunatification/jib_ocean_variability.csv 2021_05_init/state/jib_g600m_v1_RAGIS_id_INIT-0.8-100-1.00_1980-1-1_1990-1-1.nc  ;
-    for id in {0..9} CTRL TM; do
+    for id in TM; do
         sbatch /import/c1/ICESHEET/ICESHEET/crios2pism/historical/2021_05_ocean_variability/run_scripts/jib_g600m_v1_RAGIS_id_OCEAN-VAR-${id}_1980-1-1_1985-1-1.sh
-        python historical.py --hydrology routing --spatial_ts standard --exstep monthly --tsstep daily -b rm --dataset_version 1_RAGIS -d ${d} --o_dir ${odir} --start 1980-1-1 --end 2010-1-1 -q t2small -s chinook -w 12:00:00 -n ${n} -g ${grid} -e ../uncertainty_qunatification/jib_ocean_variability.csv 2021_05_ocean/state/jib_g600m_v1_RAGIS_id_OCEAN-VAR-${id}_1980-1-1_1985-1-1.nc  ;
+        python historical.py --hydrology routing --spatial_ts standard --exstep monthly --tsstep daily -b rm --dataset_version 1_RAGIS -d ${d} --o_dir ${odir} --start 1980-1-1 --end 2010-1-1 -q t2small -s chinook -w 12:00:00 -n ${n} -g ${grid} -e ../uncertainty_qunatification/jib_ocean_variability.csv $odir/state/jib_g600m_v1_RAGIS_id_OCEAN-VAR-${id}_1980-1-1_1985-1-1.nc;
+        # sbatch /import/c1/ICESHEET/ICESHEET/crios2pism/historical/2021_05_ocean_variability/run_scripts/jib_g600m_v1_RAGIS_id_OCEAN-VAR-${id}_1980-1-1_2010-1-1.sh
     done
 done
 
@@ -415,10 +416,10 @@ done
 cdo -L -O expr,"subshelf_melt_rate=basal_mass_flux_floating/-1000.0" -fldmean -ifthen ugid_0_JIB_tongue_ex_jib_g600m_v1_RAGIS_id_INIT1_1985-1-1/ugid_0_JIB_tongue_ex_jib_g600m_v1_RAGIS_id_INIT1_1985-1-1.nc ugid_0_JIB_tongue_ex_jib_g600m_v1_RAGIS_id_INIT1_1985-1-1/ugid_0_JIB_tongue_ex_jib_g600m_v1_RAGIS_id_INIT1_1985-1-1.nc scalar/subshelf_melt_rate_ugid_0_JIB_tongue_ex_jib_g600m_v1_RAGIS_id_INIT1_1985-1-1.nc
 
 
-odir=2021_05_ocean
+odir=2021_05_ocean_variability
 mkdir -p $odir/glaciers/scalar
 cd $odir/spatial
-for file in ex_jib*.nc; do
+for file in ex_jib*2010*.nc; do
  python ~/base/gris-analysis/basins/extract_glacier.py --ugid 225 --epsg 3413 --o_dir ../glaciers --shape_file ~/base/gris-analysis/basins/Greenland_Basins_PS_v1.4.2_1980.shp $file
 done
 # cd ../glaciers
@@ -430,6 +431,6 @@ cdo -L -O setattribute,subshelf_melt_rate@units="m yr-1" -aexpr,"subshelf_melt_r
 done
 
 
-for id in {0..9}; do
-extract_profiles.py -v velsurf_mag --srs epsg:3413 ~/Google\ Drive/My\ Drive/Projects/jib-breakup/data/shape_files/joughin-gps-points.shp ugid_225_Jakobshavn_Isbrae_ex_jib_g600m_v1_RAGIS_id_OCEAN-VAR-${id}_1980-1-1_2010-1-1/ugid_225_Jakobshavn_Isbrae_ex_jib_g600m_v1_RAGIS_id_OCEAN-VAR-${id}_1980-1-1_2010-1-1.nc gps_ugid_225_Jakobshavn_Isbrae_ex_jib_g600m_v1_RAGIS_id_OCEAN-VAR-${id}_1980-1-1_2010-1-1.nc
+for id in {0..9} CTRL; do
+extract_profiles.py -v velsurf_mag --srs epsg:3413 ~/Google\ Drive/My\ Drive/Projects/jib-breakup/data/shape_files/joughin-gps-points.shp ugid_225_Jakobshavn_Isbrae_ex_jib_g600m_v1_RAGIS_id_OCEAN-VAR-${id}_1980-1-1_2010-1-1/ugid_225_Jakobshavn_Isbrae_ex_jib_g600m_v1_RAGIS_id_OCEAN-VAR-${id}_1980-1-1_2010-1-1.nc points_ugid_225_Jakobshavn_Isbrae_ex_jib_g600m_v1_RAGIS_id_OCEAN-VAR-${id}_1980-1-1_2010-1-1.nc
 done
