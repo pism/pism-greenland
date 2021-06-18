@@ -5,7 +5,7 @@
 # Jakobshavn Fjord
 # for Fjord and Bay measurements
 
-from cftime import utime
+import cftime
 from dateutil import rrule
 from datetime import datetime
 from netCDF4 import Dataset as NC
@@ -110,7 +110,7 @@ class PLMultitaskGPModel(pl.LightningModule):
 
 
 def set_size(w, h, ax=None):
-    """ w, h: width, height in inches """
+    """w, h: width, height in inches"""
 
     if not ax:
         ax = plt.gca()
@@ -397,7 +397,6 @@ if __name__ == "__main__":
 
     calendar = "standard"
     units = "days since 1980-1-1"
-    cdftime_days = utime(units, calendar)
 
     # create list with dates from start_date until end_date with
     # periodicity prule for netCDF file
@@ -409,7 +408,7 @@ if __name__ == "__main__":
 
     bnds_datelist = list(rrule.rrule(rd[sampling_interval], dtstart=start_date, until=end_date_yearly))
     # calculate the days since refdate, including refdate, with time being the
-    bnds_interval_since_refdate = cdftime_days.date2num(bnds_datelist)
+    bnds_interval_since_refdate = cftime.date2num(bnds_datelist, units, calendar=calendar)
     time_interval_since_refdate = bnds_interval_since_refdate[0:-1] + np.diff(bnds_interval_since_refdate) / 2
 
     time_dict = {
@@ -692,9 +691,13 @@ if __name__ == "__main__":
     ofile = "jib_ocean_forcing_id_ctrl_1980_2020.nc"
     create_nc(ofile, theta_ocean_fjord_mean, salinity_fjord_mean, grid_spacing, time_dict)
 
-    theta_ocean_fjord_timmean = np.mean(theta_ocean_fjord_mean) + np.zeros_like(theta_ocean_fjord_mean)
-    salinity_fjord_timmean = np.mean(salinity_fjord_mean) + np.zeros_like(salinity_fjord_mean)
-    ofile = "jib_ocean_forcing_id_tm_1980_2020.nc"
+    theta_ocean_fjord_timmean = np.mean(
+        theta_ocean_fjord_mean[(dates >= datetime(1985, 1, 1)) & (dates < datetime(1990, 1, 1))]
+    ) + np.zeros_like(theta_ocean_fjord_mean)
+    salinity_fjord_timmean = np.mean(
+        salinity_fjord_mean[(dates >= datetime(1985, 1, 1)) & (dates < datetime(1990, 1, 1))]
+    ) + np.zeros_like(salinity_fjord_mean)
+    ofile = "jib_ocean_forcing_id_tm_1985_1990.nc"
     create_nc(ofile, theta_ocean_fjord_timmean, salinity_fjord_timmean, grid_spacing, time_dict)
 
     ax[1].set_xlabel("Year")

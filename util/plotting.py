@@ -46,11 +46,20 @@ gt2mmSLE = 1.0 / 362.5
 gt2cmSLE = 1.0 / 362.5 / 10.0
 gt2mSLE = 1.0 / 362.5 / 1000.0
 
-plot_var = "tendency_of_ice_mass_due_to_calving"
+plot_var = "grounding_line_flux"
 mass_ounits = "Gt"
 flux_ounits = "Gt year-1"
 
 vars_dict = {
+    "grounding_line_flux": {
+        "ounits": "Gt year-1",
+        "vtype": "mass",
+        "sign": 1,
+        "as19_name": "grounding_line_flux",
+        "normalize": False,
+        "ylabel": "flux (Gt/yr)",
+        "mass2sle": 1,
+    },
     "limnsw": {
         "ounits": "Gt",
         "vtype": "mass",
@@ -117,8 +126,8 @@ for k, ifile in enumerate(ifiles):
     date = num2date(time[:], units=time_units, calendar=time_calendar)
     var_vals = nc.variables[plot_var][:]
     iunits = nc.variables[plot_var].units
-    ax.plot_date(date, var_vals, "-", color=colors[k], linestyle="solid", linewidth=0.2)
-    var_vals_smoothed = smooth(var_vals, 33)
+    # ax.plot_date(date, var_vals, "-", color=colors[k], linestyle="solid", linewidth=0.2)
+    var_vals_smoothed = smooth(var_vals, 13 * 30)
     ax.plot_date(date, var_vals_smoothed, "-", color=colors[k], linestyle="solid", linewidth=1.0, label=exp)
     nc.close()
 legend = ax.legend()
