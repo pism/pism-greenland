@@ -691,25 +691,60 @@ if __name__ == "__main__":
     ofile = "jib_ocean_forcing_id_ctrl_1980_2020.nc"
     create_nc(ofile, theta_ocean_fjord_mean, salinity_fjord_mean, grid_spacing, time_dict)
 
-    theta_ocean_fjord_timmean = np.mean(
-        theta_ocean_fjord_mean[(dates >= datetime(1985, 1, 1)) & (dates < datetime(1990, 1, 1))]
-    ) + np.zeros_like(theta_ocean_fjord_mean)
-    salinity_fjord_timmean = np.mean(
-        salinity_fjord_mean[(dates >= datetime(1985, 1, 1)) & (dates < datetime(1990, 1, 1))]
-    ) + np.zeros_like(salinity_fjord_mean)
-    ofile = "jib_ocean_forcing_id_tm_1985_1990.nc"
+    # theta_ocean_fjord_timmean = np.mean(
+    #     theta_ocean_fjord_mean[(dates >= datetime(1985, 1, 1)) & (dates < datetime(1990, 1, 1))]
+    # ) + np.zeros_like(theta_ocean_fjord_mean)
+    # salinity_fjord_timmean = np.mean(
+    #     salinity_fjord_mean[(dates >= datetime(1985, 1, 1)) & (dates < datetime(1990, 1, 1))]
+    # ) + np.zeros_like(salinity_fjord_mean)
+
+    T_cf = np.mean(
+        ctrl["Temperature [Celsius]"]["Fjord"][(dates >= datetime(1985, 1, 1)) & (dates < datetime(1995, 1, 1))]
+    )
+    S_cf = np.mean(ctrl["Salinity [g/kg]"]["Fjord"][(dates >= datetime(1985, 1, 1)) & (dates < datetime(1995, 1, 1))])
+    if normalize:
+        T_cf = T_cf * T_std + T_mean
+        S_cf = S_cf * S_std + S_mean
+
+    temperature_fjord_timmean = T_cf + np.zeros_like(ctrl["Temperature [Celsius]"]["Fjord"])
+    theta_ocean_fjord_timmean = temperature_fjord_timmean - melting_point_temperature(depth, salinity_fjord_mean)
+    salinity_fjord_timmean = S_cf + np.zeros_like(ctrl["Salinity [g/kg]"]["Fjord"])
+    ax[0].plot(
+        X_new,
+        temperature_fjord_timmean,
+        color=col_dict["Fjord"],
+        linewidth=0.75,
+        linestyle="dotted",
+        label=f"Constant Forcing",
+    )
+    ax[1].plot(
+        X_new,
+        salinity_fjord_timmean,
+        color=col_dict["Fjord"],
+        linewidth=0.75,
+        linestyle="dotted",
+        label=f"Constant Forcing",
+    )
+
+    ofile = "jib_ocean_forcing_id_tm_1985_1995.nc"
     create_nc(ofile, theta_ocean_fjord_timmean, salinity_fjord_timmean, grid_spacing, time_dict)
 
     ax[1].set_xlabel("Year")
     ax[1].set_xlim(1980, 2021)
     ax[0].set_ylim(0, 5)
-    ax[1].set_ylim(33, 35)
+    ax[1].set_ylim(33.5, 35.5)
     handles, labels = ax[0].get_legend_handles_labels()
-    m_handles = [handles[2], handles[3], handles[6], handles[4], handles[0], handles[1], handles[5]]
-    m_labels = [labels[2], labels[3], labels[6], labels[4], labels[0], labels[1], labels[5]]
-    l1 = ax[0].legend(m_handles, m_labels, ncol=2)
+    m_handles_1 = [handles[2], handles[0]]
+    m_labels_1 = [labels[2], labels[0]]
+    l1 = ax[0].legend(m_handles_1, m_labels_1, ncol=1)
+    m_handles_2 = [handles[3], handles[7], handles[1], handles[6]]
+    m_labels_2 = [labels[3], labels[7], labels[1], labels[6]]
+    l2 = ax[1].legend(m_handles_2, m_labels_2, ncol=2)
+    # l1 = ax[0].legend(ncol=2)
     l1.get_frame().set_linewidth(0.0)
     l1.get_frame().set_alpha(0.0)
+    l2.get_frame().set_linewidth(0.0)
+    l2.get_frame().set_alpha(0.0)
 
     set_size(3.35, 3.35)
     if normalize:
