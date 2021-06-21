@@ -22,7 +22,7 @@ except:
 
 
 def set_size(w, h, ax=None):
-    """ w, h: width, height in inches """
+    """w, h: width, height in inches"""
 
     if not ax:
         ax = plt.gca()
@@ -124,10 +124,10 @@ for k, ifile in enumerate(ifiles):
     time_units = time.units
     time_calendar = time.calendar
     date = num2date(time[:], units=time_units, calendar=time_calendar)
-    var_vals = nc.variables[plot_var][:]
+    var_vals = np.squeeze(nc.variables[plot_var][:])
     iunits = nc.variables[plot_var].units
     # ax.plot_date(date, var_vals, "-", color=colors[k], linestyle="solid", linewidth=0.2)
-    var_vals_smoothed = smooth(var_vals, 13 * 30)
+    var_vals_smoothed = smooth(var_vals, 13)
     ax.plot_date(date, var_vals_smoothed, "-", color=colors[k], linestyle="solid", linewidth=1.0, label=exp)
     nc.close()
 legend = ax.legend()
