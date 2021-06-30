@@ -391,10 +391,10 @@ n=48
 grid=600
 for d in jib; do
     python historical.py --hydrology routing --spatial_ts standard --exstep monthly --tsstep daily -b rm --dataset_version 1_RAGIS -d ${d} --o_dir ${odir} --start 1980-1-1 --end 1985-1-1 -q t2small -s chinook -w 4:00:00 -n ${n} -g ${grid} -e ../uncertainty_qunatification/jib_ocean_variability.csv 2021_05_init/state/jib_g600m_v1_RAGIS_id_INIT-0.8-100-1.00_1980-1-1_1990-1-1.nc  ;
-    for id in TM; do
-        sbatch /import/c1/ICESHEET/ICESHEET/crios2pism/historical/2021_05_ocean_variability/run_scripts/jib_g600m_v1_RAGIS_id_OCEAN-VAR-${id}_1980-1-1_1985-1-1.sh
+    for id in CF; do
+        # sbatch /import/c1/ICESHEET/ICESHEET/crios2pism/historical/2021_05_ocean_variability/run_scripts/jib_g600m_v1_RAGIS_id_OCEAN-VAR-${id}_1980-1-1_1985-1-1.sh
         python historical.py --hydrology routing --spatial_ts standard --exstep monthly --tsstep daily -b rm --dataset_version 1_RAGIS -d ${d} --o_dir ${odir} --start 1980-1-1 --end 2010-1-1 -q t2small -s chinook -w 12:00:00 -n ${n} -g ${grid} -e ../uncertainty_qunatification/jib_ocean_variability.csv $odir/state/jib_g600m_v1_RAGIS_id_OCEAN-VAR-${id}_1980-1-1_1985-1-1.nc;
-        # sbatch /import/c1/ICESHEET/ICESHEET/crios2pism/historical/2021_05_ocean_variability/run_scripts/jib_g600m_v1_RAGIS_id_OCEAN-VAR-${id}_1980-1-1_2010-1-1.sh
+        sbatch /import/c1/ICESHEET/ICESHEET/crios2pism/historical/2021_05_ocean_variability/run_scripts/jib_g600m_v1_RAGIS_id_OCEAN-VAR-${id}_1980-1-1_2010-1-1.sh
     done
 done
 
