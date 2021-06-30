@@ -7,6 +7,7 @@ from netCDF4 import Dataset as NC
 from netCDF4 import num2date
 
 import cf_units
+import cftime
 import numpy as np
 import os
 import pylab as plt
@@ -46,16 +47,27 @@ gt2mmSLE = 1.0 / 362.5
 gt2cmSLE = 1.0 / 362.5 / 10.0
 gt2mSLE = 1.0 / 362.5 / 1000.0
 
-plot_var = "grounding_line_flux"
+plot_var = "total_grounding_line_flux"
+# plot_var = "tendency_of_ice_mass_due_to_discharge"
+# plot_var = "tendency_of_ice_mass_due_to_basal_mass_flux"
 mass_ounits = "Gt"
 flux_ounits = "Gt year-1"
 
 vars_dict = {
+    "total_grounding_line_flux": {
+        "ounits": "Gt year-1",
+        "vtype": "mass",
+        "sign": 1,
+        "as19_name": "total_grounding_line_flux",
+        "normalize": False,
+        "ylabel": "flux (Gt/yr)",
+        "mass2sle": 1,
+    },
     "grounding_line_flux": {
         "ounits": "Gt year-1",
         "vtype": "mass",
         "sign": 1,
-        "as19_name": "grounding_line_flux",
+        "as19_name": "total_grounding_line_flux",
         "normalize": False,
         "ylabel": "flux (Gt/yr)",
         "mass2sle": 1,
@@ -83,6 +95,24 @@ vars_dict = {
         "vtype": "flux",
         "sign": 1,
         "as19_name": "tendency_of_ice_mass_due_to_discharge",
+        "normalize": False,
+        "ylabel": "flux (Gt/yr)",
+        "mass2sle": 1,
+    },
+    "tendency_of_ice_mass_due_to_discharge": {
+        "ounits": "Gt year-1",
+        "vtype": "flux",
+        "sign": 1,
+        "as19_name": "tendency_of_ice_mass_due_to_discharge",
+        "normalize": False,
+        "ylabel": "flux (Gt/yr)",
+        "mass2sle": 1,
+    },
+    "tendency_of_ice_mass_due_to_basal_mass_flux": {
+        "ounits": "Gt year-1",
+        "vtype": "flux",
+        "sign": 1,
+        "as19_name": "tendency_of_ice_mass_due_to_basal_mass_flux",
         "normalize": False,
         "ylabel": "flux (Gt/yr)",
         "mass2sle": 1,
@@ -119,16 +149,17 @@ ax = fig.add_subplot(111)
 
 for k, ifile in enumerate(ifiles):
     nc = NC(ifile)
+    print(ifile)
     exp = re.search("id_(.+?)_", ifile).group(1).upper()
     time = nc.variables["time"]
     time_units = time.units
     time_calendar = time.calendar
-    date = num2date(time[:], units=time_units, calendar=time_calendar)
+    date = cftime.num2pydate(time, time_units)
     var_vals = np.squeeze(nc.variables[plot_var][:])
     iunits = nc.variables[plot_var].units
     # ax.plot_date(date, var_vals, "-", color=colors[k], linestyle="solid", linewidth=0.2)
     var_vals_smoothed = smooth(var_vals, 13)
-    ax.plot_date(date, var_vals_smoothed, "-", color=colors[k], linestyle="solid", linewidth=1.0, label=exp)
+    ax.plot_date(date, var_vals_smoothed, "-", linestyle="solid", linewidth=1.0, label=exp)
     nc.close()
 legend = ax.legend()
 legend.get_frame().set_linewidth(0.0)

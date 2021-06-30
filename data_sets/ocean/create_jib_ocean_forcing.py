@@ -715,7 +715,7 @@ if __name__ == "__main__":
         color=col_dict["Fjord"],
         linewidth=0.75,
         linestyle="dotted",
-        label=f"Constant Forcing",
+        label=f"Fjord Constant",
     )
     ax[1].plot(
         X_new,
@@ -723,7 +723,7 @@ if __name__ == "__main__":
         color=col_dict["Fjord"],
         linewidth=0.75,
         linestyle="dotted",
-        label=f"Constant Forcing",
+        label=f"Fjord Constant",
     )
 
     ofile = "jib_ocean_forcing_id_tm_1985_1995.nc"
@@ -732,19 +732,13 @@ if __name__ == "__main__":
     ax[1].set_xlabel("Year")
     ax[1].set_xlim(1980, 2021)
     ax[0].set_ylim(0, 5)
-    ax[1].set_ylim(33.5, 35.5)
+    ax[1].set_ylim(33, 35)
     handles, labels = ax[0].get_legend_handles_labels()
-    m_handles_1 = [handles[2], handles[0]]
-    m_labels_1 = [labels[2], labels[0]]
-    l1 = ax[0].legend(m_handles_1, m_labels_1, ncol=1)
-    m_handles_2 = [handles[3], handles[7], handles[1], handles[6]]
-    m_labels_2 = [labels[3], labels[7], labels[1], labels[6]]
-    l2 = ax[1].legend(m_handles_2, m_labels_2, ncol=2)
-    # l1 = ax[0].legend(ncol=2)
+    m_handles = [handles[0], handles[1], handles[6], handles[2], handles[3], handles[7], handles[5], handles[4]]
+    m_labels = [labels[0], labels[1], labels[6], labels[2], labels[3], labels[7], labels[5], labels[4]]
+    l1 = ax[0].legend(m_handles, m_labels, ncol=3, loc="upper left", handletextpad=1.0)
     l1.get_frame().set_linewidth(0.0)
     l1.get_frame().set_alpha(0.0)
-    l2.get_frame().set_linewidth(0.0)
-    l2.get_frame().set_alpha(0.0)
 
     set_size(3.35, 3.35)
     if normalize:
