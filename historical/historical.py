@@ -40,22 +40,57 @@ def map_dict(val, mdict):
         return val
 
 
-grid_choices = [18000, 9000, 6000, 4500, 3600, 3000, 2400, 1800, 1500, 1200, 900, 600, 450, 300, 150, 1000]
+grid_choices = [
+    18000,
+    9000,
+    6000,
+    4500,
+    3600,
+    3000,
+    2400,
+    1800,
+    1500,
+    1200,
+    900,
+    600,
+    450,
+    300,
+    150,
+    1000,
+]
 
 # set up the option parser
 parser = ArgumentParser(formatter_class=ArgumentDefaultsHelpFormatter)
 parser.description = "Generating scripts for warming experiments."
 parser.add_argument("FILE", nargs=1, help="Input file to restart from", default=None)
 parser.add_argument(
-    "-n", "--n_procs", dest="n", type=int, help="""number of cores/processors. default=140.""", default=140
+    "-n",
+    "--n_procs",
+    dest="n",
+    type=int,
+    help="""number of cores/processors. default=140.""",
+    default=140,
 )
 parser.add_argument(
-    "-w", "--wall_time", dest="walltime", help="""walltime. default: 100:00:00.""", default="100:00:00"
+    "-w",
+    "--wall_time",
+    dest="walltime",
+    help="""walltime. default: 100:00:00.""",
+    default="100:00:00",
 )
 parser.add_argument(
-    "-q", "--queue", dest="queue", choices=list_queues(), help="""queue. default=long.""", default="long"
+    "-q",
+    "--queue",
+    dest="queue",
+    choices=list_queues(),
+    help="""queue. default=long.""",
+    default="long",
 )
-parser.add_argument("--options", dest="commandline_options", help="""Here you can add command-line options""")
+parser.add_argument(
+    "--options",
+    dest="commandline_options",
+    help="""Here you can add command-line options""",
+)
 parser.add_argument(
     "-d",
     "--domain",
@@ -64,8 +99,18 @@ parser.add_argument(
     help="sets the modeling domain",
     default="ismip6",
 )
-parser.add_argument("--exstep", dest="exstep", help="Writing interval for spatial time series", default="monthly")
-parser.add_argument("--tsstep", dest="tsstep", help="Writing interval for scalar time series", default="daily")
+parser.add_argument(
+    "--exstep",
+    dest="exstep",
+    help="Writing interval for spatial time series",
+    default="monthly",
+)
+parser.add_argument(
+    "--tsstep",
+    dest="tsstep",
+    help="Writing interval for scalar time series",
+    default="daily",
+)
 parser.add_argument(
     "-f",
     "--o_format",
@@ -82,7 +127,13 @@ parser.add_argument(
     default=2,
 )
 parser.add_argument(
-    "-g", "--grid", dest="grid", type=int, choices=grid_choices, help="horizontal grid resolution", default=9000
+    "-g",
+    "--grid",
+    dest="grid",
+    type=int,
+    choices=grid_choices,
+    help="horizontal grid resolution",
+    default=9000,
 )
 parser.add_argument(
     "-r",
@@ -92,8 +143,15 @@ parser.add_argument(
     help="Horizontal grid refinement factor. For regional models only",
     default=None,
 )
-parser.add_argument("--i_dir", dest="input_dir", help="input directory", default=abspath(join(script_directory, "..")))
-parser.add_argument("--o_dir", dest="output_dir", help="output directory", default="test_dir")
+parser.add_argument(
+    "--i_dir",
+    dest="input_dir",
+    help="input directory",
+    default=abspath(join(script_directory, "..")),
+)
+parser.add_argument(
+    "--o_dir", dest="output_dir", help="output directory", default="test_dir"
+)
 parser.add_argument(
     "--o_size",
     dest="osize",
@@ -110,7 +168,12 @@ parser.add_argument(
     default="pleiades_broadwell",
 )
 parser.add_argument(
-    "-b", "--bed_type", dest="bed_type", choices=list_bed_types(), help="output size type", default="wc"
+    "-b",
+    "--bed_type",
+    dest="bed_type",
+    choices=list_bed_types(),
+    help="output size type",
+    default="wc",
 )
 parser.add_argument(
     "--spatial_ts",
@@ -221,15 +284,21 @@ else:
     input_file = options.FILE[0]
 
 if domain.lower() in ("greenland_ext", "gris_ext"):
-    pism_dataname = "$input_dir/data_sets/bed_dem/pism_Greenland_ext_{}m_mcb_jpl_v{}_{}.nc".format(
-        grid, version, bed_type
+    pism_dataname = (
+        "$input_dir/data_sets/bed_dem/pism_Greenland_ext_{}m_mcb_jpl_v{}_{}.nc".format(
+            grid, version, bed_type
+        )
     )
 if domain.lower() in ("ismip6"):
     pism_dataname = "$input_dir/data_sets/bed_dem/pism_Greenland_ismip6_{}m_mcb_jpl_v{}_{}.nc".format(
         grid, version, bed_type
     )
 else:
-    pism_dataname = "$input_dir/data_sets/bed_dem/pism_Greenland_{}m_mcb_jpl_v{}_{}.nc".format(grid, version, bed_type)
+    pism_dataname = (
+        "$input_dir/data_sets/bed_dem/pism_Greenland_{}m_mcb_jpl_v{}_{}.nc".format(
+            grid, version, bed_type
+        )
+    )
 
 # Removed "thk" from regrid vars
 # regridvars = "litho_temp,enthalpy,age,tillwat,bmelt,ice_area_specific_volume"
@@ -298,14 +367,27 @@ if system != "debug":
     cmd = "lfs setstripe -c -1 {}".format(dirs["spatial_tmp"])
     sub.call(shlex.split(cmd))
 
-pism_timefile = join(time_dir, "timefile_{start}_{end}.nc".format(start=start_date, end=end_date))
+pism_timefile = join(
+    time_dir, "timefile_{start}_{end}.nc".format(start=start_date, end=end_date)
+)
 try:
     os.remove(pism_timefile)
 except OSError:
     pass
 
 periodicity = "daily"
-cmd = ["create_timeline.py", "-a", start_date, "-e", end_date, "-p", periodicity, "-d", "2008-01-01", pism_timefile]
+cmd = [
+    "create_timeline.py",
+    "-a",
+    start_date,
+    "-e",
+    end_date,
+    "-p",
+    periodicity,
+    "-d",
+    "2008-01-01",
+    pism_timefile,
+]
 sub.call(cmd)
 
 # ########################################################
@@ -320,7 +402,9 @@ phi_max = 40.0
 topg_min = -700
 topg_max = 700
 
-combinations = np.genfromtxt(ensemble_file, dtype=None, encoding=None, delimiter=",", skip_header=1)
+combinations = np.genfromtxt(
+    ensemble_file, dtype=None, encoding=None, delimiter=",", skip_header=1
+)
 
 scripts = []
 scripts_post = []
@@ -363,8 +447,15 @@ for n, combination in enumerate(combinations):
         name_options["id"] = "{}".format(run_id)
 
     vversion = "v" + str(version)
-    full_exp_name = "_".join([vversion, "_".join(["_".join([k, str(v)]) for k, v in list(name_options.items())])])
-    full_outfile = "g{grid}m_{experiment}.nc".format(grid=grid, experiment=full_exp_name)
+    full_exp_name = "_".join(
+        [
+            vversion,
+            "_".join(["_".join([k, str(v)]) for k, v in list(name_options.items())]),
+        ]
+    )
+    full_outfile = "g{grid}m_{experiment}.nc".format(
+        grid=grid, experiment=full_exp_name
+    )
 
     experiment = "_".join(
         [
@@ -392,7 +483,9 @@ for n, combination in enumerate(combinations):
         pism = generate_prefix_str(pism_exec)
 
         general_params_dict = {
-            "profile": join(dirs["performance"], "profile_${job_id}.py".format(**batch_system)),
+            "profile": join(
+                dirs["performance"], "profile_${job_id}.py".format(**batch_system)
+            ),
             "time_file": pism_timefile,
             "o_format": oformat,
             "output.compression_level": compression_level,
@@ -427,7 +520,9 @@ for n, combination in enumerate(combinations):
         if osize != "custom":
             general_params_dict["o_size"] = osize
         else:
-            general_params_dict["output.sizes.medium"] = "sftgif,velsurf_mag,mask,usurf,bmelt"
+            general_params_dict[
+                "output.sizes.medium"
+            ] = "sftgif,velsurf_mag,mask,usurf,bmelt"
 
         grid_params_dict = generate_grid_description(grid, domain)
 
@@ -453,7 +548,9 @@ for n, combination in enumerate(combinations):
 
         sb_params_dict["topg_to_phi"] = ttphi
 
-        stress_balance_params_dict = generate_stress_balance(stress_balance, sb_params_dict)
+        stress_balance_params_dict = generate_stress_balance(
+            stress_balance, sb_params_dict
+        )
 
         climate_parameters = {
             "climate_forcing.buffer_size": 367,
@@ -464,7 +561,9 @@ for n, combination in enumerate(combinations):
 
         hydrology_parameters = {
             "hydrology.routing.include_floating_ice": True,
-            "hydrology.surface_input_file": "$input_dir/data_sets/ismip6/{}".format(runoff_file),
+            "hydrology.surface_input_file": "$input_dir/data_sets/ismip6/{}".format(
+                runoff_file
+            ),
             "hydrology.routing.add_water_input_to_till_storage": False,
             "hydrology.add_water_input_to_till_storage": False,
         }
@@ -472,7 +571,9 @@ for n, combination in enumerate(combinations):
         hydro_params_dict = generate_hydrology(hydrology, **hydrology_parameters)
 
         if frontal_melt == "discharge_routing":
-            hydrology_parameters["hydrology.surface_input.file"] = f"$input_dir/data_sets/ismip6/{frontal_melt_file}"
+            hydrology_parameters[
+                "hydrology.surface_input.file"
+            ] = f"$input_dir/data_sets/ismip6/{frontal_melt_file}"
 
             frontalmelt_parameters = {
                 "frontal_melt": "routing",
@@ -497,22 +598,27 @@ for n, combination in enumerate(combinations):
 
         ocean_params_dict = generate_ocean("th", **ocean_parameters)
 
+        calving_parameters = {
+            "float_kill_calve_near_grounding_line": float_kill_calve_near_grounding_line,
+            "calving.vonmises_calving.use_custom_flow_law": True,
+            "calving.vonmises_calving.Glen_exponent": 3.0,
+        }
         try:
             vcm = float(vcm)
-            calving_parameters = {
-                "float_kill_calve_near_grounding_line": float_kill_calve_near_grounding_line,
-                "calving.vonmises_calving.sigma_max": vcm * 1e6,
-                "calving.vonmises_calving.use_custom_flow_law": True,
-                "calving.vonmises_calving.Glen_exponent": 3.0,
-                "calving.thickness_calving.threshold": calving_threshold,
-            }
+            calving_parameters["calving.vonmises_calving.sigma_max"] = vcm * 1e6
         except:
-            calving_parameters = {
-                "float_kill_calve_near_grounding_line": float_kill_calve_near_grounding_line,
-                "calving.vonmises_calving.threshold_file": f"$input_dir/data_sets/calving/{vcm}",
-                "calving.vonmises_calving.use_custom_flow_law": True,
-                "calving.vonmises_calving.Glen_exponent": 3.0,
-            }
+            calving_parameters[
+                "calving.vonmises_calving.threshold_file"
+            ] = f"$input_dir/data_sets/calving/{vcm}"
+        try:
+            calving_threshold = float(calving_threshold)
+            calving_parameters[
+                "calving.thickness_calving.threshold"
+            ] = calving_threshold
+        except:
+            calving_parameters[
+                "calving.thickness_calving.threshold_file"
+            ] = f"$input_dir/data_sets/calving/{calving_threshold}"
         if calving_rate_scaling_file:
             calving_parameters[
                 "calving.rate_scaling.file"
@@ -540,14 +646,18 @@ for n, combination in enumerate(combinations):
 
         if not spatial_ts == "none":
             exvars = spatial_ts_vars[spatial_ts]
-            spatial_ts_dict = generate_spatial_ts(outfile, exvars, exstep, odir=dirs["spatial_tmp"], split=False)
+            spatial_ts_dict = generate_spatial_ts(
+                outfile, exvars, exstep, odir=dirs["spatial_tmp"], split=False
+            )
 
             all_params_dict = merge_dicts(all_params_dict, spatial_ts_dict)
 
         if stress_balance == "blatter":
             del all_params_dict["skip"]
 
-        all_params = " \\\n  ".join(["-{} {}".format(k, v) for k, v in list(all_params_dict.items())])
+        all_params = " \\\n  ".join(
+            ["-{} {}".format(k, v) for k, v in list(all_params_dict.items())]
+        )
 
         if commandline_options is not None:
             all_params = f"{all_params} \\\n  {commandline_options[1:-1]}"
@@ -568,7 +678,8 @@ for n, combination in enumerate(combinations):
         if not spatial_ts == "none":
             f.write(
                 "mv {tmpfile} {ofile}\n".format(
-                    tmpfile=spatial_ts_dict["extra_file"], ofile=join(dirs["spatial"], "ex_" + outfile)
+                    tmpfile=spatial_ts_dict["extra_file"],
+                    ofile=join(dirs["spatial"], "ex_" + outfile),
                 )
             )
         f.write("\n")
