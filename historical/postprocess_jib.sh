@@ -6,7 +6,7 @@
 #SBATCH --output=pism.%j
 #SBATCH --mem=214G
 
-# cd $SLURM_SUBMIT_DIR
+cd $SLURM_SUBMIT_DIR
 
 odir=$1
 file=$2

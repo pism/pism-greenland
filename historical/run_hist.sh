@@ -276,10 +276,10 @@ e_2="2010-1-1"
 for d in jib; do
     python historical.py --hydrology routing --spatial_ts standard --exstep monthly --tsstep daily -b rm --dataset_version 1_RAGIS -d ${d} --o_dir ${odir} --start $a --end $e_1 -q t2small -s chinook -w 8:00:00 -n ${n} -g ${grid} -e ../uncertainty_qunatification/jib_calving.csv 2021_05_init/state/jib_g600m_v1_RAGIS_id_INIT-0.8-100-1.00_${a}_1990-1-1.nc  ;
 #    for id in VCM-0.4-1.00 VCM-0.4-1.25 VCM-0.4-1.50 VCM-0.5-1.00 VCM-0.5-1.25 VCM-0.5-1.50 VCM-0.6-1.00 VCM-0.6-1.25 VCM-0.6-1.50 VCM-0.7-1.00  VCM-0.8-1.00 ; do
-    for id in  VCM-0.7-1.00  VCM-0.8-1.00 ; do
-        # sbatch /import/c1/ICESHEET/ICESHEET/crios2pism/historical/${odir}/run_scripts/jib_g600m_v1_RAGIS_id_CALV-${id}_${a}_${e_1}.sh
+    for id in  VCM-0.8-1.00-200 ; do
+        sbatch /import/c1/ICESHEET/ICESHEET/crios2pism/historical/${odir}/run_scripts/jib_g600m_v1_RAGIS_id_CALV-${id}_${a}_${e_1}.sh
         python historical.py --hydrology routing --spatial_ts standard --exstep monthly --tsstep daily -b rm --dataset_version 1_RAGIS -d ${d} --o_dir ${odir} --start $a --end $e_2 -q t2small -s chinook -w 16:00:00 -n ${n} -g ${grid} -e ../uncertainty_qunatification/jib_calving.csv ${odir}/state/jib_g600m_v1_RAGIS_id_CALV-${id}_${a}_${e_1}.nc;
-        sbatch /import/c1/ICESHEET/ICESHEET/crios2pism/historical/${odir}/run_scripts/jib_g600m_v1_RAGIS_id_CALV-${id}_${a}_${e_2}.sh
+        # sbatch /import/c1/ICESHEET/ICESHEET/crios2pism/historical/${odir}/run_scripts/jib_g600m_v1_RAGIS_id_CALV-${id}_${a}_${e_2}.sh
     done
 done
 
@@ -300,21 +300,47 @@ for d in jib; do
     done
 done
 
-odir=2021_07_calving_threshold
+odir=2021_07_calving_calib
 n=48
 grid=600
 a="1980-1-1"
 e_1="2000-1-1"
-e_2="2010-1-1"
+e_2="1985-8-1"
 for d in jib; do
-    # python historical.py --hydrology routing --spatial_ts standard --exstep monthly --tsstep daily -b rm --dataset_version 1_RAGIS -d ${d} --o_dir ${odir} --start $a --end $e_1 -q t2small -s chinook -w 8:00:00 -n ${n} -g ${grid} -e ../uncertainty_qunatification/jib_calving.csv 2021_05_init/state/jib_g600m_v1_RAGIS_id_INIT-0.8-100-1.00_${a}_1990-1-1.nc  ;
-#    for id in VCM-0.4-1.00 VCM-0.4-1.25 VCM-0.4-1.50 VCM-0.5-1.00 VCM-0.5-1.25 VCM-0.5-1.50 VCM-0.6-1.00 VCM-0.6-1.25 VCM-0.6-1.50 VCM-0.7-1.00  VCM-0.8-1.00 ; do
-    for id in  VCM-0.8-1.00 ; do
-        sbatch /import/c1/ICESHEET/ICESHEET/crios2pism/historical/${odir}/run_scripts/jib_g600m_v1_RAGIS_id_CALV-${id}_${a}_${e_1}.sh
-        python historical.py --hydrology routing --spatial_ts standard --exstep monthly --tsstep daily -b rm --dataset_version 1_RAGIS -d ${d} --o_dir ${odir} --start $a --end $e_2 -q t2small -s chinook -w 16:00:00 -n ${n} -g ${grid} -e ../uncertainty_qunatification/jib_calving.csv ${odir}/state/jib_g600m_v1_RAGIS_id_CALV-${id}_${a}_${e_1}.nc;
-        sbatch /import/c1/ICESHEET/ICESHEET/crios2pism/historical/${odir}/run_scripts/jib_g600m_v1_RAGIS_id_CALV-${id}-TH_${a}_${e_2}.sh
+    python historical.py --hydrology routing --spatial_ts standard --exstep monthly --tsstep daily -b rm --dataset_version 1_RAGIS -d ${d} --o_dir ${odir} --start $a --end $e_1 -q t2small -s chinook -w 8:00:00 -n ${n} -g ${grid} -e ../uncertainty_qunatification/jib_calving_calib.csv 2021_05_init/state/jib_g600m_v1_RAGIS_id_INIT-0.8-100-1.00_${a}_1990-1-1.nc  ;
+    for id in CALV-0.5-1.00-200 CALV-0.5-1.25-200  CALV-0.5-1.50-200  CALV-0.5-1.00-250 CALV-0.5-1.00-250 CALV-0.5-1.25-250 CALV-0.5-1.50-250; do
+#     for id in CALV-0.6-1.00-200 CALV-0.7-1.00-200 CALV-0.8-1.00-200 CALV-0.6-1.25-200 CALV-0.7-1.25-200 CALV-0.8-1.25-200 CALV-0.6-1.50-200 CALV-0.7-1.50-200 CALV-0.8-1.50-200 CALV-0.6-1.00-250 CALV-0.7-1.00-250 CALV-0.8-1.00-250 CALV-0.6-1.25-250 CALV-0.7-1.25-250 CALV-0.8-1.25-250 CALV-0.6-1.50-250 CALV-0.7-1.50-250 CALV-0.8-1.50-250; do
+        sbatch /import/c1/ICESHEET/ICESHEET/crios2pism/historical/${odir}/run_scripts/jib_g600m_v1_RAGIS_id_${id}_${a}_${e_1}.sh
+        # python historical.py --hydrology routing --spatial_ts standard --exstep monthly --tsstep daily -b rm --dataset_version 1_RAGIS -d ${d} --o_dir ${odir} --start $a --end $e_2 -q t2small -s chinook -w 5:00:00 -n ${n} -g ${grid} -e ../uncertainty_qunatification/jib_calving_calib.csv ${odir}/state/jib_g600m_v1_RAGIS_id_CALV-${id}_${a}_${e_1}.nc;
+        # sbatch /import/c1/ICESHEET/ICESHEET/crios2pism/historical/${odir}/run_scripts/jib_g600m_v1_RAGIS_id_${id}_${a}_${e_2}.sh
     done
 done
+
+odir=2021_07_calving_calib
+n=48
+grid=600
+a="1980-1-1"
+e_1="2000-1-1"
+e_2="1985-8-1"
+for d in jib; do
+    python historical.py --hydrology routing --spatial_ts standard --exstep monthly --tsstep daily -b rm --dataset_version 1_RAGIS -d ${d} --o_dir ${odir} --start $a --end $e_1 -q t2small -s chinook -w 8:00:00 -n ${n} -g ${grid} -e ../uncertainty_qunatification/jib_calving_calib.csv 2021_05_init/state/jib_g600m_v1_RAGIS_id_INIT-0.8-100-1.00_${a}_1990-1-1.nc  ;
+    for id in CALV-0.5-1.00-200 CALV-0.5-1.25-200  CALV-0.5-1.50-200  CALV-0.5-1.00-250 CALV-0.5-1.25-250 CALV-0.5-1.50-250; do
+#     for id in CALV-0.6-1.00-200 CALV-0.7-1.00-200 CALV-0.8-1.00-200 CALV-0.6-1.25-200 CALV-0.7-1.25-200 CALV-0.8-1.25-200 CALV-0.6-1.50-200 CALV-0.7-1.50-200 CALV-0.8-1.50-200 CALV-0.6-1.00-250 CALV-0.7-1.00-250 CALV-0.8-1.00-250 CALV-0.6-1.25-250 CALV-0.7-1.25-250 CALV-0.8-1.25-250 CALV-0.6-1.50-250 CALV-0.7-1.50-250 CALV-0.8-1.50-250; do
+        # sbatch /import/c1/ICESHEET/ICESHEET/crios2pism/historical/${odir}/run_scripts/jib_g600m_v1_RAGIS_id_${id}_${a}_${e_1}.sh
+        python historical.py --hydrology routing --spatial_ts standard --exstep monthly --tsstep daily -b rm --dataset_version 1_RAGIS -d ${d} --o_dir ${odir} --start $a --end $e_2 -q t2small -s chinook -w 5:00:00 -n ${n} -g ${grid} -e ../uncertainty_qunatification/jib_calving_calib.csv ${odir}/state/jib_g600m_v1_RAGIS_id_${id}_${a}_${e_1}.nc;
+        sbatch /import/c1/ICESHEET/ICESHEET/crios2pism/historical/${odir}/run_scripts/jib_g600m_v1_RAGIS_id_${id}_${a}_${e_2}.sh
+    done
+done
+
+
+odir=2021_07_calving_threshold
+n=24
+grid=600
+a_1="1980-1-1"
+a_2="1985-1-1"
+e_1="1985-1-1"
+e_2="2010-1-1"
+python historical.py --hydrology routing --spatial_ts standard --exstep monthly --tsstep daily -b rm --dataset_version 1_RAGIS -d ${d} --o_dir ${odir} --start $a_2 --end $e_2 -q analysis -s chinook -w 16:00:00 -n ${n} -g ${grid} -e ../uncertainty_qunatification/jib_calving_threshold.csv 2021_07_calving_calib/state/jib_g600m_v1_RAGIS_id_CALV-0.5-1.25-250_1980-1-1_1985-8-1.nc;
 
 
 odir=2021_06_test

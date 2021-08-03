@@ -149,9 +149,7 @@ parser.add_argument(
     help="input directory",
     default=abspath(join(script_directory, "..")),
 )
-parser.add_argument(
-    "--o_dir", dest="output_dir", help="output directory", default="test_dir"
-)
+parser.add_argument("--o_dir", dest="output_dir", help="output directory", default="test_dir")
 parser.add_argument(
     "--o_size",
     dest="osize",
@@ -284,21 +282,15 @@ else:
     input_file = options.FILE[0]
 
 if domain.lower() in ("greenland_ext", "gris_ext"):
-    pism_dataname = (
-        "$input_dir/data_sets/bed_dem/pism_Greenland_ext_{}m_mcb_jpl_v{}_{}.nc".format(
-            grid, version, bed_type
-        )
+    pism_dataname = "$input_dir/data_sets/bed_dem/pism_Greenland_ext_{}m_mcb_jpl_v{}_{}.nc".format(
+        grid, version, bed_type
     )
 if domain.lower() in ("ismip6"):
     pism_dataname = "$input_dir/data_sets/bed_dem/pism_Greenland_ismip6_{}m_mcb_jpl_v{}_{}.nc".format(
         grid, version, bed_type
     )
 else:
-    pism_dataname = (
-        "$input_dir/data_sets/bed_dem/pism_Greenland_{}m_mcb_jpl_v{}_{}.nc".format(
-            grid, version, bed_type
-        )
-    )
+    pism_dataname = "$input_dir/data_sets/bed_dem/pism_Greenland_{}m_mcb_jpl_v{}_{}.nc".format(grid, version, bed_type)
 
 # Removed "thk" from regrid vars
 # regridvars = "litho_temp,enthalpy,age,tillwat,bmelt,ice_area_specific_volume"
@@ -367,9 +359,7 @@ if system != "debug":
     cmd = "lfs setstripe -c -1 {}".format(dirs["spatial_tmp"])
     sub.call(shlex.split(cmd))
 
-pism_timefile = join(
-    time_dir, "timefile_{start}_{end}.nc".format(start=start_date, end=end_date)
-)
+pism_timefile = join(time_dir, "timefile_{start}_{end}.nc".format(start=start_date, end=end_date))
 try:
     os.remove(pism_timefile)
 except OSError:
@@ -402,9 +392,7 @@ phi_max = 40.0
 topg_min = -700
 topg_max = 700
 
-combinations = np.genfromtxt(
-    ensemble_file, dtype=None, encoding=None, delimiter=",", skip_header=1
-)
+combinations = np.genfromtxt(ensemble_file, dtype=None, encoding=None, delimiter=",", skip_header=1)
 
 scripts = []
 scripts_post = []
@@ -453,9 +441,7 @@ for n, combination in enumerate(combinations):
             "_".join(["_".join([k, str(v)]) for k, v in list(name_options.items())]),
         ]
     )
-    full_outfile = "g{grid}m_{experiment}.nc".format(
-        grid=grid, experiment=full_exp_name
-    )
+    full_outfile = "g{grid}m_{experiment}.nc".format(grid=grid, experiment=full_exp_name)
 
     experiment = "_".join(
         [
@@ -483,9 +469,7 @@ for n, combination in enumerate(combinations):
         pism = generate_prefix_str(pism_exec)
 
         general_params_dict = {
-            "profile": join(
-                dirs["performance"], "profile_${job_id}.py".format(**batch_system)
-            ),
+            "profile": join(dirs["performance"], "profile_${job_id}.py".format(**batch_system)),
             "time_file": pism_timefile,
             "o_format": oformat,
             "output.compression_level": compression_level,
@@ -520,9 +504,7 @@ for n, combination in enumerate(combinations):
         if osize != "custom":
             general_params_dict["o_size"] = osize
         else:
-            general_params_dict[
-                "output.sizes.medium"
-            ] = "sftgif,velsurf_mag,mask,usurf,bmelt"
+            general_params_dict["output.sizes.medium"] = "sftgif,velsurf_mag,mask,usurf,bmelt"
 
         grid_params_dict = generate_grid_description(grid, domain)
 
@@ -548,48 +530,44 @@ for n, combination in enumerate(combinations):
 
         sb_params_dict["topg_to_phi"] = ttphi
 
-        stress_balance_params_dict = generate_stress_balance(
-            stress_balance, sb_params_dict
-        )
+        stress_balance_params_dict = generate_stress_balance(stress_balance, sb_params_dict)
 
+        climate_file_p = f"$input_dir/data_sets/ismip6/{climate_file}"
         climate_parameters = {
             "climate_forcing.buffer_size": 367,
-            "surface_given_file": "$input_dir/data_sets/ismip6/{}".format(climate_file),
+            "surface_given_file": climate_file_p,
         }
 
         climate_params_dict = generate_climate(climate, **climate_parameters)
 
+        runoff_file_p = f"$input_dir/data_sets/ismip6/{runoff_file}"
         hydrology_parameters = {
             "hydrology.routing.include_floating_ice": True,
-            "hydrology.surface_input_file": "$input_dir/data_sets/ismip6/{}".format(
-                runoff_file
-            ),
+            "hydrology.surface_input_file": runoff_file_p,
             "hydrology.routing.add_water_input_to_till_storage": False,
             "hydrology.add_water_input_to_till_storage": False,
         }
 
         hydro_params_dict = generate_hydrology(hydrology, **hydrology_parameters)
 
+        frontal_melt_file_p = f"$input_dir/data_sets/ocean/{frontal_melt_file}"
         if frontal_melt == "discharge_routing":
-            hydrology_parameters[
-                "hydrology.surface_input.file"
-            ] = f"$input_dir/data_sets/ismip6/{frontal_melt_file}"
+            hydrology_parameters["hydrology.surface_input.file"] = frontal_melt_file_p
 
             frontalmelt_parameters = {
                 "frontal_melt": "routing",
-                "frontal_melt.routing.file": f"$input_dir/data_sets/ocean/{frontal_melt_file}",
+                "frontal_melt.routing.file": frontal_melt_file_p,
             }
         else:
             frontalmelt_parameters = {
                 "frontal_melt": "discharge_given",
-                "frontal_melt.discharge_given.file": f"$input_dir/data_sets/ocean/{frontal_melt_file}",
+                "frontal_melt.discharge_given.file": frontal_melt_file_p,
             }
 
         frontalmelt_params_dict = frontalmelt_parameters
 
-        # Need to add salinity first
         ocean_parameters = {
-            "ocean.th.file": f"$input_dir/data_sets/ocean/{frontal_melt_file}",
+            "ocean.th.file": frontal_melt_file_p,
             "ocean.th.clip_salinity": False,
             "ocean.th.gamma_T": gamma_T,
         }
@@ -606,23 +584,20 @@ for n, combination in enumerate(combinations):
         try:
             vcm = float(vcm)
             calving_parameters["calving.vonmises_calving.sigma_max"] = vcm * 1e6
+            vonmises_calving_threshold_file_p = "$input_dir/data_sets/calving/{vcm}"
         except:
-            calving_parameters[
-                "calving.vonmises_calving.threshold_file"
-            ] = f"$input_dir/data_sets/calving/{vcm}"
+            vonmises_calving_threshold_file_p = "$input_dir/data_sets/calving/{vcm}"
+            calving_parameters["calving.vonmises_calving.threshold_file"] = vonmises_calving_threshold_file_p
         try:
             calving_threshold = float(calving_threshold)
-            calving_parameters[
-                "calving.thickness_calving.threshold"
-            ] = calving_threshold
+            print(calving_threshold)
+            calving_parameters["calving.thickness_calving.threshold"] = calving_threshold
         except:
-            calving_parameters[
-                "calving.thickness_calving.threshold_file"
-            ] = f"$input_dir/data_sets/calving/{calving_threshold}"
+            calving_threshold_file_p = f"$input_dir/data_sets/calving/{calving_threshold}"
+            calving_parameters["calving.thickness_calving.file"] = calving_threshold_file_p
         if calving_rate_scaling_file:
-            calving_parameters[
-                "calving.rate_scaling.file"
-            ] = f"$input_dir/data_sets/calving/{calving_rate_scaling_file}"
+            calving_rate_scaling_file_p = f"$input_dir/data_sets/calving/{calving_rate_scaling_file}"
+            calving_parameters["calving.rate_scaling.file"] = calving_rate_scaling_file_p
             calving_parameters["calving.rate_scaling.period"] = 0
         calving = options.calving
         calving_params_dict = generate_calving(calving, **calving_parameters)
@@ -646,21 +621,30 @@ for n, combination in enumerate(combinations):
 
         if not spatial_ts == "none":
             exvars = spatial_ts_vars[spatial_ts]
-            spatial_ts_dict = generate_spatial_ts(
-                outfile, exvars, exstep, odir=dirs["spatial_tmp"], split=False
-            )
+            spatial_ts_dict = generate_spatial_ts(outfile, exvars, exstep, odir=dirs["spatial_tmp"], split=False)
 
             all_params_dict = merge_dicts(all_params_dict, spatial_ts_dict)
 
         if stress_balance == "blatter":
             del all_params_dict["skip"]
 
-        all_params = " \\\n  ".join(
-            ["-{} {}".format(k, v) for k, v in list(all_params_dict.items())]
-        )
+        all_params = " \\\n  ".join(["-{} {}".format(k, v) for k, v in list(all_params_dict.items())])
 
         if commandline_options is not None:
             all_params = f"{all_params} \\\n  {commandline_options[1:-1]}"
+
+        print("Input files:\n")
+        for m_f in (
+            pism_dataname,
+            climate_file_p,
+            runoff_file_p,
+            frontal_melt_file_p,
+            calving_rate_scaling_file_p,
+            vonmises_calving_threshold_file_p,
+        ):
+            m_f_abs = m_f.replace("$input_dir", options.input_dir)
+            print(f"{m_f_abs}: {os.path.isfile(m_f_abs)}")
+        print("\n")
 
         if system == "debug":
             redirect = " 2>&1 | tee {jobs}/job.${job_id}"
