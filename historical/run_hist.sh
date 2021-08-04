@@ -336,11 +336,23 @@ done
 odir=2021_07_calving_threshold
 n=24
 grid=600
+d=jib
 a_1="1980-1-1"
 a_2="1985-1-1"
 e_1="1985-1-1"
 e_2="2010-1-1"
 python historical.py --hydrology routing --spatial_ts standard --exstep monthly --tsstep daily -b rm --dataset_version 1_RAGIS -d ${d} --o_dir ${odir} --start $a_2 --end $e_2 -q analysis -s chinook -w 16:00:00 -n ${n} -g ${grid} -e ../uncertainty_qunatification/jib_calving_threshold.csv 2021_07_calving_calib/state/jib_g600m_v1_RAGIS_id_CALV-0.5-1.25-250_1980-1-1_1985-8-1.nc;
+
+
+odir=2021_07_calving_threshold
+n=24
+grid=600
+d=jib
+a_1="1980-1-1"
+a_2="1985-1-1"
+e_1="1985-1-1"
+e_2="2010-1-1"
+python historical.py --hydrology routing --spatial_ts standard --exstep monthly --tsstep daily -b rm --dataset_version 1_RAGIS -d ${d} --o_dir ${odir} --start $a_2 --end $e_2 -q normal -s pleiades_broadwell -w 00:25:00 -n ${n} -g ${grid} -e ../uncertainty_qunatification/jib_calving_threshold.csv 2021_07_calving_calib/state/jib_g600m_v1_RAGIS_id_CALV-0.5-1.25-250_1980-1-1_1985-8-1.nc;
 
 
 odir=2021_06_test
