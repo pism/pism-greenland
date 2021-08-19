@@ -281,6 +281,7 @@ if options.FILE is None:
 else:
     input_file = options.FILE[0]
 
+pism_dataname = False
 if domain.lower() in ("greenland_ext", "gris_ext"):
     pism_dataname = "$input_dir/data_sets/bed_dem/pism_Greenland_ext_{}m_mcb_jpl_v{}_{}.nc".format(
         grid, version, bed_type
@@ -485,8 +486,8 @@ for n, combination in enumerate(combinations):
             "bp_mg_coarse_pc_type": "lu",
             "bp_snes_monitor_ratio": "",
             "bp_ksp_monitor": "",
-            "bp_snes_ksp_ew": "",
-            "bp_snes_ksp_ew_version": 3,
+            # "bp_snes_ksp_ew": "",
+            # "bp_snes_ksp_ew_version": 3,
             "stress_balance.ice_free_thickness_standard": 50,
         }
 
@@ -521,17 +522,18 @@ for n, combination in enumerate(combinations):
             "pseudo_plastic_q": ppq,
             "till_effective_fraction_overburden": tefo,
             "vertical_velocity_approximation": vertical_velocity_approximation,
-            "stress_balance.blatter.enhancement_factor": sia_e
-            # "fractures": True,
-            # "fracture_parameters": "{},{},{},{}".format(FRACRATE, THRESHOLD, HEALRATE, HEALTHRESHOLD),
-            # "write_fd_fields": True,
-            # "scheme_fd2d": True,
+            "stress_balance.blatter.enhancement_factor": sia_e,
+            "fractures": True,
+            "fracture_parameters": "{},{},{},{}".format(FRACRATE, THRESHOLD, HEALRATE, HEALTHRESHOLD),
+            "write_fd_fields": True,
+            "scheme_fd2d": True,
         }
 
         sb_params_dict["topg_to_phi"] = ttphi
 
         stress_balance_params_dict = generate_stress_balance(stress_balance, sb_params_dict)
 
+        climate_file_p = False
         climate_file_p = f"$input_dir/data_sets/ismip6/{climate_file}"
         climate_parameters = {
             "climate_forcing.buffer_size": 367,
@@ -540,6 +542,7 @@ for n, combination in enumerate(combinations):
 
         climate_params_dict = generate_climate(climate, **climate_parameters)
 
+        runoff_file_p = False
         runoff_file_p = f"$input_dir/data_sets/ismip6/{runoff_file}"
         hydrology_parameters = {
             "hydrology.routing.include_floating_ice": True,
@@ -581,6 +584,7 @@ for n, combination in enumerate(combinations):
             "calving.vonmises_calving.use_custom_flow_law": True,
             "calving.vonmises_calving.Glen_exponent": 3.0,
         }
+        vonmises_calving_threshold_file_p = False
         try:
             vcm = float(vcm)
             calving_parameters["calving.vonmises_calving.sigma_max"] = vcm * 1e6
@@ -588,6 +592,7 @@ for n, combination in enumerate(combinations):
         except:
             vonmises_calving_threshold_file_p = "$input_dir/data_sets/calving/{vcm}"
             calving_parameters["calving.vonmises_calving.threshold_file"] = vonmises_calving_threshold_file_p
+        calving_rate_scaling_file_p = False
         try:
             calving_threshold = float(calving_threshold)
             print(calving_threshold)
@@ -627,6 +632,7 @@ for n, combination in enumerate(combinations):
 
         if stress_balance == "blatter":
             del all_params_dict["skip"]
+            all_params_dict["time_stepping.adaptive_ratio"] = 1
 
         all_params = " \\\n  ".join(["-{} {}".format(k, v) for k, v in list(all_params_dict.items())])
 
@@ -634,14 +640,23 @@ for n, combination in enumerate(combinations):
             all_params = f"{all_params} \\\n  {commandline_options[1:-1]}"
 
         print("Input files:\n")
-        for m_f in (
-            pism_dataname,
-            climate_file_p,
-            runoff_file_p,
-            frontal_melt_file_p,
-            calving_rate_scaling_file_p,
-            vonmises_calving_threshold_file_p,
-        ):
+
+        check_files = []
+        if pism_dataname:
+            check_files.append(pism_dataname)
+        if climate_file_p:
+            check_files.append(climate_file_p)
+        if runoff_file_p:
+            check_files.append(runoff_file_p)
+        if frontal_melt_file_p:
+            check_files.append(frontal_melt_file_p)
+        if calving_rate_scaling_file_p:
+            check_files.append(calving_rate_scaling_file_p)
+            print("Hi")
+        if vonmises_calving_threshold_file_p:
+            check_files.append(vonmises_calving_threshold_file_p)
+
+        for m_f in check_files:
             m_f_abs = m_f.replace("$input_dir", options.input_dir)
             print(f"{m_f_abs}: {os.path.isfile(m_f_abs)}")
         print("\n")

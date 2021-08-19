@@ -124,6 +124,7 @@ spatial_ts_vars["standard"] = [
     "mask",
     "mass_fluxes",
     "sftgif",
+    "strain_rates",
     "subglacial_discharge",
     "tendency_of_subglacial_water_mass",
     "thk",

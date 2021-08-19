@@ -341,7 +341,7 @@ a_1="1980-1-1"
 a_2="1985-1-1"
 e_1="1985-1-1"
 e_2="2010-1-1"
-python historical.py --hydrology routing --spatial_ts standard --exstep monthly --tsstep daily -b rm --dataset_version 1_RAGIS -d ${d} --o_dir ${odir} --start $a_2 --end $e_2 -q analysis -s chinook -w 16:00:00 -n ${n} -g ${grid} -e ../uncertainty_qunatification/jib_calving_threshold.csv 2021_07_calving_calib/state/jib_g600m_v1_RAGIS_id_CALV-0.5-1.25-250_1980-1-1_1985-8-1.nc;
+python historical.py --hydrology routing --spatial_ts standard --exstep monthly --tsstep daily -b rm --dataset_version 1_RAGIS -d ${d} --o_dir ${odir} --start $a_2 --end $e_2 -q analysis -s chinook -w 24:00:00 -n ${n} -g ${grid} -e ../uncertainty_qunatification/jib_calving_threshold.csv 2021_07_calving_calib/state/jib_g600m_v1_RAGIS_id_CALV-0.5-1.25-250_1980-1-1_1985-8-1.nc;
 
 
 odir=2021_07_calving_threshold
@@ -405,3 +405,15 @@ done
 for id in {0..9} CTRL; do
 extract_profiles.py -v velsurf_mag --srs epsg:3413 ~/Google\ Drive/My\ Drive/Projects/jib-breakup/data/shape_files/joughin-gps-points.shp ugid_225_Jakobshavn_Isbrae_ex_jib_g600m_v1_RAGIS_id_OCEAN-VAR-${id}_1980-1-1_2010-1-1/ugid_225_Jakobshavn_Isbrae_ex_jib_g600m_v1_RAGIS_id_OCEAN-VAR-${id}_1980-1-1_2010-1-1.nc points_ugid_225_Jakobshavn_Isbrae_ex_jib_g600m_v1_RAGIS_id_OCEAN-VAR-${id}_1980-1-1_2010-1-1.nc
 done
+
+odir=2021_08_blatter
+n=24
+grid=4500
+
+for d in gris; do     python historical.py --stress_balance blatter --spatial_ts standard --exstep daily --dataset_version 3a -b wc -d ${d} --o_dir ${odir} --start 2008-1-1 --end 2009-1-1 -q t2small -s chinook -w 1:00:00 -n ${n} -g ${grid} -e ../uncertainty_qunatification/ctrl.csv ../../pism-gris/calibration/2017_06_vc/state/gris_g${grid}m_flux_v3a_no_bath_sia_e_1.25_sia_n_3_ssa_n_3.25_ppq_0.6_tefo_0.02_calving_vonmises_calving_0_100.nc; done
+
+odir=2021_08_blatter
+n=72
+grid=1800
+
+for d in gris; do     python historical.py --stress_balance blatter --spatial_ts standard --exstep daily --dataset_version 3a -b wc -d ${d} --o_dir ${odir} --start 2008-1-1 --end 2009-1-1 -q t2standard -s chinook -w 24:00:00 -n ${n} -g ${grid} -e ../uncertainty_qunatification/ctrl.csv ../../pism-gris/calibration/2017_06_vc/state/gris_g${grid}m_flux_v3a_no_bath_sia_e_1.25_sia_n_3_ssa_n_3.25_ppq_0.6_tefo_0.02_calving_vonmises_calving_0_100.nc; done
