@@ -477,8 +477,8 @@ for n, combination in enumerate(combinations):
             "config_override": "$config",
             "stress_balance.blatter.coarsening_factor": 4,
             "blatter_Mz": 17,
-            "bp_ksp_type": "gmres",
-            "bp_pc_type": "mg",
+            "bp_ksp_type": "preonly",
+            "bp_pc_type": "lu",
             "bp_pc_mg_levels": 3,
             "bp_mg_levels_ksp_type": "richardson",
             "bp_mg_levels_pc_type": "sor",
@@ -511,8 +511,8 @@ for n, combination in enumerate(combinations):
 
         THRESHOLD = 4.5e4  #  stress threshold
         FRACRATE = 0.5  #  fracture rate
-        HEALTHRESHOLD = 2.0e-10  #  healing threshold
-        HEALRATE = 0.05  #  healing rate
+        HEALTHRESHOLD = 1.0e-10  #  healing threshold
+        HEALRATE = 10.0  #  healing rate
         SOFTRES = 0.01  #  softening residual (avoid viscosity from degeneration), value 1 inhibits softening effect
 
         sb_params_dict = {
@@ -524,6 +524,7 @@ for n, combination in enumerate(combinations):
             "vertical_velocity_approximation": vertical_velocity_approximation,
             "stress_balance.blatter.enhancement_factor": sia_e,
             "fractures": True,
+            "fracture_density.include_grounded_ice": True,
             "fracture_parameters": "{},{},{},{}".format(FRACRATE, THRESHOLD, HEALRATE, HEALTHRESHOLD),
             "write_fd_fields": True,
             "scheme_fd2d": True,
@@ -632,7 +633,7 @@ for n, combination in enumerate(combinations):
 
         if stress_balance == "blatter":
             del all_params_dict["skip"]
-            all_params_dict["time_stepping.adaptive_ratio"] = 1
+            all_params_dict["time_stepping.adaptive_ratio"] = 25
 
         all_params = " \\\n  ".join(["-{} {}".format(k, v) for k, v in list(all_params_dict.items())])
 

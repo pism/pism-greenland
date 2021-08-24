@@ -126,6 +126,8 @@ spatial_ts_vars["standard"] = [
     "sftgif",
     "strain_rates",
     "subglacial_discharge",
+    "tauc",
+    "taud_mag",
     "tendency_of_subglacial_water_mass",
     "thk",
     "tillwat",
