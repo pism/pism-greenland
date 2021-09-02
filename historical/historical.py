@@ -10,6 +10,7 @@ import os
 import sys
 import shlex
 from os.path import join, abspath, realpath, dirname
+import pandas as pd
 
 try:
     import subprocess32 as sub
@@ -299,7 +300,7 @@ regridvars = "litho_temp,enthalpy,age,tillwat,bmelt,ice_area_specific_volume,thk
 
 dirs = {"output": "$output_dir", "spatial_tmp": "$spatial_tmp_dir"}
 for d in ["performance", "state", "scalar", "spatial", "jobs", "basins"]:
-    dirs[d] = "$output_dir/{dir}".format(dir=d)
+    dirs[d] = f"$output_dir/{d}"
 
 if spatial_ts == "none":
     del dirs["spatial"]
@@ -310,11 +311,16 @@ scripts_dir = join(output_dir, "run_scripts")
 if not os.path.isdir(scripts_dir):
     os.makedirs(scripts_dir)
 
-# use the actual path of the run scripts directory (we need it now and
+# use the actual path of the time file directory (we need it now and
 # not during the simulation)
 time_dir = join(output_dir, "time_forcing")
 if not os.path.isdir(time_dir):
     os.makedirs(time_dir)
+
+# use the actual path of the uq directory
+uq_dir = join(output_dir, "uq")
+if not os.path.isdir(uq_dir):
+    os.makedirs(uq_dir)
 
 # generate the config file *after* creating the output directory
 pism_config = "pism"
@@ -355,10 +361,17 @@ done
 )
 
 if system != "debug":
-    cmd = "lfs setstripe -c -1 {}".format(dirs["output"])
+    cmd = f"""lfs setstripe -c -1 {dirs["output"]}"""
     sub.call(shlex.split(cmd))
-    cmd = "lfs setstripe -c -1 {}".format(dirs["spatial_tmp"])
+    cmd = f"""lfs setstripe -c -1 {dirs["spatial_tmp"]}"""
     sub.call(shlex.split(cmd))
+
+
+ensemble_infile = os.path.split(ensemble_file)[-1]
+ensemble_outfile = join(uq_dir, ensemble_infile)
+
+cmd = f"cp {ensemble_file} {ensemble_outfile}"
+sub.call(shlex.split(cmd))
 
 pism_timefile = join(time_dir, "timefile_{start}_{end}.nc".format(start=start_date, end=end_date))
 try:
@@ -393,7 +406,8 @@ phi_max = 40.0
 topg_min = -700
 topg_max = 700
 
-combinations = np.genfromtxt(ensemble_file, dtype=None, encoding=None, delimiter=",", skip_header=1)
+uq_df = pd.read_csv(ensemble_file)
+uq_df.fillna(False, inplace=True)
 
 scripts = []
 scripts_post = []
@@ -404,36 +418,17 @@ simulation_end_year = options.end
 batch_header, batch_system = make_batch_header(system, nn, walltime, queue)
 post_header = make_batch_post_header(system)
 
-for n, combination in enumerate(combinations):
-
-    (
-        run_id,
-        climate,
-        hydrology,
-        frontal_melt,
-        climate_file,
-        runoff_file,
-        frontal_melt_file,
-        calving_rate_scaling_file,
-        fm_a,
-        fm_b,
-        fm_alpha,
-        fm_beta,
-        vcm,
-        calving_threshold,
-        gamma_T,
-        salinity,
-        ppq,
-        sia_e,
-    ) = combination
+for n, row in enumerate(uq_df.iterrows()):
+    combination = row[1]
+    print(combination)
 
     ttphi = "{},{},{},{}".format(phi_min, phi_max, topg_min, topg_max)
 
     name_options = {}
     try:
-        name_options["id"] = "{:03d}".format(int(run_id))
+        name_options["id"] = int(combination["id"])
     except:
-        name_options["id"] = "{}".format(run_id)
+        name_options["id"] = combination["id"]
 
     vversion = "v" + str(version)
     full_exp_name = "_".join(
@@ -477,8 +472,8 @@ for n, combination in enumerate(combinations):
             "config_override": "$config",
             "stress_balance.blatter.coarsening_factor": 4,
             "blatter_Mz": 17,
-            "bp_ksp_type": "preonly",
-            "bp_pc_type": "lu",
+            "bp_ksp_type": "gmres",
+            "bp_pc_type": "mg",
             "bp_pc_mg_levels": 3,
             "bp_mg_levels_ksp_type": "richardson",
             "bp_mg_levels_pc_type": "sor",
@@ -511,40 +506,49 @@ for n, combination in enumerate(combinations):
 
         THRESHOLD = 4.5e4  #  stress threshold
         FRACRATE = 0.5  #  fracture rate
-        HEALTHRESHOLD = 1.0e-10  #  healing threshold
-        HEALRATE = 10.0  #  healing rate
+        HEALTHRESHOLD = 2.0e-10  #  healing threshold
+        HEALRATE = 2.0  #  healing rate
         SOFTRES = 0.01  #  softening residual (avoid viscosity from degeneration), value 1 inhibits softening effect
 
         sb_params_dict = {
-            "sia_e": sia_e,
+            "sia_e": combination["sia_e"],
             "ssa_e": ssa_e,
             "ssa_n": ssa_n,
-            "pseudo_plastic_q": ppq,
+            "pseudo_plastic_q": combination["pseudo_plastic_q"],
             "till_effective_fraction_overburden": tefo,
             "vertical_velocity_approximation": vertical_velocity_approximation,
-            "stress_balance.blatter.enhancement_factor": sia_e,
-            "fractures": True,
-            "fracture_density.include_grounded_ice": True,
-            "fracture_parameters": "{},{},{},{}".format(FRACRATE, THRESHOLD, HEALRATE, HEALTHRESHOLD),
-            "write_fd_fields": True,
-            "scheme_fd2d": True,
+            "stress_balance.blatter.enhancement_factor": combination["sia_e"],
         }
-
         sb_params_dict["topg_to_phi"] = ttphi
+
+        if combination["fractures"] == True:
+            sb_params_dict["fractures"] = True
+            sb_params_dict["fracture_softening"] = combination["fracture_softening"]
+            sb_params_dict["fracture_density.include_grounded_ice"] = True
+            sb_params_dict["fracture_density.constant_healing"] = True
+            fracture_rate = combination["fracture_rate"]
+            fracture_threshold = combination["fracture_threshold"]
+            fracture_healing_rate = combination["fracture_healing_rate"]
+            fracture_healing_threshold = combination["fracture_healing_threshold"]
+            sb_params_dict[
+                "fracture_parameters"
+            ] = f"{fracture_rate},{fracture_threshold},{fracture_healing_rate},{fracture_healing_threshold}"
+            sb_params_dict["write_fd_fields"] = True
+            sb_params_dict["scheme_fd2d"] = True
 
         stress_balance_params_dict = generate_stress_balance(stress_balance, sb_params_dict)
 
         climate_file_p = False
-        climate_file_p = f"$input_dir/data_sets/ismip6/{climate_file}"
+        climate_file_p = f"""$input_dir/data_sets/ismip6/{combination["climate_file"]}"""
         climate_parameters = {
             "climate_forcing.buffer_size": 367,
             "surface_given_file": climate_file_p,
         }
 
-        climate_params_dict = generate_climate(climate, **climate_parameters)
+        climate_params_dict = generate_climate(combination["climate"], **climate_parameters)
 
         runoff_file_p = False
-        runoff_file_p = f"$input_dir/data_sets/ismip6/{runoff_file}"
+        runoff_file_p = f"""$input_dir/data_sets/ismip6/{combination["runoff_file"]}"""
         hydrology_parameters = {
             "hydrology.routing.include_floating_ice": True,
             "hydrology.surface_input_file": runoff_file_p,
@@ -552,9 +556,10 @@ for n, combination in enumerate(combinations):
             "hydrology.add_water_input_to_till_storage": False,
         }
 
-        hydro_params_dict = generate_hydrology(hydrology, **hydrology_parameters)
+        hydro_params_dict = generate_hydrology(combination["hydrology"], **hydrology_parameters)
 
-        frontal_melt_file_p = f"$input_dir/data_sets/ocean/{frontal_melt_file}"
+        frontal_melt_file_p = f"""$input_dir/data_sets/ocean/{combination["frontal_melt_file"]}"""
+        frontal_melt = combination["frontal_melt"]
         if frontal_melt == "discharge_routing":
             hydrology_parameters["hydrology.surface_input.file"] = frontal_melt_file_p
 
@@ -573,8 +578,9 @@ for n, combination in enumerate(combinations):
         ocean_parameters = {
             "ocean.th.file": frontal_melt_file_p,
             "ocean.th.clip_salinity": False,
-            "ocean.th.gamma_T": gamma_T,
+            "ocean.th.gamma_T": combination["gamma_T"],
         }
+        salinity = combination["salinity"]
         if salinity:
             ocean_parameters["constants.sea_water.salinity"] = salinity
 
@@ -584,8 +590,10 @@ for n, combination in enumerate(combinations):
             "float_kill_calve_near_grounding_line": float_kill_calve_near_grounding_line,
             "calving.vonmises_calving.use_custom_flow_law": True,
             "calving.vonmises_calving.Glen_exponent": 3.0,
+            "geometry.front_retreat.use_cfl": True,
         }
         vonmises_calving_threshold_file_p = False
+        vcm = combination["vcm"]
         try:
             vcm = float(vcm)
             calving_parameters["calving.vonmises_calving.sigma_max"] = vcm * 1e6
@@ -594,22 +602,23 @@ for n, combination in enumerate(combinations):
             vonmises_calving_threshold_file_p = "$input_dir/data_sets/calving/{vcm}"
             calving_parameters["calving.vonmises_calving.threshold_file"] = vonmises_calving_threshold_file_p
         calving_rate_scaling_file_p = False
+        thickness_calving_threshold = combination["thickness_calving_threshold"]
         try:
-            calving_threshold = float(calving_threshold)
-            print(calving_threshold)
-            calving_parameters["calving.thickness_calving.threshold"] = calving_threshold
+            thickness_calving_threshold = float(thickness_calving_threshold)
+            print(thickness_calving_threshold)
+            calving_parameters["calving.thickness_calving.threshold"] = thickness_calving_threshold
         except:
-            calving_threshold_file_p = f"$input_dir/data_sets/calving/{calving_threshold}"
-            calving_parameters["calving.thickness_calving.file"] = calving_threshold_file_p
+            thickness_calving_threshold_file_p = f"$input_dir/data_sets/calving/{thickness_calving_threshold}"
+            calving_parameters["calving.thickness_calving.file"] = thickness_calving_threshold_file_p
+        calving_rate_scaling_file = combination["calving_rate_scaling_file"]
         if calving_rate_scaling_file:
-            calving_rate_scaling_file_p = f"$input_dir/data_sets/calving/{calving_rate_scaling_file}"
+            calving_rate_scaling_file_p = f"""$input_dir/data_sets/calving/{calving_rate_scaling_file}"""
             calving_parameters["calving.rate_scaling.file"] = calving_rate_scaling_file_p
             calving_parameters["calving.rate_scaling.period"] = 0
         calving = options.calving
         calving_params_dict = generate_calving(calving, **calving_parameters)
 
         scalar_ts_dict = generate_scalar_ts(outfile, tsstep, odir=dirs["scalar"])
-
         solver_dict = {}
 
         all_params_dict = merge_dicts(
@@ -653,7 +662,6 @@ for n, combination in enumerate(combinations):
             check_files.append(frontal_melt_file_p)
         if calving_rate_scaling_file_p:
             check_files.append(calving_rate_scaling_file_p)
-            print("Hi")
         if vonmises_calving_threshold_file_p:
             check_files.append(vonmises_calving_threshold_file_p)
 
@@ -671,16 +679,23 @@ for n, combination in enumerate(combinations):
 
         context = merge_dicts(batch_system, dirs, {"pism": pism, "params": all_params})
         cmd = template.format(**context)
-
         f.write(cmd)
+        f.write("\n")
+
+        f.write("\n")
+        run_id = combination["id"]
+        id_cmd = f"ncatted -a id,global,a,c,{run_id}"
+        for m_file in [scalar_ts_dict["ts_file"], join(dirs["state"], outfile)]:
+            cmd = f"{id_cmd} {m_file}\n"
+            f.write(cmd)
         f.write("\n")
         f.write("\n")
         if not spatial_ts == "none":
+            tmpfile = spatial_ts_dict["extra_file"]
+            ofile = join(dirs["spatial"], "ex_" + outfile)
+            f.write(f"{id_cmd} {tmpfile}\n")
             f.write(
-                "mv {tmpfile} {ofile}\n".format(
-                    tmpfile=spatial_ts_dict["extra_file"],
-                    ofile=join(dirs["spatial"], "ex_" + outfile),
-                )
+                f"mv {tmpfile} {ofile}\n",
             )
         f.write("\n")
         f.write(batch_system.get("footer", ""))
