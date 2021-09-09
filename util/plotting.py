@@ -1,15 +1,15 @@
 #!/usr/bin/env python
 
-# Copyright (C) 2019 Andy Aschwanden
+# Copyright (C) 2021 Andy Aschwanden
 
 from argparse import ArgumentParser
-from netCDF4 import Dataset as NC
-from netCDF4 import num2date
+import xarray as xr
 
 import cf_units
 import cftime
 import numpy as np
 import os
+import pandas as pd
 import pylab as plt
 import re
 from pypismtools.pypismtools import smooth
@@ -144,26 +144,32 @@ normalize = m_var["normalize"]
 ylabel = m_var["ylabel"]
 mass2sle = m_var["mass2sle"]
 
+D = pd.read_csv("~/Google Drive/My Drive/data/mankoff_discharge/gate_merged.csv", parse_dates=["Date"])
+D = D[D["Gate"] == 184]
 fig = plt.figure()
 ax = fig.add_subplot(111)
 
+ax.errorbar(D["Date"], -D["Discharge [Gt/yr]"], yerr=D["Discharge Error [Gt/yr]"], c="#238b45", lw=1.0, elinewidth=0.5)
 for k, ifile in enumerate(ifiles):
-    nc = NC(ifile)
+    nc = xr.open_dataset(ifile)
     print(ifile)
     exp = re.search("id_(.+?)_", ifile).group(1).upper()
     time = nc.variables["time"]
-    time_units = time.units
-    time_calendar = time.calendar
-    date = cftime.num2pydate(time, time_units)
-    var_vals = np.squeeze(nc.variables[plot_var][:])
-    iunits = nc.variables[plot_var].units
+    # time_units = time.units
+    # time_calendar = time.calendar
+    # date = cftime.num2pydate(time, time_units)
+    date = time
+    data = nc.variables[plot_var]
+    var_vals = np.squeeze(data)
+    iunits = data.attrs["units"]
     # ax.plot_date(date, var_vals, "-", color=colors[k], linestyle="solid", linewidth=0.2)
     var_vals_smoothed = smooth(var_vals, 13)
-    ax.plot_date(date, var_vals_smoothed, "-", linestyle="solid", linewidth=1.0, label=exp)
+    #    ax.plot_date(date, var_vals_smoothed, "-", linewidth=1.0, label=exp)
+    ax.plot_date(date, var_vals_smoothed, "-", color="0.5", linewidth=0.5, label=exp)
     nc.close()
-legend = ax.legend()
-legend.get_frame().set_linewidth(0.0)
-legend.get_frame().set_alpha(0.0)
+# legend = ax.legend()
+# legend.get_frame().set_linewidth(0.0)
+# legend.get_frame().set_alpha(0.0)
 
 # ax.set_xlim(datetime(2015, 1, 1), datetime(2100, 1, 1))
 ax.set_xlabel("Year")
@@ -172,3 +178,18 @@ set_size(6, 3)
 ofile = "calving_{}.pdf".format(plot_var)
 print("  saving to {}".format(ofile))
 fig.savefig(ofile, bbox_inches="tight")
+
+
+# df_meta = pd.read_csv("/Users/andy/Downloads/gate_meta.csv")
+# df_D = pd.read_csv("/Users/andy/Downloads/gate_D.csv")
+# df_D.index = df_D["Date"]
+# df_D = df_D[df_D.index.isin(dates_merged)]
+# df_D_nd = df_D.drop(columns=["Date"])
+# df_err = pd.read_csv("/Users/andy/Downloads/gate_err.csv")
+# df_err.index = df_err["Date"]
+# df_err = df_err[df_err.index.isin(dates_merged)]
+# df_err_nd = df_err.drop(columns=["Date"])
+# dfs = [pd.DataFrame(data = np.hstack([df_D["Date"].values.reshape(-1,1), np.repeat(col, len(df_D_nd)).reshape(-1, 1), df_D_nd[col].values.reshape(-1,1), df_err_nd[col].values.reshape(-1,1)]), columns=["Date", "Gate", "Discharge [Gt/yr]", "Discharge Error [Gt/yr]"]).astype({"Gate": int}) for col in df_D_nd]
+# all_D = pd.concat(dfs)
+# df = pd.merge(all_D, df_meta, left_on="Gate", right_on="gate").drop(columns=["gate"]).astype({"Date": "datetime64[ns]"})
+# df.to_csv("/Users/andy/Downloads/gate_merged.csv")
