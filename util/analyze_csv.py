@@ -41,7 +41,7 @@ id_df = pd.read_csv(ensemble_file)
 # Define a salib "problem"
 problem = {
     "num_vars": len(id_df.columns[1:8].values),
-    "names": id_df.columns[1:8],  # Parameter names
+    "names": id_df.columns[1:8].values.tolist(),  # Parameter names
     "bounds": zip(id_df.min()[1:8], id_df.max()[1:8]),  # Parameter bounds
 }
 
@@ -73,15 +73,16 @@ for s_df in df.groupby(by="time"):
     response_matrix = response_filled[response_filled.columns[-1]].values
 
     Si = sobol.analyze(problem, response_matrix, calc_second_order=True, num_resamples=100, print_to_console=False)
+    total_Si, first_Si, second_Si = Si.to_df()
 
-# for p_var in [
-#     "vcm",
-#     "fracture_softening",
-#     "fracture_rate",
-#     "fracture_threshold",
-#     "fracture_healing_rate",
-#     "fracture_healing_threshold",
-# ]:
-#     fig = plt.figure()
-#     ax = fig.add_subplot(111)
-#     sns.histplot(data=outside_df, p=m_var, stat="density", linewidth=0.8, ax=ax)
+for p_var in [
+    "vcm",
+    "fracture_softening",
+    "fracture_rate",
+    "fracture_threshold",
+    "fracture_healing_rate",
+    "fracture_healing_threshold",
+]:
+    fig = plt.figure()
+    ax = fig.add_subplot(111)
+    sns.histplot(data=outside_df, x=p_var, stat="density", linewidth=0.8, ax=ax)
