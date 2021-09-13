@@ -601,18 +601,17 @@ for n, row in enumerate(uq_df.iterrows()):
         except:
             vonmises_calving_threshold_file_p = "$input_dir/data_sets/calving/{vcm}"
             calving_parameters["calving.vonmises_calving.threshold_file"] = vonmises_calving_threshold_file_p
-        calving_rate_scaling_file_p = False
         thickness_calving_threshold = combination["thickness_calving_threshold"]
         try:
             thickness_calving_threshold = float(thickness_calving_threshold)
-            print(thickness_calving_threshold)
             calving_parameters["calving.thickness_calving.threshold"] = thickness_calving_threshold
         except:
             thickness_calving_threshold_file_p = f"$input_dir/data_sets/calving/{thickness_calving_threshold}"
             calving_parameters["calving.thickness_calving.file"] = thickness_calving_threshold_file_p
         calving_rate_scaling_file = combination["calving_rate_scaling_file"]
-        if calving_rate_scaling_file:
-            calving_rate_scaling_file_p = f"""$input_dir/data_sets/calving/{calving_rate_scaling_file}"""
+        calving_rate_scaling_file_p = False
+        if calving_rate_scaling_file == 1:
+            calving_rate_scaling_file_p = "$input_dir/data_sets/calving/seasonal_calving.nc"
             calving_parameters["calving.rate_scaling.file"] = calving_rate_scaling_file_p
             calving_parameters["calving.rate_scaling.period"] = 0
         calving = options.calving

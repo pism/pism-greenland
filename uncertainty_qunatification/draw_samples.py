@@ -4,19 +4,22 @@
 from argparse import ArgumentParser
 import numpy as np
 import pandas as pd
-from scipy.stats.distributions import truncnorm, gamma, uniform, randint
+from scipy.stats.distributions import uniform, randint, truncnorm, gamma
 
 from SALib.sample import saltelli
-from SALib.analyze import sobol
 
 parser = ArgumentParser()
 parser.description = "Draw samples using the Saltelli methods"
 parser.add_argument(
     "-s", "--n_samples", dest="n_samples", type=int, help="""number of samples to draw. default=10.""", default=10
 )
+parser.add_argument(
+    , "--calc_second_order", action="store_true", help="""Second order interactions.""", default=False
+)
 parser.add_argument("OUTFILE", nargs=1, help="Ouput file (CSV)", default="velocity_calibration_samples.csv")
 options = parser.parse_args()
 n_samples = options.n_samples
+calc_second_order = options.calc_second_order
 outfile = options.OUTFILE[-1]
 
 
@@ -35,12 +38,13 @@ distributions = {
 }
 
 distributions = {
-    "vcm": uniform(loc=0.5, scale=0.5),
-    "fracture_softening": uniform(loc=0.01, scale=0.99),
+    "vcm": uniform(loc=0.5, scale=1.0),
+    "fracture_softening": uniform(loc=0.25, scale=0.75),
     "fracture_rate": uniform(loc=0.1, scale=0.8),
     "fracture_threshold": uniform(loc=40e3, scale=110e3),
     "fracture_healing_rate": uniform(loc=0.0, scale=2.0),
     "fracture_healing_threshold": uniform(loc=1e-11, scale=9.9e-10),
+    "calving_rate_scaling_file": randint(0, 2),
 }
 
 
@@ -53,7 +57,7 @@ problem = {
 }
 
 # Generate samples
-unif_sample = saltelli.sample(problem, n_samples, calc_second_order=False)
+unif_sample = saltelli.sample(problem, n_samples, calc_second_order=calc_second_order)
 
 
 # To hold the transformed variables
@@ -67,6 +71,7 @@ for i, key in enumerate(distributions.keys()):
 
 # Convert to Pandas dataframe, append column headers, output as csv
 df = pd.DataFrame(dist_sample, columns=distributions.keys())
+df.to_csv({outfile}, index=True, index_label="id")
 
 df["climate"] = "given"
 df["hydrology"] = "routing"
@@ -74,13 +79,12 @@ df["frontal_melt"] = "discharge_routing"
 df["climate_file"] = "DMI-HIRHAM5_GL2_ERAI_1980_2016_EPSG3413_4500M_DM.nc"
 df["runoff_file"] = "DMI-HIRHAM5_GL2_ERAI_1980_2016_MRROS_EPSG3413_4500M_DM.nc"
 df["frontal_melt_file"] = "jib_ocean_forcing_ctrl_1980_2020.nc"
-df["calving_rate_scaling_file"] = "seasonal_calving.nc"
-df["thickness_calving_threshold"] = 250
+df["thickness_calving_threshold"] = 150
 df["gamma_T"] = 1.25e-4
 df["salinity"] = ""
 df["pseudo_plastic_q"] = 0.6
 df["sia_e"] = 1.25
+df["ssa_n"] = 3.0
 df["fractures"] = "true"
 
-
-df.to_csv(outfile, index=True, index_label="id")
+df.to_csv(f"ensemble_{outfile}", index=True, index_label="id")
