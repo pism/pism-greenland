@@ -504,12 +504,6 @@ for n, row in enumerate(uq_df.iterrows()):
 
         grid_params_dict = generate_grid_description(grid, domain)
 
-        THRESHOLD = 4.5e4  #  stress threshold
-        FRACRATE = 0.5  #  fracture rate
-        HEALTHRESHOLD = 2.0e-10  #  healing threshold
-        HEALRATE = 2.0  #  healing rate
-        SOFTRES = 0.01  #  softening residual (avoid viscosity from degeneration), value 1 inhibits softening effect
-
         sb_params_dict = {
             "sia_e": combination["sia_e"],
             "ssa_e": ssa_e,
@@ -526,6 +520,8 @@ for n, row in enumerate(uq_df.iterrows()):
             sb_params_dict["fracture_softening"] = combination["fracture_softening"]
             sb_params_dict["fracture_density.include_grounded_ice"] = True
             sb_params_dict["fracture_density.constant_healing"] = True
+            sb_params_dict["fracture_weighted_healing"] = True
+            sb_params_dict["fracture_density.borstad_limit"] = True
             fracture_rate = combination["fracture_rate"]
             fracture_threshold = combination["fracture_threshold"]
             fracture_healing_rate = combination["fracture_healing_rate"]
