@@ -9,6 +9,7 @@ import seaborn as sns
 from SALib.analyze import sobol
 import numpy as np
 from scipy.interpolate import LinearNDInterpolator, NearestNDInterpolator
+from datetime import datetime
 
 
 def set_size(w, h, ax=None):
@@ -23,6 +24,18 @@ def set_size(w, h, ax=None):
     figw = float(w) / (r - l)
     figh = float(h) / (t - b)
     ax.figure.set_size_inches(figw, figh)
+
+
+def to_decimal_year(date):
+
+    year = date.year
+    start_of_this_year = datetime(year=year, month=1, day=1)
+    start_of_next_year = datetime(year=year + 1, month=1, day=1)
+    year_elapsed = (date - start_of_this_year).total_seconds()
+    year_duration = (start_of_next_year - start_of_this_year).total_seconds()
+    fraction = year_elapsed / year_duration
+
+    return date.year + fraction
 
 
 # Set up the option parser
@@ -41,7 +54,7 @@ id_df = pd.read_csv(ensemble_file)
 # Define a salib "problem"
 problem = {
     "num_vars": len(id_df.columns[1:8].values),
-    "names": id_df.columns[1:8],  # Parameter names
+    "names": id_df.columns[1:8].values.tolist(),  # Parameter names
     "bounds": zip(id_df.min()[1:8], id_df.max()[1:8]),  # Parameter bounds
 }
 
@@ -62,7 +75,7 @@ m_df = df.groupby(by="id").mean().reset_index()
 
 outside_df = m_df[m_df[m_var] < -30]
 
-
+ST_df = []
 for s_df in df.groupby(by="time"):
     response = s_df[1][["id", "total_grounding_line_flux (Gt year-1)"]]
     f = NearestNDInterpolator(params, response.values[:, 1], rescale=True)
@@ -73,15 +86,34 @@ for s_df in df.groupby(by="time"):
     response_matrix = response_filled[response_filled.columns[-1]].values
 
     Si = sobol.analyze(problem, response_matrix, calc_second_order=True, num_resamples=100, print_to_console=False)
+    total_Si, first_Si, second_Si = Si.to_df()
+    t_df = pd.DataFrame(data=total_Si["ST"].values.reshape(1, -1), columns=total_Si.transpose().columns)
+    t_df["date"] = s_df[0]
+    t_df.set_index("date")
+    ST_df.append(t_df)
+ST_df = pd.concat(ST_df)
+ST_df.reset_index(inplace=True, drop=True)
+time = pd.date_range(start="01-15-1980", end="01-01-1986", freq="M")
+ST_df["time"] = time
+ST_df.set_index(time, inplace=True)
 
-# for p_var in [
-#     "vcm",
-#     "fracture_softening",
-#     "fracture_rate",
-#     "fracture_threshold",
-#     "fracture_healing_rate",
-#     "fracture_healing_threshold",
-# ]:
-#     fig = plt.figure()
-#     ax = fig.add_subplot(111)
-#     sns.histplot(data=outside_df, p=m_var, stat="density", linewidth=0.8, ax=ax)
+fig = plt.figure()
+ax = fig.add_subplot(111)
+sns.lineplot(data=ST_df, ax=ax).set_title("Sobol Indices")
+fig.savefig("total_sobol_indices.pdf", bbox_inches="tight")
+
+fig, axs = plt.subplots(6, 1, figsize=[4, 12])
+fig.subplots_adjust(hspace=0.55, wspace=0.25)
+for k, p_var in enumerate(
+    [
+        "vcm",
+        "fracture_softening",
+        "fracture_rate",
+        "fracture_threshold",
+        "fracture_healing_rate",
+        "fracture_healing_threshold",
+    ]
+):
+    sns.histplot(data=outside_df, x=p_var, stat="count", linewidth=0.8, ax=axs[k])
+    ax.set_title(p_var)
+    fig.savefig(f"hist_1985.pdf", bbox_inches="tight")

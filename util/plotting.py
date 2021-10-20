@@ -149,7 +149,15 @@ D = D[D["Gate"] == 184]
 fig = plt.figure()
 ax = fig.add_subplot(111)
 
-ax.errorbar(D["Date"], -D["Discharge [Gt/yr]"], yerr=D["Discharge Error [Gt/yr]"], c="#238b45", lw=1.0, elinewidth=0.5)
+ax.errorbar(
+    D["Date"],
+    -D["Discharge [Gt/yr]"],
+    yerr=D["Discharge Error [Gt/yr]"],
+    c="#238b45",
+    lw=1.0,
+    elinewidth=0.5,
+    label="Mankoff",
+)
 for k, ifile in enumerate(ifiles):
     nc = xr.open_dataset(ifile)
     print(ifile)
@@ -165,7 +173,7 @@ for k, ifile in enumerate(ifiles):
     # ax.plot_date(date, var_vals, "-", color=colors[k], linestyle="solid", linewidth=0.2)
     var_vals_smoothed = smooth(var_vals, 13)
     #    ax.plot_date(date, var_vals_smoothed, "-", linewidth=1.0, label=exp)
-    ax.plot_date(date, var_vals_smoothed, "-", color="0.5", linewidth=0.5, label=exp)
+    ax.plot_date(date, var_vals_smoothed, "-", color="0.5", linewidth=0.5)
     nc.close()
 # legend = ax.legend()
 # legend.get_frame().set_linewidth(0.0)
@@ -174,6 +182,7 @@ for k, ifile in enumerate(ifiles):
 # ax.set_xlim(datetime(2015, 1, 1), datetime(2100, 1, 1))
 ax.set_xlabel("Year")
 ax.set_ylabel(ylabel)
+ax.set_ylim(-50, -10)
 set_size(6, 3)
 ofile = "calving_{}.pdf".format(plot_var)
 print("  saving to {}".format(ofile))
