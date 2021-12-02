@@ -428,7 +428,7 @@ python historical.py --hydrology routing --spatial_ts standard --exstep monthly 
 
 
 
-odir=2021_09_hind
+odir=2021_10_hind
 n=24
 grid=600
 d=jib

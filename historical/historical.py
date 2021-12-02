@@ -118,7 +118,7 @@ parser.add_argument(
     dest="oformat",
     choices=["netcdf3", "netcdf4_parallel", "netcdf4_serial", "pnetcdf"],
     help="output format",
-    default="netcdf4_serial",
+    default="netcdf4_parallel",
 )
 parser.add_argument(
     "-L",
