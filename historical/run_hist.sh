@@ -511,7 +511,7 @@ for id in {0..9} CTRL; do
 extract_profiles.py -v velsurf_mag --srs epsg:3413 ~/Google\ Drive/My\ Drive/Projects/jib-breakup/data/shape_files/joughin-gps-points.shp ugid_225_Jakobshavn_Isbrae_ex_jib_g600m_v1_RAGIS_id_OCEAN-VAR-${id}_1980-1-1_2010-1-1/ugid_225_Jakobshavn_Isbrae_ex_jib_g600m_v1_RAGIS_id_OCEAN-VAR-${id}_1980-1-1_2010-1-1.nc points_ugid_225_Jakobshavn_Isbrae_ex_jib_g600m_v1_RAGIS_id_OCEAN-VAR-${id}_1980-1-1_2010-1-1.nc
 done
 
-odir=2021_08_blatter
+odir=2021_12_blatter
 n=24
 grid=4500
 

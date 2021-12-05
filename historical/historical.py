@@ -124,7 +124,7 @@ parser.add_argument(
     "-L",
     "--comp_level",
     dest="compression_level",
-    help="Compression level for output file. Only works with netcdf4_serial.",
+    help="Compression level for output file.",
     default=2,
 )
 parser.add_argument(
@@ -150,7 +150,9 @@ parser.add_argument(
     help="input directory",
     default=abspath(join(script_directory, "..")),
 )
-parser.add_argument("--o_dir", dest="output_dir", help="output directory", default="test_dir")
+parser.add_argument(
+    "--o_dir", dest="output_dir", help="output directory", default="test_dir"
+)
 parser.add_argument(
     "--o_size",
     dest="osize",
@@ -284,15 +286,21 @@ else:
 
 pism_dataname = False
 if domain.lower() in ("greenland_ext", "gris_ext"):
-    pism_dataname = "$input_dir/data_sets/bed_dem/pism_Greenland_ext_{}m_mcb_jpl_v{}_{}.nc".format(
-        grid, version, bed_type
+    pism_dataname = (
+        "$input_dir/data_sets/bed_dem/pism_Greenland_ext_{}m_mcb_jpl_v{}_{}.nc".format(
+            grid, version, bed_type
+        )
     )
 if domain.lower() in ("ismip6"):
     pism_dataname = "$input_dir/data_sets/bed_dem/pism_Greenland_ismip6_{}m_mcb_jpl_v{}_{}.nc".format(
         grid, version, bed_type
     )
 else:
-    pism_dataname = "$input_dir/data_sets/bed_dem/pism_Greenland_{}m_mcb_jpl_v{}_{}.nc".format(grid, version, bed_type)
+    pism_dataname = (
+        "$input_dir/data_sets/bed_dem/pism_Greenland_{}m_mcb_jpl_v{}_{}.nc".format(
+            grid, version, bed_type
+        )
+    )
 
 # Removed "thk" from regrid vars
 # regridvars = "litho_temp,enthalpy,age,tillwat,bmelt,ice_area_specific_volume"
@@ -373,7 +381,9 @@ ensemble_outfile = join(uq_dir, ensemble_infile)
 cmd = f"cp {ensemble_file} {ensemble_outfile}"
 sub.call(shlex.split(cmd))
 
-pism_timefile = join(time_dir, "timefile_{start}_{end}.nc".format(start=start_date, end=end_date))
+pism_timefile = join(
+    time_dir, "timefile_{start}_{end}.nc".format(start=start_date, end=end_date)
+)
 try:
     os.remove(pism_timefile)
 except OSError:
@@ -419,6 +429,7 @@ batch_header, batch_system = make_batch_header(system, nn, walltime, queue)
 post_header = make_batch_post_header(system)
 
 for n, row in enumerate(uq_df.iterrows()):
+    print(row)
     combination = row[1]
     print(combination)
 
@@ -437,7 +448,9 @@ for n, row in enumerate(uq_df.iterrows()):
             "_".join(["_".join([k, str(v)]) for k, v in list(name_options.items())]),
         ]
     )
-    full_outfile = "g{grid}m_{experiment}.nc".format(grid=grid, experiment=full_exp_name)
+    full_outfile = "g{grid}m_{experiment}.nc".format(
+        grid=grid, experiment=full_exp_name
+    )
 
     experiment = "_".join(
         [
@@ -465,7 +478,9 @@ for n, row in enumerate(uq_df.iterrows()):
         pism = generate_prefix_str(pism_exec)
 
         general_params_dict = {
-            "profile": join(dirs["performance"], "profile_${job_id}.py".format(**batch_system)),
+            "profile": join(
+                dirs["performance"], "profile_${job_id}.py".format(**batch_system)
+            ),
             "time_file": pism_timefile,
             "o_format": oformat,
             "output.compression_level": compression_level,
@@ -477,13 +492,14 @@ for n, row in enumerate(uq_df.iterrows()):
             "bp_pc_mg_levels": 3,
             "bp_mg_levels_ksp_type": "richardson",
             "bp_mg_levels_pc_type": "sor",
-            "bp_mg_coarse_ksp_type": "preonly",
-            "bp_mg_coarse_pc_type": "lu",
+            "bp_mg_coarse_ksp_type": "gmres",
+            "bp_mg_coarse_pc_type": "bjacobi",
             "bp_snes_monitor_ratio": "",
             "bp_ksp_monitor": "",
-            # "bp_snes_ksp_ew": "",
-            # "bp_snes_ksp_ew_version": 3,
-            "stress_balance.ice_free_thickness_standard": 50,
+            "bp_ksp_view_singularvalues": "",
+            "bp_snes_ksp_ew": 1,
+            "bp_snes_ksp_ew_version": 3,
+            "stress_balance.ice_free_thickness_standard": 5,
         }
 
         if "-regional" in pism and refinement_factor is not None:
@@ -500,7 +516,9 @@ for n, row in enumerate(uq_df.iterrows()):
         if osize != "custom":
             general_params_dict["o_size"] = osize
         else:
-            general_params_dict["output.sizes.medium"] = "sftgif,velsurf_mag,mask,usurf,bmelt"
+            general_params_dict[
+                "output.sizes.medium"
+            ] = "sftgif,velsurf_mag,mask,usurf,bmelt"
 
         grid_params_dict = generate_grid_description(grid, domain)
 
@@ -515,7 +533,7 @@ for n, row in enumerate(uq_df.iterrows()):
         }
         sb_params_dict["topg_to_phi"] = ttphi
 
-        if combination["fractures"] == True:
+        if (hasattr(combination, "fractures")) and (combination["fractures"] == True):
             sb_params_dict["fractures"] = True
             sb_params_dict["fracture_softening"] = combination["fracture_softening"]
             sb_params_dict["fracture_density.include_grounded_ice"] = True
@@ -532,16 +550,22 @@ for n, row in enumerate(uq_df.iterrows()):
             sb_params_dict["write_fd_fields"] = True
             sb_params_dict["scheme_fd2d"] = True
 
-        stress_balance_params_dict = generate_stress_balance(stress_balance, sb_params_dict)
+        stress_balance_params_dict = generate_stress_balance(
+            stress_balance, sb_params_dict
+        )
 
         climate_file_p = False
-        climate_file_p = f"""$input_dir/data_sets/ismip6/{combination["climate_file"]}"""
+        climate_file_p = (
+            f"""$input_dir/data_sets/ismip6/{combination["climate_file"]}"""
+        )
         climate_parameters = {
             "climate_forcing.buffer_size": 367,
             "surface_given_file": climate_file_p,
         }
 
-        climate_params_dict = generate_climate(combination["climate"], **climate_parameters)
+        climate_params_dict = generate_climate(
+            combination["climate"], **climate_parameters
+        )
 
         runoff_file_p = False
         runoff_file_p = f"""$input_dir/data_sets/ismip6/{combination["runoff_file"]}"""
@@ -552,9 +576,13 @@ for n, row in enumerate(uq_df.iterrows()):
             "hydrology.add_water_input_to_till_storage": False,
         }
 
-        hydro_params_dict = generate_hydrology(combination["hydrology"], **hydrology_parameters)
+        hydro_params_dict = generate_hydrology(
+            combination["hydrology"], **hydrology_parameters
+        )
 
-        frontal_melt_file_p = f"""$input_dir/data_sets/ocean/{combination["frontal_melt_file"]}"""
+        frontal_melt_file_p = (
+            f"""$input_dir/data_sets/ocean/{combination["frontal_melt_file"]}"""
+        )
         frontal_melt = combination["frontal_melt"]
         if frontal_melt == "discharge_routing":
             hydrology_parameters["hydrology.surface_input.file"] = frontal_melt_file_p
@@ -576,8 +604,7 @@ for n, row in enumerate(uq_df.iterrows()):
             "ocean.th.clip_salinity": False,
             "ocean.th.gamma_T": combination["gamma_T"],
         }
-        salinity = combination["salinity"]
-        if salinity:
+        if hasattr(combination, "salinity"):
             ocean_parameters["constants.sea_water.salinity"] = salinity
 
         ocean_params_dict = generate_ocean("th", **ocean_parameters)
@@ -596,19 +623,30 @@ for n, row in enumerate(uq_df.iterrows()):
             vonmises_calving_threshold_file_p = "$input_dir/data_sets/calving/{vcm}"
         except:
             vonmises_calving_threshold_file_p = "$input_dir/data_sets/calving/{vcm}"
-            calving_parameters["calving.vonmises_calving.threshold_file"] = vonmises_calving_threshold_file_p
+            calving_parameters[
+                "calving.vonmises_calving.threshold_file"
+            ] = vonmises_calving_threshold_file_p
         thickness_calving_threshold = combination["thickness_calving_threshold"]
         try:
             thickness_calving_threshold = float(thickness_calving_threshold)
-            calving_parameters["calving.thickness_calving.threshold"] = thickness_calving_threshold
+            calving_parameters[
+                "calving.thickness_calving.threshold"
+            ] = thickness_calving_threshold
         except:
-            thickness_calving_threshold_file_p = f"$input_dir/data_sets/calving/{thickness_calving_threshold}"
-            calving_parameters["calving.thickness_calving.file"] = thickness_calving_threshold_file_p
-        calving_rate_scaling_file = combination["calving_rate_scaling_file"]
-        calving_rate_scaling_file_p = False
-        if calving_rate_scaling_file == 1:
-            calving_rate_scaling_file_p = "$input_dir/data_sets/calving/seasonal_calving.nc"
-            calving_parameters["calving.rate_scaling.file"] = calving_rate_scaling_file_p
+            thickness_calving_threshold_file_p = (
+                f"$input_dir/data_sets/calving/{thickness_calving_threshold}"
+            )
+            calving_parameters[
+                "calving.thickness_calving.file"
+            ] = thickness_calving_threshold_file_p
+
+        if hasattr(combination, "calving_rate_scaling_file"):
+            calving_rate_scaling_file_p = (
+                "$input_dir/data_sets/calving/seasonal_calving.nc"
+            )
+            calving_parameters[
+                "calving.rate_scaling.file"
+            ] = calving_rate_scaling_file_p
             calving_parameters["calving.rate_scaling.period"] = 0
         calving = options.calving
         calving_params_dict = generate_calving(calving, **calving_parameters)
@@ -631,7 +669,9 @@ for n, row in enumerate(uq_df.iterrows()):
 
         if not spatial_ts == "none":
             exvars = spatial_ts_vars[spatial_ts]
-            spatial_ts_dict = generate_spatial_ts(outfile, exvars, exstep, odir=dirs["spatial_tmp"], split=False)
+            spatial_ts_dict = generate_spatial_ts(
+                outfile, exvars, exstep, odir=dirs["spatial_tmp"], split=False
+            )
 
             all_params_dict = merge_dicts(all_params_dict, spatial_ts_dict)
 
@@ -639,7 +679,9 @@ for n, row in enumerate(uq_df.iterrows()):
             del all_params_dict["skip"]
             all_params_dict["time_stepping.adaptive_ratio"] = 25
 
-        all_params = " \\\n  ".join(["-{} {}".format(k, v) for k, v in list(all_params_dict.items())])
+        all_params = " \\\n  ".join(
+            ["-{} {}".format(k, v) for k, v in list(all_params_dict.items())]
+        )
 
         if commandline_options is not None:
             all_params = f"{all_params} \\\n  {commandline_options[1:-1]}"
@@ -655,7 +697,7 @@ for n, row in enumerate(uq_df.iterrows()):
             check_files.append(runoff_file_p)
         if frontal_melt_file_p:
             check_files.append(frontal_melt_file_p)
-        if calving_rate_scaling_file_p:
+        if hasattr(combination, "calving_rate_scaling_file"):
             check_files.append(calving_rate_scaling_file_p)
         if vonmises_calving_threshold_file_p:
             check_files.append(vonmises_calving_threshold_file_p)
