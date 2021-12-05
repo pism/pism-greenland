@@ -429,7 +429,6 @@ batch_header, batch_system = make_batch_header(system, nn, walltime, queue)
 post_header = make_batch_post_header(system)
 
 for n, row in enumerate(uq_df.iterrows()):
-    print(row)
     combination = row[1]
     print(combination)
 
