@@ -604,7 +604,10 @@ for n, row in enumerate(uq_df.iterrows()):
             "ocean.th.gamma_T": combination["gamma_T"],
         }
         if hasattr(combination, "salinity"):
-            ocean_parameters["constants.sea_water.salinity"] = salinity
+            if combination["salinity"] is not False:
+                ocean_parameters["constants.sea_water.salinity"] = combination[
+                    "salinity"
+                ]
 
         ocean_params_dict = generate_ocean("th", **ocean_parameters)
 
