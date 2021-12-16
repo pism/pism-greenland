@@ -640,9 +640,7 @@ for n, row in enumerate(uq_df.iterrows()):
             ] = thickness_calving_threshold_file_p
 
         if hasattr(combination, "calving_rate_scaling_file"):
-            calving_rate_scaling_file_p = (
-                f"$input_dir/data_sets/calving/{combination["calving_rate_scaling_file"]}"
-            )
+            calving_rate_scaling_file_p = f"""$input_dir/data_sets/calving/{combination["calving_rate_scaling_file"]}"""
             calving_parameters[
                 "calving.rate_scaling.file"
             ] = calving_rate_scaling_file_p
