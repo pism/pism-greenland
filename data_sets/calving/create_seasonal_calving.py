@@ -3,17 +3,22 @@
 
 from argparse import ArgumentParser
 from calendar import isleap
-from cftime import utime
 from dateutil import rrule
 from datetime import datetime
 import numpy as np
 from netCDF4 import Dataset as NC
+import cftime
 
 # set up the option parser
 parser = ArgumentParser()
 parser.add_argument("FILE", nargs="*")
 parser.add_argument(
-    "-s", "--scaling_factor", dest="scaling_factor", type=float, help="Scales the calving rate", default=1
+    "-s",
+    "--scaling_factor",
+    dest="scaling_factor",
+    type=float,
+    help="Scales the calving rate",
+    default=1,
 )
 
 options = parser.parse_args()
@@ -33,17 +38,34 @@ else:
 
 start_year = 1980
 end_year = 2021
-time_calendar = "standard"
-time_units = f"days since {start_year}-1-1"
-cdftime = utime(time_units, time_calendar)
-bnds_datelist = list(rrule.rrule(rrule.DAILY, dtstart=datetime(start_year, 1, 1), until=datetime(end_year, 1, 1)))
+start_date = datetime(start_year, 1, 1)
+end_date = datetime(end_year, 1, 1)
 
+calendar = "standard"
+units = "days since 1980-1-1"
+
+sampling_interval = "daily"
+rd = {
+    "daily": rrule.DAILY,
+    "weekly": rrule.WEEKLY,
+    "monthly": rrule.MONTHLY,
+    "yearly": rrule.YEARLY,
+}
+
+bnds_datelist = list(
+    rrule.rrule(rd[sampling_interval], dtstart=start_date, until=end_date)
+)
 # calculate the days since refdate, including refdate, with time being the
-bnds_interval_since_refdate = cdftime.date2num(bnds_datelist)
+bnds_interval_since_refdate = cftime.date2num(bnds_datelist, units, calendar=calendar)
+time_interval_since_refdate = (
+    bnds_interval_since_refdate[0:-1] + np.diff(bnds_interval_since_refdate) / 2
+)
 
 # mid-point value:
 # time[n] = (bnds[n] + bnds[n+1]) / 2
-time_interval_since_refdate = bnds_interval_since_refdate[0:-1] + np.diff(bnds_interval_since_refdate) / 2
+time_interval_since_refdate = (
+    bnds_interval_since_refdate[0:-1] + np.diff(bnds_interval_since_refdate) / 2
+)
 
 nt = len(time_interval_since_refdate)
 
@@ -93,13 +115,17 @@ for year in range(start_year, end_year):
     frac_calving_rate = np.zeros(year_length)
     for t in range(year_length):
         if (t <= winter_e) and (t >= winter_a):
-            frac_calving_rate[t] = frac_calving_rate_max - frac_calving_rate_max / np.sqrt(winter_e) * np.sqrt(
+            frac_calving_rate[
+                t
+            ] = frac_calving_rate_max - frac_calving_rate_max / np.sqrt(
+                winter_e
+            ) * np.sqrt(
                 np.mod(t, year_length)
             )
         elif (t > winter_e) and (t < spring_e):
-            frac_calving_rate[t] = (frac_calving_rate_max / np.sqrt(spring_e - winter_e)) * np.sqrt(
-                np.mod(t - winter_e, year_length)
-            )
+            frac_calving_rate[t] = (
+                frac_calving_rate_max / np.sqrt(spring_e - winter_e)
+            ) * np.sqrt(np.mod(t - winter_e, year_length))
         else:
             frac_calving_rate[t] = 1
 
@@ -115,7 +141,7 @@ import datetime
 
 
 def set_size(w, h, ax=None):
-    """ w, h: width, height in inches """
+    """w, h: width, height in inches"""
 
     if not ax:
         ax = plt.gca()
@@ -159,7 +185,21 @@ params = {
 plt.rcParams.update(params)
 
 positions = np.cumsum([0, 31, 30, 31, 31, 28, 31, 30, 31, 30, 31, 31, 30])
-labels = ["Oct", "Nov", "Dec", "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct"]
+labels = [
+    "Oct",
+    "Nov",
+    "Dec",
+    "Jan",
+    "Feb",
+    "Mar",
+    "Apr",
+    "May",
+    "Jun",
+    "Jul",
+    "Aug",
+    "Sep",
+    "Oct",
+]
 fig = plt.figure()
 ax = fig.add_subplot(111)
 ax.plot(range(len(frac_calving_rate)), np.roll(frac_calving_rate, 90))

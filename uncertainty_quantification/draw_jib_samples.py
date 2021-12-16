@@ -11,29 +11,30 @@ from SALib.sample import saltelli
 parser = ArgumentParser()
 parser.description = "Draw samples using the Saltelli methods"
 parser.add_argument(
-    "-s", "--n_samples", dest="n_samples", type=int, help="""number of samples to draw. default=10.""", default=10
+    "-s",
+    "--n_samples",
+    dest="n_samples",
+    type=int,
+    help="""number of samples to draw. default=10.""",
+    default=10,
 )
-parser.add_argument("--calc_second_order", action="store_true", help="""Second order interactions.""", default=False)
-parser.add_argument("OUTFILE", nargs=1, help="Ouput file (CSV)", default="velocity_calibration_samples.csv")
+parser.add_argument(
+    "--calc_second_order",
+    action="store_true",
+    help="""Second order interactions.""",
+    default=False,
+)
+parser.add_argument(
+    "OUTFILE",
+    nargs=1,
+    help="Ouput file (CSV)",
+    default="velocity_calibration_samples.csv",
+)
 options = parser.parse_args()
 n_samples = options.n_samples
 calc_second_order = options.calc_second_order
 outfile = options.OUTFILE[-1]
 
-
-distributions = {
-    "GCM": randint(0, 4),
-    "FICE": truncnorm(-4 / 4.0, 4.0 / 4, loc=8, scale=4),
-    "FSNOW": truncnorm(-4.1 / 3, 4.1 / 3, loc=4.1, scale=1.5),
-    "PRS": uniform(loc=5, scale=2),
-    "RFR": truncnorm(-0.4 / 0.3, 0.4 / 0.3, loc=0.5, scale=0.2),
-    "OCM": randint(-1, 2),
-    "OCS": randint(-1, 2),
-    "TCT": randint(-1, 2),
-    "VCM": truncnorm(-0.35 / 0.2, 0.35 / 0.2, loc=1, scale=0.2),
-    "PPQ": truncnorm(-0.35 / 0.2, 0.35 / 0.2, loc=0.6, scale=0.2),
-    "SIAE": gamma(1.5, scale=0.8, loc=1),
-}
 
 distributions = {
     "vcm": uniform(loc=0.5, scale=0.75),
@@ -66,9 +67,15 @@ dist_sample = np.zeros_like(unif_sample, dtype="object")
 
 # For each variable, transform with the inverse of the CDF (inv(CDF)=ppf)
 for i, key in enumerate(distributions.keys()):
+    if key == "calving_rate_scaling_file":
+        dist_sample[:, i] = [
+            f"seasonal_calving_{int(id)}_1980_2020.nc"
+            for id in distributions[key].ppf(unif_sample[:, i])
+        ]
     if key == "frontal_melt_file":
         dist_sample[:, i] = [
-            f"jib_ocean_forcing_{int(id)}_1980_2020.nc" for id in distributions[key].ppf(unif_sample[:, i])
+            f"jib_ocean_forcing_{int(id)}_1980_2020.nc"
+            for id in distributions[key].ppf(unif_sample[:, i])
         ]
     else:
         dist_sample[:, i] = distributions[key].ppf(unif_sample[:, i])
@@ -83,7 +90,6 @@ df["hydrology"] = "routing"
 df["frontal_melt"] = "discharge_routing"
 df["climate_file"] = "DMI-HIRHAM5_GL2_ERAI_1980_2016_EPSG3413_4500M_DM.nc"
 df["runoff_file"] = "DMI-HIRHAM5_GL2_ERAI_1980_2016_MRROS_EPSG3413_4500M_DM.nc"
-df["frontal_melt_file"] = "jib_ocean_forcing_ctrl_1980_2020.nc"
 df["salinity"] = ""
 df["pseudo_plastic_q"] = 0.6
 df["sia_e"] = 1.25

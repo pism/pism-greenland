@@ -1,3 +1,0 @@
-id,m_min,m_max,h_min,h_ela,h_max,vct,hydro,frontal_melt_file
-CTRL,-2.75,1.25,0,1750,2000,0.35,diffuse,synth_jib_runoff_g1000m_4.2C_34.1Sv.nc
-STEADY,-2.75,1.25,0,1750,2000,0.35,steady,synth_jib_runoff_g1000m_4.2C_34.1Sv.nc

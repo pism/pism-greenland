@@ -641,7 +641,7 @@ for n, row in enumerate(uq_df.iterrows()):
 
         if hasattr(combination, "calving_rate_scaling_file"):
             calving_rate_scaling_file_p = (
-                "$input_dir/data_sets/calving/seasonal_calving.nc"
+                f"$input_dir/data_sets/calving/{combination["calving_rate_scaling_file"]}"
             )
             calving_parameters[
                 "calving.rate_scaling.file"
