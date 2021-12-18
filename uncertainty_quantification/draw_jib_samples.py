@@ -11,12 +11,25 @@ from SALib.sample import saltelli
 parser = ArgumentParser()
 parser.description = "Draw samples using the Saltelli methods"
 parser.add_argument(
-    "-s", "--n_samples", dest="n_samples", type=int, help="""number of samples to draw. default=10.""", default=10
+    "-s",
+    "--n_samples",
+    dest="n_samples",
+    type=int,
+    help="""number of samples to draw. default=10.""",
+    default=10,
 )
 parser.add_argument(
-    , "--calc_second_order", action="store_true", help="""Second order interactions.""", default=False
+    "--calc_second_order",
+    action="store_true",
+    help="""Second order interactions.""",
+    default=False,
 )
-parser.add_argument("OUTFILE", nargs=1, help="Ouput file (CSV)", default="velocity_calibration_samples.csv")
+parser.add_argument(
+    "OUTFILE",
+    nargs=1,
+    help="Ouput file (CSV)",
+    default="velocity_calibration_samples.csv",
+)
 options = parser.parse_args()
 n_samples = options.n_samples
 calc_second_order = options.calc_second_order
@@ -24,27 +37,15 @@ outfile = options.OUTFILE[-1]
 
 
 distributions = {
-    "GCM": randint(0, 4),
-    "FICE": truncnorm(-4 / 4.0, 4.0 / 4, loc=8, scale=4),
-    "FSNOW": truncnorm(-4.1 / 3, 4.1 / 3, loc=4.1, scale=1.5),
-    "PRS": uniform(loc=5, scale=2),
-    "RFR": truncnorm(-0.4 / 0.3, 0.4 / 0.3, loc=0.5, scale=0.2),
-    "OCM": randint(-1, 2),
-    "OCS": randint(-1, 2),
-    "TCT": randint(-1, 2),
-    "VCM": truncnorm(-0.35 / 0.2, 0.35 / 0.2, loc=1, scale=0.2),
-    "PPQ": truncnorm(-0.35 / 0.2, 0.35 / 0.2, loc=0.6, scale=0.2),
-    "SIAE": gamma(1.5, scale=0.8, loc=1),
-}
-
-distributions = {
-    "vcm": uniform(loc=0.5, scale=1.0),
+    "vcm": uniform(loc=0.5, scale=0.75),
     "fracture_softening": uniform(loc=0.25, scale=0.75),
-    "fracture_rate": uniform(loc=0.1, scale=0.8),
     "fracture_threshold": uniform(loc=40e3, scale=110e3),
     "fracture_healing_rate": uniform(loc=0.0, scale=2.0),
     "fracture_healing_threshold": uniform(loc=1e-11, scale=9.9e-10),
     "calving_rate_scaling_file": randint(0, 2),
+    "frontal_melt_file": randint(0, 10),
+    "thickness_calving_threshold": randint(200, 400),
+    "gamma_T": uniform(loc=1.00e-4, scale=0.5e-4),
 }
 
 
@@ -61,30 +62,39 @@ unif_sample = saltelli.sample(problem, n_samples, calc_second_order=calc_second_
 
 
 # To hold the transformed variables
-dist_sample = np.zeros_like(unif_sample)
+dist_sample = np.zeros_like(unif_sample, dtype="object")
 
 
 # For each variable, transform with the inverse of the CDF (inv(CDF)=ppf)
 for i, key in enumerate(distributions.keys()):
-    dist_sample[:, i] = distributions[key].ppf(unif_sample[:, i])
+    if key == "calving_rate_scaling_file":
+        dist_sample[:, i] = [
+            f"seasonal_calving_{int(id)}_1980_2020.nc"
+            for id in distributions[key].ppf(unif_sample[:, i])
+        ]
+    if key == "frontal_melt_file":
+        dist_sample[:, i] = [
+            f"jib_ocean_forcing_{int(id)}_1980_2020.nc"
+            for id in distributions[key].ppf(unif_sample[:, i])
+        ]
+    else:
+        dist_sample[:, i] = distributions[key].ppf(unif_sample[:, i])
 
 
 # Convert to Pandas dataframe, append column headers, output as csv
 df = pd.DataFrame(dist_sample, columns=distributions.keys())
-df.to_csv({outfile}, index=True, index_label="id")
+df.to_csv(outfile, index=True, index_label="id")
 
 df["climate"] = "given"
 df["hydrology"] = "routing"
 df["frontal_melt"] = "discharge_routing"
 df["climate_file"] = "DMI-HIRHAM5_GL2_ERAI_1980_2016_EPSG3413_4500M_DM.nc"
 df["runoff_file"] = "DMI-HIRHAM5_GL2_ERAI_1980_2016_MRROS_EPSG3413_4500M_DM.nc"
-df["frontal_melt_file"] = "jib_ocean_forcing_ctrl_1980_2020.nc"
-df["thickness_calving_threshold"] = 150
-df["gamma_T"] = 1.25e-4
 df["salinity"] = ""
 df["pseudo_plastic_q"] = 0.6
 df["sia_e"] = 1.25
 df["ssa_n"] = 3.0
 df["fractures"] = "true"
+df["fracture_rate"] = 0.5
 
 df.to_csv(f"ensemble_{outfile}", index=True, index_label="id")

@@ -1,0 +1,2 @@
+id,climate,hydrology,frontal_melt,climate_file,runoff_file,frontal_melt_file,calving_rate_scaling_file,vcm,thickness_calving_threshold,gamma_T,salinity,pseudo_plastic_q,sia_e
+INIT-TM-0.8-100-1.0,given,routing,discharge_routing,DMI-HIRHAM5_GL2_ERAI_1980_1990_EPSG3413_4500M_TM.nc,DMI-HIRHAM5_GL2_ERAI_1980_1990_MRROS_EPSG3413_4500M_TM.nc,jib_ocean_forcing_ctrl_1980_1990_TM.nc,seasonal_calving.nc,0.8,100,1.00e-4,,0.6,1.25

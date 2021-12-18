@@ -47,55 +47,129 @@ options = parser.parse_args()
 ensemble_file = options.ensemble_file
 ifile = options.FILE
 m_var = "total_grounding_line_flux (Gt year-1)"
+calc_second_order = False
 
 df = pd.read_csv(ifile[0], parse_dates=["time"])
-id_df = pd.read_csv(ensemble_file)
 
-# Define a salib "problem"
-problem = {
-    "num_vars": len(id_df.columns[1:8].values),
-    "names": id_df.columns[1:8].values.tolist(),  # Parameter names
-    "bounds": zip(id_df.min()[1:8], id_df.max()[1:8]),  # Parameter bounds
-}
+if ensemble_file is not None:
+    id_df = pd.read_csv(ensemble_file)
 
+    # Define a salib "problem"
+    problem = {
+        "num_vars": len(id_df.drop(columns="id").columns.values),
+        "names": id_df.drop(columns="id").columns.values.tolist(),  # Parameter names
+        "bounds": zip(
+            id_df.drop(columns="id").min().values, id_df.drop(columns="id").max().values
+        ),  # Parameter bounds
+    }
 
-missing_ids = list(set(id_df["id"]).difference(df["id"]))
-if missing_ids:
-    print("The following simulation ids are missing:\n   {}".format(missing_ids))
+    missing_ids = list(set(id_df["id"]).difference(df["id"]))
+    if missing_ids:
+        print("The following simulation ids are missing:\n   {}".format(missing_ids))
 
-    id_df_missing_removed = id_df[~id_df["id"].isin(missing_ids)]
-    id_df_missing = id_df[id_df["id"].isin(missing_ids)]
-    params = np.array(id_df_missing_removed.values[:, 1:8], dtype=np.float32)
+        id_df_missing_removed = id_df[~id_df["id"].isin(missing_ids)]
+        id_df_missing = id_df[id_df["id"].isin(missing_ids)]
+        params = np.array(
+            id_df_missing_removed.drop(columns="id").values, dtype=np.float32
+        )
+    else:
+        params = np.array(id_df.drop(columns="id").values, dtype=np.float32)
+        id_df_missing = None
 
+    df = pd.merge(id_df, df, on="id")
 
-df = pd.merge(id_df, df, on="id")
-
-m_df = df[(df["time"] > pd.to_datetime("1985-1-1")) & (df["time"] < pd.to_datetime("1986-1-1"))]
+m_df = df[
+    (df["time"] > pd.to_datetime("1985-1-1"))
+    & (df["time"] < pd.to_datetime("1986-1-1"))
+]
 m_df = df.groupby(by="id").mean().reset_index()
 
 outside_df = m_df[m_df[m_var] < -30]
 
+D = pd.read_csv(
+    "~/Google Drive/My Drive/data/mankoff_discharge/gate_merged.csv",
+    parse_dates=["Date"],
+)
+D = D[D["Gate"] == 184]
+
+fig = plt.figure()
+ax = fig.add_subplot(111)
+
+
+def plot_ts(f, ax):
+    ax.plot(
+        f.index,
+        f["total_grounding_line_flux (Gt year-1)"],
+        color="0.5",
+        lw=0.25,
+        alpha=0.2,
+    )
+
+
+[plot_ts(f, ax) for f in df.groupby(by="id").rolling(13, on="time")]
+
+ax.fill_between(
+    D["Date"],
+    -D["Discharge [Gt/yr]"] - D["Discharge Error [Gt/yr]"],
+    -D["Discharge [Gt/yr]"] + D["Discharge Error [Gt/yr]"],
+    color="#238b45",
+    alpha=0.5,
+    lw=1.0,
+)
+
+ax.plot(
+    D["Date"],
+    -D["Discharge [Gt/yr]"],
+    color="#238b45",
+    lw=1.0,
+    label="Mankoff",
+)
+
+ax.set_xlim(datetime(1985, 1, 1), datetime(1990, 1, 1))
+ax.set_xlabel("Year")
+ax.set_ylabel("Flux (Gt/yr)")
+ax.set_ylim(-75, -10)
+set_size(6, 3)
+ofile = "calving_{}.pdf".format(m_var)
+print("  saving to {}".format(ofile))
+fig.savefig(ofile, bbox_inches="tight")
+
+
 ST_df = []
 for s_df in df.groupby(by="time"):
-    response = s_df[1][["id", "total_grounding_line_flux (Gt year-1)"]]
-    f = NearestNDInterpolator(params, response.values[:, 1], rescale=True)
-    data = f(*np.transpose(id_df_missing.values[:, 1:8]))
-    filled = pd.DataFrame(data=np.transpose([missing_ids, data]), columns=["id", m_var])
-    response_filled = response.append(filled)
-    response_filled = response_filled.sort_values(by="id")
-    response_matrix = response_filled[response_filled.columns[-1]].values
+    if id_df_missing is not None:
+        response = s_df[1][["id", "total_grounding_line_flux (Gt year-1)"]]
+        f = NearestNDInterpolator(params, response.values[:, 1], rescale=True)
+        data = f(*np.transpose(id_df_missing.values[:, 1:8]))
+        filled = pd.DataFrame(
+            data=np.transpose([missing_ids, data]), columns=["id", m_var]
+        )
+        response_filled = response.append(filled)
+        response_filled = response_filled.sort_values(by="id")
+        response_matrix = response_filled[response_filled.columns[-1]].values
+    else:
+        response_matrix = s_df[1]["total_grounding_line_flux (Gt year-1)"].values
+    Si = sobol.analyze(
+        problem,
+        response_matrix,
+        calc_second_order=calc_second_order,
+        num_resamples=100,
+        print_to_console=False,
+    )
+    if calc_second_order:
+        total_Si, first_Si, second_Si = Si.to_df()
+    else:
+        total_Si, first_Si = Si.to_df()
 
-    Si = sobol.analyze(problem, response_matrix, calc_second_order=True, num_resamples=100, print_to_console=False)
-    total_Si, first_Si, second_Si = Si.to_df()
-    t_df = pd.DataFrame(data=total_Si["ST"].values.reshape(1, -1), columns=total_Si.transpose().columns)
-    t_df["date"] = s_df[0]
-    t_df.set_index("date")
+    t_df = pd.DataFrame(
+        data=total_Si["ST"].values.reshape(1, -1), columns=total_Si.transpose().columns
+    )
+    t_df["Date"] = s_df[0]
+    t_df.set_index("Date")
     ST_df.append(t_df)
 ST_df = pd.concat(ST_df)
 ST_df.reset_index(inplace=True, drop=True)
-time = pd.date_range(start="01-15-1980", end="01-01-1986", freq="M")
-ST_df["time"] = time
-ST_df.set_index(time, inplace=True)
+ST_df.set_index(ST_df["Date"], inplace=True)
 
 fig = plt.figure()
 ax = fig.add_subplot(111)

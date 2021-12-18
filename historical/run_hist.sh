@@ -395,7 +395,7 @@ e_2="1986-1-1"
 python historical.py --hydrology routing --spatial_ts standard --exstep monthly --tsstep daily -b rm --dataset_version 1_RAGIS -d ${d} --o_dir ${odir} --start $a_2 --end $e_2 -q t2small -s chinook -w 8:00:00 -n ${n} -g ${grid} -e ../uncertainty_qunatification/jib_uq_samples_10.csv 2021_05_init/state/jib_g600m_v1_RAGIS_id_INIT-0.8-100-1.00_${a_1}_${e_1}.nc;
 
 
-odir=2021_09_uq_20
+odir=2021_09_uq_borstadt_2
 n=24
 grid=600
 d=jib
@@ -403,8 +403,40 @@ a_1="1980-1-1"
 a_2="1980-1-1"
 e_1="1990-1-1"
 e_2="1988-1-1"
-python historical.py --hydrology routing --spatial_ts standard --exstep monthly --tsstep daily -b rm --dataset_version 1_RAGIS -d ${d} --o_dir ${odir} --start $a_2 --end $e_2 -q t2small -s chinook -w 12:00:00 -n ${n} -g ${grid} -e ../uncertainty_qunatification/jib_uq_samples_10.csv 2021_05_init/state/jib_g600m_v1_RAGIS_id_INIT-0.8-100-1.00_${a_1}_${e_1}.nc;
+python historical.py --hydrology routing --spatial_ts standard --exstep monthly --tsstep daily -b rm --dataset_version 1_RAGIS -d ${d} --o_dir ${odir} --start $a_2 --end $e_2 -q t2small -s chinook -w 12:00:00 -n ${n} -g ${grid} -e ../uncertainty_qunatification/ensemble_jib_borstadt_2_uq_samples_10.csv 2021_05_init/state/jib_g600m_v1_RAGIS_id_INIT-0.8-100-1.00_${a_1}_${e_1}.nc;
 
+odir=2021_09_uq_borstadt_20
+n=24
+grid=600
+d=jib
+a_1="1980-1-1"
+a_2="1980-1-1"
+e_1="1990-1-1"
+e_2="1988-1-1"
+python historical.py --hydrology routing --spatial_ts standard --exstep monthly --tsstep daily -b rm --dataset_version 1_RAGIS -d ${d} --o_dir ${odir} --start $a_2 --end $e_2 -q t2small -s chinook -w 16:00:00 -n ${n} -g ${grid} -e ../uncertainty_qunatification/ensemble_jib_borstadt_samples_20.csv 2021_05_init/state/jib_g600m_v1_RAGIS_id_INIT-0.8-100-1.00_${a_1}_${e_1}.nc;
+
+
+odir=2021_10_variability
+n=24
+grid=600
+d=jib
+a_1="1980-1-1"
+a_2="1980-1-1"
+e_1="1990-1-1"
+e_2="1988-1-1"
+python historical.py --hydrology routing --spatial_ts standard --exstep monthly --tsstep daily -b rm --dataset_version 1_RAGIS -d ${d} --o_dir ${odir} --start $a_2 --end $e_2 -q t2small -s chinook -w 16:00:00 -n ${n} -g ${grid} -e ../uncertainty_qunatification/ensemble_jib_variability_16.csv 2021_05_init/state/jib_g600m_v1_RAGIS_id_INIT-0.8-100-1.00_${a_1}_${e_1}.nc;
+
+
+
+odir=2021_10_hind
+n=24
+grid=600
+d=jib
+a_1="1980-1-1"
+a_2="1980-1-1"
+e_1="1990-1-1"
+e_2="2010-1-1"
+python historical.py --hydrology routing --spatial_ts standard --exstep monthly --tsstep daily -b rm --dataset_version 1_RAGIS -d ${d} --o_dir ${odir} --start $a_2 --end $e_2 -q t2small -s chinook -w 48:00:00 -n ${n} -g ${grid} -e ../uncertainty_qunatification/ensemble_jib_borstadt_samples_20.csv 2021_05_init/state/jib_g600m_v1_RAGIS_id_INIT-0.8-100-1.00_${a_1}_${e_1}.nc;
 
 odir=2021_08_calving_threshold_blatter
 n=24
@@ -479,7 +511,7 @@ for id in {0..9} CTRL; do
 extract_profiles.py -v velsurf_mag --srs epsg:3413 ~/Google\ Drive/My\ Drive/Projects/jib-breakup/data/shape_files/joughin-gps-points.shp ugid_225_Jakobshavn_Isbrae_ex_jib_g600m_v1_RAGIS_id_OCEAN-VAR-${id}_1980-1-1_2010-1-1/ugid_225_Jakobshavn_Isbrae_ex_jib_g600m_v1_RAGIS_id_OCEAN-VAR-${id}_1980-1-1_2010-1-1.nc points_ugid_225_Jakobshavn_Isbrae_ex_jib_g600m_v1_RAGIS_id_OCEAN-VAR-${id}_1980-1-1_2010-1-1.nc
 done
 
-odir=2021_08_blatter
+odir=2021_12_blatter
 n=24
 grid=4500
 

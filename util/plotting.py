@@ -6,20 +6,12 @@ from argparse import ArgumentParser
 import xarray as xr
 
 import cf_units
-import cftime
 import numpy as np
 import os
 import pandas as pd
 import pylab as plt
-import re
-from pypismtools.pypismtools import smooth
 
 from datetime import datetime
-
-try:
-    from pypismtools import unit_converter
-except:
-    from pypismtools.pypismtools import unit_converter
 
 
 def set_size(w, h, ax=None):
@@ -38,7 +30,9 @@ def set_size(w, h, ax=None):
 
 # Set up the option parser
 parser = ArgumentParser()
-parser.description = "A script for PISM output files to time series plots using pylab/matplotlib."
+parser.description = (
+    "A script for PISM output files to time series plots using pylab/matplotlib."
+)
 parser.add_argument("FILE", nargs="*")
 options = parser.parse_args()
 ifiles = options.FILE
@@ -144,61 +138,51 @@ normalize = m_var["normalize"]
 ylabel = m_var["ylabel"]
 mass2sle = m_var["mass2sle"]
 
-D = pd.read_csv("~/Google Drive/My Drive/data/mankoff_discharge/gate_merged.csv", parse_dates=["Date"])
+D = pd.read_csv(
+    "~/Google Drive/My Drive/data/mankoff_discharge/gate_merged.csv",
+    parse_dates=["Date"],
+)
 D = D[D["Gate"] == 184]
+
+df = pd.read_csv("fldsum_test.csv", parse_dates=["time"])
 fig = plt.figure()
 ax = fig.add_subplot(111)
 
-ax.errorbar(
+
+def plot_ts(f, ax):
+    ax.plot(
+        f.index,
+        f["total_grounding_line_flux (Gt year-1)"],
+        color="0.5",
+        lw=0.25,
+        alpha=0.2,
+    )
+
+
+[plot_ts(f, ax) for f in df.groupby(by="id").rolling(13, on="time")]
+
+ax.fill_between(
+    D["Date"],
+    -D["Discharge [Gt/yr]"] - D["Discharge Error [Gt/yr]"],
+    -D["Discharge [Gt/yr]"] + D["Discharge Error [Gt/yr]"],
+    color="#238b45",
+    alpha=0.5,
+    lw=1.0,
+)
+
+ax.plot(
     D["Date"],
     -D["Discharge [Gt/yr]"],
-    yerr=D["Discharge Error [Gt/yr]"],
-    c="#238b45",
+    color="#238b45",
     lw=1.0,
-    elinewidth=0.5,
     label="Mankoff",
 )
-for k, ifile in enumerate(ifiles):
-    nc = xr.open_dataset(ifile)
-    print(ifile)
-    exp = re.search("id_(.+?)_", ifile).group(1).upper()
-    time = nc.variables["time"]
-    # time_units = time.units
-    # time_calendar = time.calendar
-    # date = cftime.num2pydate(time, time_units)
-    date = time
-    data = nc.variables[plot_var]
-    var_vals = np.squeeze(data)
-    iunits = data.attrs["units"]
-    # ax.plot_date(date, var_vals, "-", color=colors[k], linestyle="solid", linewidth=0.2)
-    var_vals_smoothed = smooth(var_vals, 13)
-    #    ax.plot_date(date, var_vals_smoothed, "-", linewidth=1.0, label=exp)
-    ax.plot_date(date, var_vals_smoothed, "-", color="0.5", linewidth=0.5)
-    nc.close()
-# legend = ax.legend()
-# legend.get_frame().set_linewidth(0.0)
-# legend.get_frame().set_alpha(0.0)
 
-# ax.set_xlim(datetime(2015, 1, 1), datetime(2100, 1, 1))
+ax.set_xlim(datetime(1985, 1, 1), datetime(1990, 1, 1))
 ax.set_xlabel("Year")
 ax.set_ylabel(ylabel)
-ax.set_ylim(-50, -10)
+ax.set_ylim(-75, -10)
 set_size(6, 3)
 ofile = "calving_{}.pdf".format(plot_var)
 print("  saving to {}".format(ofile))
 fig.savefig(ofile, bbox_inches="tight")
-
-
-# df_meta = pd.read_csv("/Users/andy/Downloads/gate_meta.csv")
-# df_D = pd.read_csv("/Users/andy/Downloads/gate_D.csv")
-# df_D.index = df_D["Date"]
-# df_D = df_D[df_D.index.isin(dates_merged)]
-# df_D_nd = df_D.drop(columns=["Date"])
-# df_err = pd.read_csv("/Users/andy/Downloads/gate_err.csv")
-# df_err.index = df_err["Date"]
-# df_err = df_err[df_err.index.isin(dates_merged)]
-# df_err_nd = df_err.drop(columns=["Date"])
-# dfs = [pd.DataFrame(data = np.hstack([df_D["Date"].values.reshape(-1,1), np.repeat(col, len(df_D_nd)).reshape(-1, 1), df_D_nd[col].values.reshape(-1,1), df_err_nd[col].values.reshape(-1,1)]), columns=["Date", "Gate", "Discharge [Gt/yr]", "Discharge Error [Gt/yr]"]).astype({"Gate": int}) for col in df_D_nd]
-# all_D = pd.concat(dfs)
-# df = pd.merge(all_D, df_meta, left_on="Gate", right_on="gate").drop(columns=["gate"]).astype({"Date": "datetime64[ns]"})
-# df.to_csv("/Users/andy/Downloads/gate_merged.csv")
