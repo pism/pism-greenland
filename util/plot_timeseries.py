@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-# Copyright (C) 2019-20 Andy Aschwanden
+# Copyright (C) 2019-21 Andy Aschwanden
 
 from argparse import ArgumentParser
 from netCDF4 import Dataset as NC
@@ -88,7 +88,9 @@ def smooth(x, window_len=11, window="hanning"):
         return x
 
     if not window in ["flat", "hanning", "hamming", "bartlett", "blackman"]:
-        raise ValueError("Window is one of 'flat', 'hanning', 'hamming', 'bartlett', 'blackman'")
+        raise ValueError(
+            "Window is one of 'flat', 'hanning', 'hamming', 'bartlett', 'blackman'"
+        )
 
     s = np.r_[2 * x[0] - x[window_len:1:-1], x, 2 * x[-1] - x[-1:-window_len:-1]]
 
@@ -103,22 +105,15 @@ def smooth(x, window_len=11, window="hanning"):
 
 # Set up the option parser
 parser = ArgumentParser()
-parser.description = "A script for PISM output files to time series plots using pylab/matplotlib."
+parser.description = (
+    "A script for PISM output files to time series plots using pylab/matplotlib."
+)
 parser.add_argument("FILE", nargs="*")
 parser.add_argument("--obs_file", default=None)
 
 options = parser.parse_args()
 ifiles = options.FILE
 obs_file = options.obs_file
-
-# Conversion between giga tons (Gt) and millimeter sea-level equivalent (mmSLE)
-gt2mmSLE = 1.0 / 362.5
-gt2cmSLE = 1.0 / 362.5 / 10.0
-gt2mSLE = 1.0 / 362.5 / 1000.0
-
-plot_var = "limnsw"
-mass_ounits = "Gt"
-flux_ounits = "Gt year-1"
 
 var = "velsurf_mag"
 
@@ -154,8 +149,11 @@ for p_id, profile in enumerate(profiles):
         v = nc.variables[var]
         data = v[p_id, :, p_id]
         lw = 1.5
-        ax.plot_date(dates, smooth(data, 13), "o", color="k", ms=1, lw=lw, label="ITS_LIVE")
+        ax.plot_date(
+            dates, smooth(data, 13), "o", color="k", ms=1, lw=lw, label="ITS_LIVE"
+        )
         nc0.close()
+        ax.set_ylim(0, data.max())
 
     ax.set_xlim(cftime.datetime(1980, 1, 1), cftime.datetime(2020, 1, 1))
     ax.set_ylabel(f"{var} ({v_units})")

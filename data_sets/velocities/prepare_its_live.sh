@@ -10,4 +10,4 @@ rm -f $file
 
 cdo -f nc4 -z zip_2 chname,v,velsurf_mag -mergetime GRE_G0240_*.nc $file
 
-extract_profiles.py -v velsurf_mag --srs epsg:3413 /Volumes/zachariae/crios2pism/data_sets/shape_files/joughin-gps-points.shp $file profiles/gps_stations_$file
+extract_profiles.py --srs epsg:3413 /Volumes/zachariae/crios2pism/data_sets/shape_files/joughin-gps-points.shp $file profiles/gps_stations_$file
