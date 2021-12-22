@@ -37,12 +37,12 @@ outfile = options.OUTFILE[-1]
 
 
 distributions = {
-    "vcm": uniform(loc=0.5, scale=0.75),
+    "vcm": uniform(loc=0.4, scale=0.80),
     "fracture_softening": uniform(loc=0.25, scale=0.75),
     "fracture_threshold": uniform(loc=40e3, scale=110e3),
     "fracture_healing_rate": uniform(loc=0.0, scale=2.0),
     "fracture_healing_threshold": uniform(loc=1e-11, scale=9.9e-10),
-    "calving_rate_scaling_file": randint(0, 2),
+#    "calving_rate_scaling_file": randint(0, 2),
     "frontal_melt_file": randint(0, 10),
     "thickness_calving_threshold": randint(200, 400),
     "gamma_T": uniform(loc=1.00e-4, scale=0.5e-4),

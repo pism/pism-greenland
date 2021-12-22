@@ -52,4 +52,4 @@ for infile in infiles:
                 S.append(m_S)
     dfs.append(pd.concat(S, axis=1).reset_index())
 df = pd.concat(dfs)
-df.to_csv(outfile, index=False, Compression="infer")
+df.to_csv(outfile, index=False, compression="infer")
