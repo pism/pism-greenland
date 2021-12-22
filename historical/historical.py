@@ -381,6 +381,12 @@ ensemble_outfile = join(uq_dir, ensemble_infile)
 cmd = f"cp {ensemble_file} {ensemble_outfile}"
 sub.call(shlex.split(cmd))
 
+ensemble_infile_2 = ensemble_infile.split("ensemble_")[-1]
+ensemble_outfile_2 = join(uq_dir, ensemble_infile_2)
+
+cmd = f"cp {ensemble_file} {ensemble_outfile}"
+sub.call(shlex.split(cmd))
+
 pism_timefile = join(
     time_dir, "timefile_{start}_{end}.nc".format(start=start_date, end=end_date)
 )

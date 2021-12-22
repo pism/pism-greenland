@@ -46,7 +46,7 @@ grid=600
 ensfile=jib_fractures.csv
 
 for id in {0..79}; do
-    file=jib_g600m_v1_RAGIS_id_${id}_1980-1-1_2010-1-1.nc
+    file=jib_g600m_v1_RAGIS_id_${id}_1980-1-1_2010-1-1
     if [ -f "${odir}/state/$file" ]; then
         echo $file
         qsub postprocess_jib.sh $odir $file $grid $ensfile
