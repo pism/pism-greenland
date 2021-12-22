@@ -42,22 +42,23 @@ def to_decimal_year(date):
 parser = ArgumentParser()
 parser.description = "A"
 parser.add_argument("--ensemble_file", default=None)
+parser.add_argument("--variable", default="total_grounding_line_flux (Gt year-1)")
 parser.add_argument("FILE", nargs=1)
 options = parser.parse_args()
 ensemble_file = options.ensemble_file
+m_var = options.variable
 ifile = options.FILE
-m_var = "total_grounding_line_flux (Gt year-1)"
 calc_second_order = False
 
 df = pd.read_csv(ifile[0], parse_dates=["time"])
 
 if ensemble_file is not None:
     id_df = pd.read_csv(ensemble_file)
-
+    param_names = id_df.drop(columns="id").columns.values.tolist()
     # Define a salib "problem"
     problem = {
         "num_vars": len(id_df.drop(columns="id").columns.values),
-        "names": id_df.drop(columns="id").columns.values.tolist(),  # Parameter names
+        "names": param_names,  # Parameter names
         "bounds": zip(
             id_df.drop(columns="id").min().values, id_df.drop(columns="id").max().values
         ),  # Parameter bounds
@@ -83,8 +84,16 @@ m_df = df[
     & (df["time"] < pd.to_datetime("1986-1-1"))
 ]
 m_df = df.groupby(by="id").mean().reset_index()
+all_ids = m_df["id"].unique()
+ids_pass = m_df[m_df[m_var] > -30]["id"]
+ids_fail = m_df[~m_df["id"].isin(ids_pass)]
+
+df["pass"] = False
+df[df["id"].isin(ids_pass)]["pass"] = True
 
 outside_df = m_df[m_df[m_var] < -30]
+inside_df = m_df[m_df[m_var] >= -30]
+
 
 D = pd.read_csv(
     "~/Google Drive/My Drive/data/mankoff_discharge/gate_merged.csv",
@@ -96,14 +105,24 @@ fig = plt.figure()
 ax = fig.add_subplot(111)
 
 
-def plot_ts(f, ax):
-    ax.plot(
-        f.index,
-        f["total_grounding_line_flux (Gt year-1)"],
-        color="0.5",
-        lw=0.25,
-        alpha=0.2,
-    )
+def plot_ts(f, ax, m_var="total_grounding_line_flux (Gt year-1)"):
+    if f["pass"] is True:
+
+        ax.plot(
+            f.index,
+            f[m_var],
+            color="b",
+            lw=0.25,
+            alpha=0.2,
+        )
+    else:
+        ax.plot(
+            f.index,
+            f[m_var],
+            color="0.25",
+            lw=0.25,
+            alpha=0.2,
+        )
 
 
 [plot_ts(f, ax) for f in df.groupby(by="id").rolling(13, on="time")]
@@ -176,18 +195,16 @@ ax = fig.add_subplot(111)
 sns.lineplot(data=ST_df, ax=ax).set_title("Sobol Indices")
 fig.savefig("total_sobol_indices.pdf", bbox_inches="tight")
 
-fig, axs = plt.subplots(6, 1, figsize=[4, 12])
+fig, axs = plt.subplots(len(param_names), 1, figsize=[4, 12])
 fig.subplots_adjust(hspace=0.55, wspace=0.25)
-for k, p_var in enumerate(
-    [
-        "vcm",
-        "fracture_softening",
-        "fracture_rate",
-        "fracture_threshold",
-        "fracture_healing_rate",
-        "fracture_healing_threshold",
-    ]
-):
+for k, p_var in enumerate(param_names):
+    sns.histplot(data=inside_df, x=p_var, stat="count", linewidth=0.8, ax=axs[k])
+    ax.set_title(p_var)
+    fig.savefig(f"hist_inside_1985.pdf", bbox_inches="tight")
+
+fig, axs = plt.subplots(len(param_names), 1, figsize=[4, 12])
+fig.subplots_adjust(hspace=0.55, wspace=0.25)
+for k, p_var in enumerate(param_names):
     sns.histplot(data=outside_df, x=p_var, stat="count", linewidth=0.8, ax=axs[k])
     ax.set_title(p_var)
-    fig.savefig(f"hist_1985.pdf", bbox_inches="tight")
+    fig.savefig(f"hist_outside_1985.pdf", bbox_inches="tight")
