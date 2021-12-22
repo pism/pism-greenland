@@ -63,8 +63,8 @@ done
 
 mkdir -p $odir/csv
 
-python  ../uncertainty_quantification/nc2csv.py -o $odir/csv/fldmean_ts.csv $odir/processed/fldmean_masked_ex_jib_g600m_v1_RAGIS_id_*
-python  ../uncertainty_quantification/nc2csv.py -o $odir/csv/fldsum_ts.csv $odir/processed/fldsum_masked_ex_jib_g600m_v1_RAGIS_id_*
+python  ../util/nc2csv.py -o $odir/csv/fldmean_ts.csv $odir/processed/fldmean_masked_ex_jib_g600m_v1_RAGIS_id_*
+python  ../util/nc2csv.py -o $odir/csv/fldsum_ts.csv $odir/processed/fldsum_masked_ex_jib_g600m_v1_RAGIS_id_*
 
 
-python  ../uncertainty_quantification/nc2csv.py -o $odir/csv/scalar_ts.csv $odir/processed_scalar/ts_jib_g600m_v1_RAGIS_id_*.nc
+python  ../util/nc2csv.py -o $odir/csv/scalar_ts.csv $odir/processed_scalar/ts_jib_g600m_v1_RAGIS_id_*.nc

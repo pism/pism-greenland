@@ -41,7 +41,7 @@ for infile in infiles:
         id_S = pd.Series(data=np.repeat(m_id, nt), index=datetimeindex, name="id")
         S = [id_S]
         for m_var in ds.data_vars:
-            if m_var not in ("time_bnds", "timestamp"):
+            if m_var not in ("time_bounds", "time_bnds", "timestamp"):
                 if hasattr(ds[m_var], "units"):
                     m_units = ds[m_var].units
                 else:
