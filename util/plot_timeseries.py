@@ -5,6 +5,7 @@
 from argparse import ArgumentParser
 import xarray as xr
 import numpy as np
+from datetime import datetime
 import os
 import pylab as plt
 from glob import glob
@@ -61,20 +62,29 @@ for p_id, profile in enumerate(profiles):
         nc.close()
 
     if obs_file is not None:
-        nc0 = NC(obs_file)
-        profiles = nc0.variables["profile_name"][:]
-        v_units = nc0.variables[var].units
-        time = nc.variables["time"]
-        time_units = time.units
-        dates = cftime.num2pydate(time, time_units)
-        v = nc.variables[var]
-        data = v[p_id, :, p_id]
+        nc_obs = xr.open_dataset(obs_file)
+        profiles = nc_obs.variables["profile_name"][:]
+        v_units = nc_obs.variables[var].attrs["units"]
+        dates = nc_obs.variables["time"]
+        v = nc_obs.variables[var]
+        speed = v[p_id, :, p_id]
+        v = nc_obs.variables["v_err"]
+        speed_err = v[p_id, :, p_id]
         lw = 1.5
-        ax.plot_date(dates, "o", color="k", ms=1, lw=lw, label="ITS_LIVE")
-        nc0.close()
-        ax.set_ylim(0, data.max())
+        ax.fill_between(
+            dates,
+            speed - speed_err,
+            speed + speed_err,
+            color="0.5",
+            alpha=0.5,
+            lw=0.0,
+        )
 
-    # ax.set_xlim(cftime.datetime(1980, 1, 1), cftime.datetime(2020, 1, 1))
+        ax.plot(dates, speed, "o", color="k", ms=1, lw=lw, label="ITS_LIVE")
+        nc_obs.close()
+        # ax.set_ylim(0, data.max())
+
+    ax.set_xlim(datetime(1980, 1, 1), datetime(2020, 1, 1))
     ax.set_ylabel(f"{var} ({v_units})")
     ax.set_title(profile.values)
     legend_1 = ax.legend(loc="upper left", ncol=3)
