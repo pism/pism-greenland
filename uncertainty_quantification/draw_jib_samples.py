@@ -37,15 +37,15 @@ outfile = options.OUTFILE[-1]
 
 
 distributions = {
-    "vcm": uniform(loc=0.4, scale=0.80),
-    "fracture_softening": uniform(loc=0.25, scale=0.75),
+    "vcm": uniform(loc=0.5, scale=0.75),
+    "fracture_softening": uniform(loc=0.40, scale=0.60),
     "fracture_threshold": uniform(loc=40e3, scale=110e3),
     "fracture_healing_rate": uniform(loc=0.0, scale=2.0),
     "fracture_healing_threshold": uniform(loc=1e-11, scale=9.9e-10),
-#    "calving_rate_scaling_file": randint(0, 2),
-    "frontal_melt_file": randint(0, 10),
-    "thickness_calving_threshold": randint(200, 400),
-    "gamma_T": uniform(loc=1.00e-4, scale=0.5e-4),
+    #  "calving_rate_scaling_file": randint(0, 2),
+    #  "frontal_melt_file": randint(0, 10),
+    #  "thickness_calving_threshold": randint(200, 400),
+    #  "gamma_T": uniform(loc=1.00e-4, scale=0.5e-4),
 }
 
 
@@ -88,6 +88,7 @@ df.to_csv(outfile, index=True, index_label="id")
 df["climate"] = "given"
 df["hydrology"] = "routing"
 df["frontal_melt"] = "discharge_routing"
+df["frontal_melt_file"] = "jib_ocean_forcing_ctrl_1980_2020.nc"
 df["climate_file"] = "DMI-HIRHAM5_GL2_ERAI_1980_2016_EPSG3413_4500M_DM.nc"
 df["runoff_file"] = "DMI-HIRHAM5_GL2_ERAI_1980_2016_MRROS_EPSG3413_4500M_DM.nc"
 df["salinity"] = ""
@@ -96,5 +97,7 @@ df["sia_e"] = 1.25
 df["ssa_n"] = 3.0
 df["fractures"] = "true"
 df["fracture_rate"] = 0.5
+df["gamma_T"] = 1.25e-4
+df["thickness_calving_threshold"] = 300
 
 df.to_csv(f"ensemble_{outfile}", index=True, index_label="id")

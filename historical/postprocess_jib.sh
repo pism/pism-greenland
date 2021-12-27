@@ -20,7 +20,6 @@ mkdir -p ${odir}/processed
 # Spatial files
 cd  ${odir}/spatial/
 
-adjust_timeline.py -p monthly -a 1980-1-1 -d 1980-1-1  ex_${file}.nc
 cdo -f nc4 -z zip_2 aexpr,"total_grounding_line_flux=grounding_line_flux*${grid}^2/1e12;" -ifnotthen ../../../data_sets/basin_masks/ugid_225_Jakobshavn_Isbrae_mask_epsg3413_g${grid}m.nc ex_${file}.nc ../processed/masked_ex_${file}.nc
 ncatted -a units,total_grounding_line_flux,o,c,"Gt year-1" ../processed/masked_ex_${file}.nc
 
@@ -35,3 +34,4 @@ extract_interface.py --ensemble_file ../uncertainty_quantification/$ensfile -e 3
 
 extract_profiles.py -v velsurf_mag --srs epsg:3413 /import/c1/ICESHEET/ICESHEET/crios2pism/data_sets/shape_files/joughin-gps-points.shp ex_${file}.nc ../profiles/gps_stations_ex_${file}.nc
 
+~/base/pypismtools/scripts/extract_profiles.py --srs epsg:3413 ~/base/gris-analysis/flux-gates/jakobshavn-flowline-50m.shp ex_${file}.nc ../profiles/flowline_ex_${file}.nc
