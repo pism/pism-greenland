@@ -49,7 +49,9 @@ def process_file(m_file):
     ref_date = nc.variables["time"]
     ref_units = ref_date.units
 
-    start_date = pd.to_datetime(ref_units.split(" ")[-1]) + pd.to_timedelta(ref_date[0], unit="s")
+    start_date = pd.to_datetime(ref_units.split(" ")[-1]) + pd.to_timedelta(
+        ref_date[0], unit="s"
+    )
 
     df = pd.DataFrame(
         data=np.hstack(
@@ -67,7 +69,9 @@ def process_file(m_file):
             "Salinity [g/kg]",
         ],
     )
-    df["Date"] = start_date.tz_convert(None) + pd.to_timedelta(time_nd[:], unit=time_units)
+    df["Date"] = start_date.tz_convert(None) + pd.to_timedelta(
+        time_nd[:], unit=time_units
+    )
     s_time = [to_decimal_year(d) for d in df["Date"]]
     df["Year"] = s_time
     n = len(df)
@@ -133,7 +137,9 @@ if __name__ == "__main__":
     ].reset_index(drop=True)
     df_bay.to_csv(f"{odir}/omg_axctd_disko_bay_10s_mean.csv")
 
-    df_bay = df_bay[(df_bay["Depth [m]"] <= depth_max) & (df_bay["Depth [m]"] >= depth_min)]
+    df_bay = df_bay[
+        (df_bay["Depth [m]"] <= depth_max) & (df_bay["Depth [m]"] >= depth_min)
+    ]
     df_bay.to_csv(f"{odir}/omg_axctd_disko_bay_10s_mean_250m.csv")
 
     # narrow bounding box for fjord
@@ -150,5 +156,7 @@ if __name__ == "__main__":
     ].reset_index(drop=True)
     df_fjord.to_csv(f"{odir}/omg_axctd_ilulissat_fjord_10s_mean.csv")
 
-    df_fjord = df_fjord[(df_fjord["Depth [m]"] <= depth_max) & (df_fjord["Depth [m]"] >= depth_min)]
+    df_fjord = df_fjord[
+        (df_fjord["Depth [m]"] <= depth_max) & (df_fjord["Depth [m]"] >= depth_min)
+    ]
     df_fjord.to_csv(f"{odir}/omg_axctd_ilulissat_fjord_10s_mean_250m.csv")

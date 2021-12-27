@@ -4,6 +4,7 @@
 
 from argparse import ArgumentParser
 import pandas as pd
+from pandas.api.types import is_string_dtype
 import pylab as plt
 import seaborn as sns
 from SALib.analyze import sobol
@@ -59,10 +60,21 @@ def prepare_df(ifile):
     return df
 
 
-def compute_sobol_indices(df, ensemble_file=None, calc_second_order=False):
+def compute_sobol_indices(
+    df,
+    ensemble_file=None,
+    calc_second_order=False,
+    calc_variable="total_grounding_line_flux (Gt year-1)",
+):
 
     id_df = pd.read_csv(ensemble_file)
     param_names = id_df.drop(columns="id").columns.values.tolist()
+    for k, col in id_df.iteritems():
+        if is_string_dtype(col):
+            u = col.unique()
+            u.sort()
+            v = [k for k, v in enumerate(u)]
+            col.replace(to_replace=dict(zip(u, v)), inplace=True)
     # Define a salib "problem"
     problem = {
         "num_vars": len(id_df.drop(columns="id").columns.values),
@@ -72,7 +84,6 @@ def compute_sobol_indices(df, ensemble_file=None, calc_second_order=False):
             id_df.drop(columns="id").max().values,
         ),  # Parameter bounds
     }
-
     missing_ids = list(set(id_df["id"]).difference(df["id"]))
     if missing_ids:
         print("The following simulation ids are missing:\n   {}".format(missing_ids))
@@ -89,11 +100,13 @@ def compute_sobol_indices(df, ensemble_file=None, calc_second_order=False):
     df = pd.merge(id_df, df, on="id")
 
     ST_df = []
-    for s_df in df.groupby(by="time"):
+    for m_date, s_df in df.groupby(by="time"):
+        print(f"Processing {m_date}", s_df.values.shape)
         if id_df_missing is not None:
-            response = s_df[1][["id", m_var]]
-            f = NearestNDInterpolator(params, response.values[:, 1], rescale=True)
-            data = f(*np.transpose(id_df_missing.values[:, 1:8]))
+            response = s_df[["id", m_var]]
+            X = id_df_missing.drop(columns="id")
+            f = LinearNDInterpolator(params, response.values[:, 1], rescale=True)
+            data = f(*np.transpose(X.values))
             filled = pd.DataFrame(
                 data=np.transpose([missing_ids, data]), columns=["id", m_var]
             )
@@ -101,7 +114,7 @@ def compute_sobol_indices(df, ensemble_file=None, calc_second_order=False):
             response_filled = response_filled.sort_values(by="id")
             response_matrix = response_filled[response_filled.columns[-1]].values
         else:
-            response_matrix = s_df[1]["total_grounding_line_flux (Gt year-1)"].values
+            response_matrix = s_df[m_var].values
         Si = sobol.analyze(
             problem,
             response_matrix,
@@ -118,7 +131,7 @@ def compute_sobol_indices(df, ensemble_file=None, calc_second_order=False):
             data=total_Si["ST"].values.reshape(1, -1),
             columns=total_Si.transpose().columns,
         )
-        t_df["Date"] = s_df[0]
+        t_df["Date"] = m_date
         t_df.set_index("Date")
         ST_df.append(t_df)
     ST_df = pd.concat(ST_df)
@@ -129,7 +142,10 @@ def compute_sobol_indices(df, ensemble_file=None, calc_second_order=False):
 
 df = prepare_df(ifile)
 ST_df = compute_sobol_indices(
-    df, ensemble_file=ensemble_file, calc_second_order=calc_second_order
+    df,
+    ensemble_file=ensemble_file,
+    calc_variable=m_var,
+    calc_second_order=calc_second_order,
 )
 
 fig = plt.figure()
