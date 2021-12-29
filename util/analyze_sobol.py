@@ -101,11 +101,11 @@ def compute_sobol_indices(
 
     ST_df = []
     for m_date, s_df in df.groupby(by="time"):
-        print(f"Processing {m_date}", s_df.values.shape)
+        print(f"Processing {m_date}")
         if id_df_missing is not None:
             response = s_df[["id", m_var]]
             X = id_df_missing.drop(columns="id")
-            f = LinearNDInterpolator(params, response.values[:, 1], rescale=True)
+            f = NearestNDInterpolator(params, response.values[:, 1], rescale=True)
             data = f(*np.transpose(X.values))
             filled = pd.DataFrame(
                 data=np.transpose([missing_ids, data]), columns=["id", m_var]

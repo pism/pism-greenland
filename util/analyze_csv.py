@@ -4,11 +4,9 @@
 
 from argparse import ArgumentParser
 import pandas as pd
+from pandas.api.types import is_string_dtype
 import pylab as plt
 import seaborn as sns
-from SALib.analyze import sobol
-import numpy as np
-from scipy.interpolate import LinearNDInterpolator, NearestNDInterpolator
 from datetime import datetime
 
 
@@ -17,12 +15,12 @@ def set_size(w, h, ax=None):
 
     if not ax:
         ax = plt.gca()
-    l = ax.figure.subplotpars.left
-    r = ax.figure.subplotpars.right
-    t = ax.figure.subplotpars.top
-    b = ax.figure.subplotpars.bottom
-    figw = float(w) / (r - l)
-    figh = float(h) / (t - b)
+    left = ax.figure.subplotpars.left
+    right = ax.figure.subplotpars.right
+    top = ax.figure.subplotpars.top
+    bottom = ax.figure.subplotpars.bottom
+    figw = float(w) / (right - left)
+    figh = float(h) / (top - bottom)
     ax.figure.set_size_inches(figw, figh)
 
 
@@ -38,90 +36,129 @@ def to_decimal_year(date):
     return date.year + fraction
 
 
+def load_mankoff_discharge():
+    """
+    Load discharge time-series from Ken Mankoff for
+    Jakobshavn Isbrae (Gate 184)
+    """
+
+    df = pd.read_csv(
+        "~/Google Drive/My Drive/data/mankoff_discharge/gate_merged.csv",
+        parse_dates=["Date"],
+    )
+    df = df[df["Gate"] == 184]
+    df.set_index("Date", inplace=True)
+    return df
+
+
+def load_mouginot_discharge():
+    """
+    Load discharge time-series from Jeremy Mouginot
+    """
+    mou19_d = pd.read_excel(
+        "/Users/andy/Google Drive/My Drive/data/mouginot_discharge/pnas.1904242116.sd02.xlsx",
+        sheet_name="(5) year_D_R23p2-5.5km",
+        header=2,
+        usecols="A,P:BJ",
+        engine="openpyxl",
+    )
+    mou19_d_err = pd.read_excel(
+        "/Users/andy/Google Drive/My Drive/data/mouginot_discharge/pnas.1904242116.sd02.xlsx",
+        sheet_name="(5) year_D_R23p2-5.5km",
+        header=2,
+        usecols="A,BN:DH",
+        engine="openpyxl",
+    )
+
+    mou19_d = mou19_d[mou19_d["NAME"] == "JAKOBSHAVN_ISBRAE"].drop(columns={"NAME"})
+    mou19_d_err = mou19_d_err[mou19_d_err["NAME"] == "JAKOBSHAVN_ISBRAE"].drop(
+        columns={"NAME"}
+    )
+    years = mou19_d.columns.astype("float").values - 0.5
+    d = mou19_d.values.T
+    d_err = mou19_d_err.values.T
+
+    mou19_d = pd.DataFrame(
+        data=d, index=years.astype(int), columns={"Discharge (Gt/yr)"}
+    )
+    mou19_d_err = pd.DataFrame(
+        data=d_err, index=years.astype(int), columns={"Discharge Error (Gt/yr)"}
+    )
+
+    df = pd.merge(mou19_d, mou19_d_err, left_index=True, right_index=True)
+    dates = pd.to_datetime(df.index, format="%Y")
+    df.set_index(dates, inplace=True)
+
+    return df
+
+
+def load_data(data_file, ensemble_file=None):
+
+    df = pd.read_csv(data_file, parse_dates=["time"])
+    df[m_var] *= -1
+
+    id_df_missing = None
+    if ensemble_file is not None:
+        id_df = pd.read_csv(ensemble_file)
+        param_names = id_df.drop(columns="id").columns.values.tolist()
+        for k, col in id_df.iteritems():
+            if is_string_dtype(col):
+                u = col.unique()
+                u.sort()
+                v = [k for k, v in enumerate(u)]
+                col.replace(to_replace=dict(zip(u, v)), inplace=True)
+        # Define a salib "problem"
+
+        missing_ids = list(set(id_df["id"]).difference(df["id"]))
+        if missing_ids:
+            print(
+                "The following simulation ids are missing:\n   {}".format(missing_ids)
+            )
+
+            id_df_missing_removed = id_df[~id_df["id"].isin(missing_ids)]
+            id_df_missing = id_df[id_df["id"].isin(missing_ids)]
+
+        df = pd.merge(id_df, df, on="id")
+    return df, param_names
+
+
 # Set up the option parser
 parser = ArgumentParser()
 parser.description = "A"
 parser.add_argument("--ensemble_file", default=None)
 parser.add_argument("--variable", default="total_grounding_line_flux (Gt year-1)")
+parser.add_argument(
+    "--mean_file", default="../historical/2021_12_fractures_narrow/csv/fldmean_ts.csv"
+)
+parser.add_argument(
+    "--sum_file", default="../historical/2021_12_fractures_narrow/csv/fldsum_ts.csv"
+)
+parser.add_argument("--threshold_range", default=[20, 40])
 parser.add_argument("--smoothing_length", type=int, default=1)
-parser.add_argument("FILE", nargs=1)
 options = parser.parse_args()
 ensemble_file = options.ensemble_file
 m_var = options.variable
-ifile = options.FILE
 calc_second_order = False
 smoothing_length = options.smoothing_length
+threshold = options.threshold_range
 
-df = pd.read_csv(ifile[0], parse_dates=["time"])
+d_man = load_mankoff_discharge()
+d_mou = load_mouginot_discharge()
 
-id_df_missing = None
-if ensemble_file is not None:
-    id_df = pd.read_csv(ensemble_file)
-    param_names = id_df.drop(columns="id").columns.values.tolist()
-    # Define a salib "problem"
+mean_df, _ = load_data(options.mean_file, ensemble_file=ensemble_file)
+sum_df, param_names = load_data(options.sum_file, ensemble_file=ensemble_file)
 
-    missing_ids = list(set(id_df["id"]).difference(df["id"]))
-    if missing_ids:
-        print("The following simulation ids are missing:\n   {}".format(missing_ids))
-
-        id_df_missing_removed = id_df[~id_df["id"].isin(missing_ids)]
-        id_df_missing = id_df[id_df["id"].isin(missing_ids)]
-
-    df = pd.merge(id_df, df, on="id")
-
-m_df = df[
-    (df["time"] > pd.to_datetime("1985-1-1"))
-    & (df["time"] < pd.to_datetime("1986-1-1"))
+m_df = sum_df[
+    sum_df["time"].between(pd.to_datetime("1985-1-1"), pd.to_datetime("1986-1-1"))
 ]
-m_df = df.groupby(by="id").mean().reset_index()
-all_ids = m_df["id"].unique()
-ids_pass = m_df[m_df[m_var] > -50]["id"]
-ids_fail = m_df[~m_df["id"].isin(ids_pass)]
+m_df = sum_df.groupby(by="id").mean().reset_index()
+all_ids = sum_df["id"].unique()
+ids_pass = m_df[m_df[m_var].between(*threshold)]["id"]
+ids_fail = m_df[~m_df["id"].isin(ids_pass)]["id"]
 
-df["pass"] = False
-df[df["id"].isin(ids_pass)]["pass"] = True
+sum_df["pass"] = False
+sum_df["pass"].loc[sum_df["id"].isin(ids_pass)] = True
 
-outside_df = m_df[m_df[m_var] < -40]
-inside_df = m_df[m_df[m_var] >= -40]
-
-
-D = pd.read_csv(
-    "~/Google Drive/My Drive/data/mankoff_discharge/gate_merged.csv",
-    parse_dates=["Date"],
-)
-D = D[D["Gate"] == 184]
-
-mou19_d = pd.read_excel(
-    "/Users/andy/Google Drive/My Drive/data/mouginot_discharge/pnas.1904242116.sd02.xlsx",
-    sheet_name="(5) year_D_R23p2-5.5km",
-    header=2,
-    usecols="A,P:BJ",
-    engine="openpyxl",
-)
-mou19_d_err = pd.read_excel(
-    "/Users/andy/Google Drive/My Drive/data/mouginot_discharge/pnas.1904242116.sd02.xlsx",
-    sheet_name="(5) year_D_R23p2-5.5km",
-    header=2,
-    usecols="A,BN:DH",
-    engine="openpyxl",
-)
-
-mou19_d = mou19_d[mou19_d["NAME"] == "JAKOBSHAVN_ISBRAE"].drop(columns={"NAME"})
-mou19_d_err = mou19_d_err[mou19_d_err["NAME"] == "JAKOBSHAVN_ISBRAE"].drop(
-    columns={"NAME"}
-)
-years = mou19_d.columns.astype("float").values - 0.5
-d = mou19_d.values.T
-d_err = mou19_d_err.values.T
-
-mou19_D = pd.DataFrame(data=d, index=years.astype(int), columns={"Discharge (Gt/yr)"})
-mou19_D_err = pd.DataFrame(
-    data=d_err, index=years.astype(int), columns={"Discharge Error (Gt/yr)"}
-)
-
-mou19 = pd.merge(mou19_D, mou19_D_err, left_index=True, right_index=True)
-mou19_dates = pd.to_datetime(mou19.index, format="%Y")
-mou19.set_index(mou19_dates, inplace=True)
 
 fig = plt.figure()
 ax = fig.add_subplot(111)
@@ -130,60 +167,83 @@ ax = fig.add_subplot(111)
 def plot_ts(df, ax, m_var):
     ax.plot(
         df.index,
-        -df[m_var],
-        color="0.25",
-        lw=0.5,
+        df[m_var],
+        color="0.5",
+        lw=0.25,
         alpha=0.5,
     )
 
 
 if smoothing_length > 1:
     [
-        plot_ts(f[1], ax, m_var)
-        for f in df.groupby(by="id").rolling(smoothing_length, on="time")
+        plot_ts(f, ax, m_var)
+        for f in sum_df.groupby(by="id").rolling(smoothing_length, on="time")
     ]
 else:
-    [plot_ts(f[1].set_index("time"), ax, m_var) for f in df.groupby(by="id")]
+    [plot_ts(f[1].set_index("time"), ax, m_var) for f in sum_df.groupby(by="id")]
 
 ax.fill_between(
-    D["Date"],
-    -D["Discharge [Gt/yr]"] - D["Discharge Error [Gt/yr]"],
-    -D["Discharge [Gt/yr]"] + D["Discharge Error [Gt/yr]"],
+    d_man.index,
+    d_man["Discharge [Gt/yr]"] - d_man["Discharge Error [Gt/yr]"],
+    d_man["Discharge [Gt/yr]"] + d_man["Discharge Error [Gt/yr]"],
     color="#238b45",
     alpha=0.5,
     lw=1.0,
 )
 
 ax.fill_between(
-    mou19.index,
-    mou19["Discharge (Gt/yr)"] - mou19["Discharge Error (Gt/yr)"],
-    mou19["Discharge (Gt/yr)"] + mou19["Discharge Error (Gt/yr)"],
+    d_mou.index,
+    d_mou["Discharge (Gt/yr)"] - d_mou["Discharge Error (Gt/yr)"],
+    d_mou["Discharge (Gt/yr)"] + d_mou["Discharge Error (Gt/yr)"],
     color="#bdd7e7",
     alpha=0.5,
     lw=1.0,
 )
 
 ax.plot(
-    D["Date"],
-    D["Discharge [Gt/yr]"],
+    d_man.index,
+    d_man["Discharge [Gt/yr]"],
     color="#238b45",
     lw=1.0,
     label="Mankoff",
 )
 ax.plot(
-    mou19.index,
-    mou19["Discharge (Gt/yr)"],
+    d_mou.index,
+    d_mou["Discharge (Gt/yr)"],
     color="#2171b5",
     lw=1.0,
     label="Mouginot",
 )
 
-ax.set_xlim(datetime(1980, 1, 1), datetime(2000, 1, 1))
+ax.set_xlim(datetime(1980, 1, 1), datetime(1990, 1, 1))
 ax.set_xlabel("Year")
 ax.set_ylabel("Flux (Gt/yr)")
-ax.set_ylim(0, 75)
+ax.set_ylim(0, 100)
 set_size(6, 3)
-ofile = "calving_{}.pdf".format(m_var)
+ofile = "jib_{}.pdf".format(m_var.split(" ")[0])
+print("  saving to {}".format(ofile))
+fig.savefig(ofile, bbox_inches="tight")
+
+fig = plt.figure()
+ax = fig.add_subplot(111)
+
+
+m_var = "vonmises_calving_rate (m year-1)"
+if smoothing_length > 1:
+    [
+        plot_ts(f, ax, m_var)
+        for f in mean_df.groupby(by="id").rolling(smoothing_length, on="time")
+    ]
+else:
+    [plot_ts(f[1].set_index("time"), ax, m_var) for f in mean_df.groupby(by="id")]
+
+
+ax.set_xlim(datetime(1980, 1, 1), datetime(1990, 1, 1))
+ax.set_xlabel("Year")
+ax.set_ylabel("Calving rate (m/yr)")
+# ax.set_ylim(0, 100)
+set_size(6, 3)
+ofile = "jib_{}.pdf".format(m_var.split(" ")[0])
 print("  saving to {}".format(ofile))
 fig.savefig(ofile, bbox_inches="tight")
 
@@ -191,6 +251,8 @@ fig.savefig(ofile, bbox_inches="tight")
 fig, axs = plt.subplots(len(param_names), 1, figsize=[4, 12])
 fig.subplots_adjust(hspace=0.55, wspace=0.25)
 for k, p_var in enumerate(param_names):
-    sns.histplot(data=outside_df, x=p_var, stat="count", linewidth=0.8, ax=axs[k])
+    sns.kdeplot(
+        data=sum_df, x=p_var, hue="pass", common_norm=False, linewidth=0.8, ax=axs[k]
+    )
     ax.set_title(p_var)
     fig.savefig(f"hist_outside_1985.pdf", bbox_inches="tight")
