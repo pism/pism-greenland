@@ -87,9 +87,7 @@ spatial_ts_vars["ismip6"] = ["ismip6"]
 spatial_ts_vars["basic"] = [
     "basal_melt_rate_grounded",
     "beta",
-    "bwat",
     "dHdt",
-    "diffusivity",
     "height_above_flotation",
     "grounding_line_flux",
     "frontal_melt_rate",
@@ -99,7 +97,6 @@ spatial_ts_vars["basic"] = [
     "mass_fluxes",
     "sftgif",
     "thk",
-    "tillwat",
     "topg",
     "usurf",
     "velbase_mag",

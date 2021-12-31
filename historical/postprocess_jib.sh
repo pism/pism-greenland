@@ -20,7 +20,7 @@ mkdir -p ${odir}/processed
 # Spatial files
 cd  ${odir}/spatial/
 
-cdo -f nc4 -z zip_2 aexpr,"total_grounding_line_flux=grounding_line_flux*${grid}^2/1e12;" -ifnotthen ../../../data_sets/basin_masks/ugid_225_Jakobshavn_Isbrae_mask_epsg3413_g${grid}m.nc ex_${file}.nc ../processed/masked_ex_${file}.nc
+cdo -f nc4 -z zip_2 setctomiss,0 -aexpr,"total_grounding_line_flux=grounding_line_flux*${grid}^2/1e12;" -ifnotthen ../../../data_sets/basin_masks/ugid_225_Jakobshavn_Isbrae_mask_epsg3413_g${grid}m.nc ex_${file}.nc ../processed/masked_ex_${file}.nc
 ncatted -a units,total_grounding_line_flux,o,c,"Gt year-1" ../processed/masked_ex_${file}.nc
 
 for var in mask velsurf_mag thk; do
