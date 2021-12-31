@@ -46,7 +46,7 @@ for infile in infiles:
                     m_units = ds[m_var].units
                 else:
                     m_units = ""
-                data = np.squeeze(ds[m_var])
+                data = np.squeeze(ds[m_var].values)
                 m_S_name = f"{m_var} ({m_units})"
                 m_S = pd.Series(data=data, index=datetimeindex, name=m_S_name)
                 S.append(m_S)
