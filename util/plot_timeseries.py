@@ -56,6 +56,7 @@ for p_id, profile in enumerate(profiles):
         dates = nc.variables["time"]
         v = nc.variables[var]
         data = v[p_id, :, p_id]
+        print(m_file, data[-1].values)
         lw = 0.5
         ax.plot(dates, data, "-", color="0.5", ms=0, lw=lw)
         nc.close()

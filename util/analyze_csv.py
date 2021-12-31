@@ -3,6 +3,7 @@
 # Copyright (C) 2021 Andy Aschwanden
 
 from argparse import ArgumentParser
+import numpy as np
 import pandas as pd
 from pandas.api.types import is_string_dtype
 import pylab as plt
@@ -47,7 +48,9 @@ def load_mankoff_discharge():
         parse_dates=["Date"],
     )
     df = df[df["Gate"] == 184]
+    df["time"] = df["Date"]
     df.set_index("Date", inplace=True)
+
     return df
 
 
@@ -88,6 +91,7 @@ def load_mouginot_discharge():
     df = pd.merge(mou19_d, mou19_d_err, left_index=True, right_index=True)
     dates = pd.to_datetime(df.index, format="%Y")
     df.set_index(dates, inplace=True)
+    df["time"] = dates
 
     return df
 
@@ -122,137 +126,189 @@ def load_data(data_file, ensemble_file=None):
     return df, param_names
 
 
-# Set up the option parser
-parser = ArgumentParser()
-parser.description = "A"
-parser.add_argument("--ensemble_file", default=None)
-parser.add_argument("--variable", default="total_grounding_line_flux (Gt year-1)")
-parser.add_argument(
-    "--mean_file", default="../historical/2021_12_fractures_narrow/csv/fldmean_ts.csv"
-)
-parser.add_argument(
-    "--sum_file", default="../historical/2021_12_fractures_narrow/csv/fldsum_ts.csv"
-)
-parser.add_argument("--threshold_range", default=[20, 40])
-parser.add_argument("--smoothing_length", type=int, default=1)
-options = parser.parse_args()
-ensemble_file = options.ensemble_file
-m_var = options.variable
-calc_second_order = False
-smoothing_length = options.smoothing_length
-threshold = options.threshold_range
+if __name__ == "__main__":
 
-d_man = load_mankoff_discharge()
-d_mou = load_mouginot_discharge()
+    # Set up the option parser
+    parser = ArgumentParser()
+    parser.description = "A"
+    parser.add_argument("--beta", default=1.0)
+    parser.add_argument(
+        "--ensemble_file", default="../historical/2021_12_all/uq/jib_all.csv"
+    )
+    parser.add_argument("--variable", default="total_grounding_line_flux (Gt year-1)")
+    parser.add_argument(
+        "--mean_file",
+        default="../historical/2021_12_all/csv/fldmean_ts.csv",
+    )
+    parser.add_argument(
+        "--sum_file", default="../historical/2021_12_all/csv/fldsum_ts.csv"
+    )
+    parser.add_argument("--threshold_range", default=[20, 40])
+    parser.add_argument("--smoothing_length", type=int, default=1)
+    options = parser.parse_args()
+    beta = options.beta
+    ensemble_file = options.ensemble_file
+    m_var = options.variable
+    calc_second_order = False
+    smoothing_length = options.smoothing_length
+    threshold = options.threshold_range
 
-mean_df, _ = load_data(options.mean_file, ensemble_file=ensemble_file)
-sum_df, param_names = load_data(options.sum_file, ensemble_file=ensemble_file)
+    d_man = load_mankoff_discharge()
+    d_mou = load_mouginot_discharge()
 
-m_df = sum_df[
-    sum_df["time"].between(pd.to_datetime("1985-1-1"), pd.to_datetime("1986-1-1"))
-]
-m_df = sum_df.groupby(by="id").mean().reset_index()
-all_ids = sum_df["id"].unique()
-ids_pass = m_df[m_df[m_var].between(*threshold)]["id"]
-ids_fail = m_df[~m_df["id"].isin(ids_pass)]["id"]
+    mean_df, _ = load_data(options.mean_file, ensemble_file=ensemble_file)
+    sum_df, param_names = load_data(options.sum_file, ensemble_file=ensemble_file)
 
-sum_df["pass"] = False
-sum_df["pass"].loc[sum_df["id"].isin(ids_pass)] = True
+    validation_time = [pd.to_datetime("1985-1-1"), pd.to_datetime("1986-1-1")]
+    m_df = sum_df[sum_df["time"].between(*validation_time)]
+    m_df = sum_df.groupby(by="id").mean().reset_index()
+    all_ids = sum_df["id"].unique()
+    d_val = d_mou[d_mou["time"].between(*validation_time)]
+    discharge_range = np.array(
+        [
+            (d_val["Discharge (Gt/yr)"].max() - d_val["Discharge Error (Gt/yr)"].max()),
+            (d_val["Discharge (Gt/yr)"].max() + d_val["Discharge Error (Gt/yr)"].max()),
+        ]
+    )
+    discharge_range *= beta
+    ids_pass = m_df[m_df[m_var].between(*discharge_range)]["id"]
+    ids_fail = m_df[~m_df["id"].isin(ids_pass)]["id"]
 
+    sum_df["pass"] = False
+    sum_df["pass"].loc[sum_df["id"].isin(ids_pass)] = True
 
-fig = plt.figure()
-ax = fig.add_subplot(111)
+    fig = plt.figure(
+        figsize=[6.0, 2.2],
+    )
+    ax = fig.add_subplot(111)
 
+    def plot_ts(df, ax, m_var, **kwargs):
+        ax.plot(
+            df.index,
+            df[m_var],
+            alpha=0.5,
+            **kwargs,
+        )
 
-def plot_ts(df, ax, m_var):
-    ax.plot(
-        df.index,
-        df[m_var],
-        color="0.5",
-        lw=0.25,
+    if smoothing_length > 1:
+        kwargs = {"color": "0.25", "lw": 0.25}
+        [
+            plot_ts(f, ax, m_var, kwargs)
+            for f in sum_df.groupby(by="id").rolling(smoothing_length, on="time")
+        ]
+        kwargs = {"color": "#6a51a3", "lw": 0.5}
+        [
+            plot_ts(f, ax, m_var, **kwargs)
+            for f in dum_df[mean_df["id"].isin(ids_pass)]
+            .groupby(by="id")
+            .rolling(smoothing_length, on="time")
+        ]
+    else:
+        kwargs = {"color": ".25", "lw": 0.25}
+        [
+            plot_ts(f[1].set_index("time"), ax, m_var, **kwargs)
+            for f in sum_df.groupby(by="id")
+        ]
+        kwargs = {"color": "#6a51a3", "lw": 0.5}
+        [
+            plot_ts(f[1].set_index("time"), ax, m_var, **kwargs)
+            for f in sum_df[sum_df["id"].isin(ids_pass)].groupby(by="id")
+        ]
+
+    ax.fill_between(
+        d_man.index,
+        d_man["Discharge [Gt/yr]"] - d_man["Discharge Error [Gt/yr]"],
+        d_man["Discharge [Gt/yr]"] + d_man["Discharge Error [Gt/yr]"],
+        color="#238b45",
         alpha=0.5,
+        lw=1.0,
     )
 
-
-if smoothing_length > 1:
-    [
-        plot_ts(f, ax, m_var)
-        for f in sum_df.groupby(by="id").rolling(smoothing_length, on="time")
-    ]
-else:
-    [plot_ts(f[1].set_index("time"), ax, m_var) for f in sum_df.groupby(by="id")]
-
-ax.fill_between(
-    d_man.index,
-    d_man["Discharge [Gt/yr]"] - d_man["Discharge Error [Gt/yr]"],
-    d_man["Discharge [Gt/yr]"] + d_man["Discharge Error [Gt/yr]"],
-    color="#238b45",
-    alpha=0.5,
-    lw=1.0,
-)
-
-ax.fill_between(
-    d_mou.index,
-    d_mou["Discharge (Gt/yr)"] - d_mou["Discharge Error (Gt/yr)"],
-    d_mou["Discharge (Gt/yr)"] + d_mou["Discharge Error (Gt/yr)"],
-    color="#bdd7e7",
-    alpha=0.5,
-    lw=1.0,
-)
-
-ax.plot(
-    d_man.index,
-    d_man["Discharge [Gt/yr]"],
-    color="#238b45",
-    lw=1.0,
-    label="Mankoff",
-)
-ax.plot(
-    d_mou.index,
-    d_mou["Discharge (Gt/yr)"],
-    color="#2171b5",
-    lw=1.0,
-    label="Mouginot",
-)
-
-ax.set_xlim(datetime(1980, 1, 1), datetime(1990, 1, 1))
-ax.set_xlabel("Year")
-ax.set_ylabel("Flux (Gt/yr)")
-ax.set_ylim(0, 100)
-set_size(6, 3)
-ofile = "jib_{}.pdf".format(m_var.split(" ")[0])
-print("  saving to {}".format(ofile))
-fig.savefig(ofile, bbox_inches="tight")
-
-fig = plt.figure()
-ax = fig.add_subplot(111)
-
-
-m_var = "vonmises_calving_rate (m year-1)"
-if smoothing_length > 1:
-    [
-        plot_ts(f, ax, m_var)
-        for f in mean_df.groupby(by="id").rolling(smoothing_length, on="time")
-    ]
-else:
-    [plot_ts(f[1].set_index("time"), ax, m_var) for f in mean_df.groupby(by="id")]
-
-
-ax.set_xlim(datetime(1980, 1, 1), datetime(1990, 1, 1))
-ax.set_xlabel("Year")
-ax.set_ylabel("Calving rate (m/yr)")
-# ax.set_ylim(0, 100)
-set_size(6, 3)
-ofile = "jib_{}.pdf".format(m_var.split(" ")[0])
-print("  saving to {}".format(ofile))
-fig.savefig(ofile, bbox_inches="tight")
-
-
-fig, axs = plt.subplots(len(param_names), 1, figsize=[4, 12])
-fig.subplots_adjust(hspace=0.55, wspace=0.25)
-for k, p_var in enumerate(param_names):
-    sns.kdeplot(
-        data=sum_df, x=p_var, hue="pass", common_norm=False, linewidth=0.8, ax=axs[k]
+    ax.fill_between(
+        d_mou.index,
+        d_mou["Discharge (Gt/yr)"] - d_mou["Discharge Error (Gt/yr)"],
+        d_mou["Discharge (Gt/yr)"] + d_mou["Discharge Error (Gt/yr)"],
+        color="#bdd7e7",
+        alpha=0.5,
+        lw=1.0,
     )
-    ax.set_title(p_var)
-    fig.savefig(f"hist_outside_1985.pdf", bbox_inches="tight")
+
+    ax.plot(
+        d_man.index,
+        d_man["Discharge [Gt/yr]"],
+        color="#238b45",
+        lw=1.0,
+        label="Mankoff",
+    )
+    ax.plot(
+        d_mou.index,
+        d_mou["Discharge (Gt/yr)"],
+        color="#2171b5",
+        lw=1.0,
+        label="Mouginot",
+    )
+
+    ax.set_xlim(datetime(1980, 1, 1), datetime(2020, 1, 1))
+    ax.set_xlabel("Year")
+    ax.set_ylabel("Flux (Gt/yr)")
+    ax.set_ylim(0, 100)
+    set_size(6, 3)
+    ofile = "jib_{}.pdf".format(m_var.split(" ")[0])
+    print("  saving to {}".format(ofile))
+    fig.savefig(ofile, bbox_inches="tight")
+
+    fig = plt.figure(
+        figsize=[6.0, 2.2],
+    )
+    ax = fig.add_subplot(111)
+
+    m_var = "vonmises_calving_rate (m year-1)"
+
+    if smoothing_length > 1:
+        kwargs = {"color": "0.25", "lw": 0.25}
+        [
+            plot_ts(f, ax, m_var, **kwargs)
+            for f in mean_df.groupby(by="id").rolling(smoothing_length, on="time")
+        ]
+        kwargs = {"color": "#6a51a3", "lw": 0.5}
+        [
+            plot_ts(f, ax, m_var, color=color)
+            for f in mean_df[mean_df["id"].isin(ids_pass)]
+            .groupby(by="id")
+            .rolling(smoothing_length, on="time")
+        ]
+    else:
+        kwargs = {"color": "0.25", "lw": 0.25}
+        [
+            plot_ts(f[1].set_index("time"), ax, m_var, **kwargs)
+            for f in mean_df.groupby(by="id")
+        ]
+        kwargs = {"color": "#6a51a3", "lw": 0.5}
+        [
+            plot_ts(f[1].set_index("time"), ax, m_var, **kwargs)
+            for f in mean_df[mean_df["id"].isin(ids_pass)].groupby(by="id")
+        ]
+
+    ax.set_xlim(datetime(1980, 1, 1), datetime(1990, 1, 1))
+    ax.set_xlabel("Year")
+    ax.set_ylabel("Calving rate (m/yr)")
+    # ax.set_ylim(0, 100)
+    set_size(6, 3)
+    ofile = "jib_{}.pdf".format(m_var.split(" ")[0])
+    print("  saving to {}".format(ofile))
+    fig.savefig(ofile, bbox_inches="tight")
+
+    fig, axs = plt.subplots(len(param_names), 1, figsize=[4, 15])
+    fig.subplots_adjust(hspace=0.55, wspace=0.25)
+    for k, p_var in enumerate(param_names):
+        sns.histplot(
+            data=sum_df,
+            x=p_var,
+            hue="pass",
+            multiple="layer",
+            linewidth=0.8,
+            ax=axs[k],
+            legend=False,
+        )
+        ax.set_title(p_var)
+        fig.savefig(f"params_hist_1985.pdf", bbox_inches="tight")
