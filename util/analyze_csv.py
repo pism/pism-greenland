@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-
 # Copyright (C) 2021 Andy Aschwanden
 
 from argparse import ArgumentParser
