@@ -1,10 +1,12 @@
 #!/usr/bin/env python3
-# Copyright (C) 2020-21 Andy Aschwanden, Douglas C Brinkerhoff
+# Copyright (C) 2020-22 Andy Aschwanden, Douglas C Brinkerhoff
 #
 # Generate time-series of ocean temperature and salinity
 # Jakobshavn Fjord
 # for Fjord and Bay measurements
 
+
+from argparse import ArgumentParser
 import cftime
 from dateutil import rrule
 from datetime import datetime
@@ -50,7 +52,8 @@ class MultitaskGPModel(gpytorch.models.ExactGP):
     def __init__(self, train_x, train_y, likelihood, num_tasks):
         super(MultitaskGPModel, self).__init__(train_x, train_y, likelihood)
         self.mean_modules = [gpytorch.means.ConstantMean() for i in range(num_tasks)]
-        self.covar_module = gpytorch.kernels.RBFKernel()
+        # self.covar_module = gpytorch.kernels.RBFKernel()
+        self.covar_module = gpytorch.kernels.MaternKernel(nu=1.5)
 
         # Surprisingly the Gram matrix of a rank-1 outer product appears to be sufficient
         # for parameterizing the inter-task covariance matrix, as increasing the rank
@@ -157,7 +160,7 @@ def create_nc(nc_outfile, theta, salinity, grid_spacing, time_dict):
     xdim = "x"
     ydim = "y"
 
-    # define output grid, these are the extents of Mathieu's domain (cell
+    # define output grid, these are the extents of BedMachine domain (cell
     # corners)
     e0 = -638000
     n0 = -3349600
@@ -383,6 +386,20 @@ plt.rcParams.update(params)
 if __name__ == "__main__":
     __spec__ = None
 
+    parser = ArgumentParser()
+    parser.description = (
+        "Create temperature and salinity time-series for Ilullisat Bay and Fjord"
+    )
+    parser.add_argument(
+        "--dry",
+        dest="write_nc",
+        help="Dry run. Do not save netCDF file, make plot only.",
+        action="store_false",
+        default=True,
+    )
+    options = parser.parse_args()
+    write_nc = options.write_nc
+
     torch.manual_seed(0)
     np.random.seed(0)
 
@@ -597,7 +614,7 @@ if __name__ == "__main__":
         1,
         sharex="col",
         figsize=[6.2, 3.6],
-        num="prognostic_all",
+        gridspec_kw=dict(height_ratios=[3, 2]),
         clear=True,
     )
     fig.subplots_adjust(hspace=0.1)
@@ -635,7 +652,7 @@ if __name__ == "__main__":
         early_stop_callback = EarlyStopping(
             monitor="loss",
             min_delta=0.00,
-            patience=200,
+            patience=100,
             verbose=False,
             mode="min",
             strict=True,
@@ -759,36 +776,55 @@ if __name__ == "__main__":
             )
         ):
             if normalize:
-                temperature = temperature * T_std + T_mean
-                salinity = salinity * S_std + S_mean
+                m_S_mean = all_data_cat["Salinity [g/kg]"][loc]["Y_mean"]
+                m_S_std = all_data_cat["Salinity [g/kg]"][loc]["Y_std"]
+                m_T_mean = all_data_cat["Temperature [Celsius]"][loc]["Y_mean"]
+                m_T_std = all_data_cat["Temperature [Celsius]"][loc]["Y_std"]
+                temperature = temperature * m_T_std + m_T_mean
+                salinity = salinity * m_S_std + m_S_mean
             if s == 0:
                 ax[0].plot(
                     X_new,
                     temperature,
                     color=col_dict[loc],
                     linewidth=0.2,
-                    label=f"{k} Sample",
+                    label=f"{loc} Sample",
                 )
                 ax[1].plot(
                     X_new,
                     salinity,
                     color=col_dict[loc],
                     linewidth=0.2,
-                    label=f"{k} Sample",
                 )
             else:
                 ax[0].plot(X_new, temperature, color=col_dict[loc], linewidth=0.2)
                 ax[1].plot(X_new, salinity, color=col_dict[loc], linewidth=0.2)
             theta_ocean = temperature - melting_point_temperature(depth, salinity)
             ofile = f"jib_ocean_forcing_id_{loc.lower()}_{s}_1980_2020.nc"
-            create_nc(ofile, theta_ocean, salinity, grid_spacing, time_dict)
+            if write_nc:
+                print(f"  Writing {ofile}")
+                create_nc(ofile, theta_ocean, salinity, grid_spacing, time_dict)
 
         salinity_mean = ctrl["Salinity [g/kg]"][loc]
-        theta_ocean_mean = ctrl["Temperature [Celsius]"][
-            loc
-        ] - melting_point_temperature(depth, salinity_mean)
+        theta_ocean_mean = ctrl["Temperature [Celsius]"][loc]
+        if normalize:
+            m_S_mean = all_data_cat["Salinity [g/kg]"][loc]["Y_mean"]
+            m_S_std = all_data_cat["Salinity [g/kg]"][loc]["Y_std"]
+            m_T_mean = all_data_cat["Temperature [Celsius]"][loc]["Y_mean"]
+            m_T_std = all_data_cat["Temperature [Celsius]"][loc]["Y_std"]
+            salinity_mean = salinity_mean * m_S_std + m_S_mean
+            theta_ocean_mean = (
+                theta_ocean_mean * m_T_std
+                + m_T_mean
+                - melting_point_temperature(depth, salinity_mean)
+            )
+        else:
+            theta_ocean_mean -= melting_point_temperature(depth, salinity_mean)
+
         ofile = f"jib_ocean_forcing_id_{loc.lower()}_ctrl_1980_2020.nc"
-        create_nc(ofile, theta_ocean_mean, salinity_mean, grid_spacing, time_dict)
+        if write_nc:
+            print(f"  Writing {ofile}")
+            create_nc(ofile, theta_ocean_mean, salinity_mean, grid_spacing, time_dict)
 
         T_cf = np.mean(
             ctrl["Temperature [Celsius]"][loc][
@@ -809,31 +845,33 @@ if __name__ == "__main__":
             depth, salinity_mean
         )
         salinity_timmean = S_cf + np.zeros_like(ctrl["Salinity [g/kg]"][loc])
-        ax[0].plot(
-            X_new,
-            temperature_timmean,
-            color=col_dict[loc],
-            linewidth=0.75,
-            linestyle="dotted",
-            label=f"{loc} Constant",
-        )
-        ax[1].plot(
-            X_new,
-            salinity_timmean,
-            color=col_dict[loc],
-            linewidth=0.75,
-            linestyle="dotted",
-            label=f"{loc} Constant",
-        )
+        # ax[0].plot(
+        #     X_new,
+        #     temperature_timmean,
+        #     color=col_dict[loc],
+        #     linewidth=0.75,
+        #     linestyle="dotted",
+        #     label=f"{loc} Constant",
+        # )
+        # ax[1].plot(
+        #     X_new,
+        #     salinity_timmean,
+        #     color=col_dict[loc],
+        #     linewidth=0.75,
+        #     linestyle="dotted",
+        #     label=f"{loc} Constant",
+        # )
 
         ofile = f"jib_ocean_forcing_id_{loc.lower()}_tm_1985_1995.nc"
-        create_nc(
-            ofile,
-            theta_ocean_timmean,
-            salinity_timmean,
-            grid_spacing,
-            time_dict,
-        )
+        if write_nc:
+            print(f"  Writing {ofile}")
+            create_nc(
+                ofile,
+                theta_ocean_timmean,
+                salinity_timmean,
+                grid_spacing,
+                time_dict,
+            )
 
     ax[1].set_xlabel("Year")
     ax[1].set_xlim(1980, 2021)
@@ -841,26 +879,26 @@ if __name__ == "__main__":
     ax[1].set_ylim(33, 35)
     handles, labels = ax[0].get_legend_handles_labels()
     m_handles = [
-        handles[0],
         handles[1],
-        handles[6],
+        handles[0],
         handles[2],
-        handles[3],
-        handles[7],
-        handles[5],
+        handles[6],
         handles[4],
+        handles[3],
+        handles[5],
+        handles[7],
     ]
     m_labels = [
-        labels[0],
         labels[1],
-        labels[6],
+        labels[0],
         labels[2],
-        labels[3],
-        labels[7],
-        labels[5],
+        labels[6],
         labels[4],
+        labels[3],
+        labels[5],
+        labels[7],
     ]
-    l1 = ax[0].legend(handles, labels, ncol=3, loc="upper left", handletextpad=1.0)
+    l1 = ax[0].legend(m_handles, m_labels, ncol=2, loc="upper left", handletextpad=1.0)
     l1.get_frame().set_linewidth(0.0)
     l1.get_frame().set_alpha(0.0)
 
