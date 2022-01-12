@@ -56,9 +56,9 @@ for p_id, profile in enumerate(profiles):
         dates = nc.variables["time"]
         v = nc.variables[var]
         data = v[p_id, :, p_id]
-        # ax.plot_date(dates, data, "-", c="0.5", ms=0, lw=0.2)
+        print(m_file, data[-1].values)
         lw = 0.5
-        ax.plot_date(dates, data, "-", ms=0, lw=lw, label=exp)
+        ax.plot(dates, data, "-", color="0.5", ms=0, lw=lw)
         nc.close()
 
     if obs_file is not None:
@@ -66,30 +66,30 @@ for p_id, profile in enumerate(profiles):
         profiles = nc_obs.variables["profile_name"][:]
         v_units = nc_obs.variables[var].attrs["units"]
         dates = nc_obs.variables["time"]
-        v = nc_obs.variables[var]
-        speed = v[p_id, :, p_id]
-        v = nc_obs.variables["v_err"]
-        speed_err = v[p_id, :, p_id]
+        v_obs = nc_obs.variables[var]
+        speed_obs = v_obs[p_id, :, p_id]
+        v_obs_err = nc_obs.variables["v_err"]
+        speed_obs_err = v_obs_err[p_id, :, p_id]
         lw = 1.5
         ax.fill_between(
             dates,
-            speed - speed_err,
-            speed + speed_err,
-            color="0.5",
+            speed_obs - 3 * speed_obs_err,
+            speed_obs + 3 * speed_obs_err,
+            color="#cbc9e2",
             alpha=0.5,
             lw=0.0,
         )
 
-        ax.plot(dates, speed, "o", color="k", ms=1, lw=lw, label="ITS_LIVE")
+        ax.plot(dates, speed_obs, "o", color="#6a51a3", ms=5, lw=lw, label="ITS_LIVE")
         nc_obs.close()
-        # ax.set_ylim(0, data.max())
+        ax.set_ylim(0, 20000)
 
-    ax.set_xlim(datetime(1980, 1, 1), datetime(2020, 1, 1))
+    ax.set_xlim(datetime(1985, 1, 1), datetime(2020, 1, 1))
     ax.set_ylabel(f"{var} ({v_units})")
     ax.set_title(profile.values)
-    legend_1 = ax.legend(loc="upper left", ncol=3)
-    legend_1.get_frame().set_linewidth(0.0)
-    legend_1.get_frame().set_alpha(0.0)
+    # legend_1 = ax.legend(loc="upper left", ncol=3)
+    # legend_1.get_frame().set_linewidth(0.0)
+    # legend_1.get_frame().set_alpha(0.0)
 
     set_size(6, 2)
-    fig.savefig(f"pt_{profile}_test.pdf")
+    fig.savefig(f"pt_{profile.values}_test.pdf")
