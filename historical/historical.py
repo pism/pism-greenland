@@ -179,9 +179,9 @@ parser.add_argument(
 parser.add_argument(
     "--spatial_ts",
     dest="spatial_ts",
-    choices=["basic", "standard", "none", "ismip6", "strain"],
+    choices=["basic", "standard", "none", "ismip6", "strain", "fractures"],
     help="output size type",
-    default="standard",
+    default="fractures",
 )
 parser.add_argument(
     "--hydrology",
@@ -540,20 +540,19 @@ for n, row in enumerate(uq_df.iterrows()):
 
         if (hasattr(combination, "fractures")) and (combination["fractures"] == True):
             sb_params_dict["fractures"] = True
-            sb_params_dict["fracture_softening"] = combination["fracture_softening"]
             sb_params_dict["fracture_density.include_grounded_ice"] = True
             sb_params_dict["fracture_density.constant_healing"] = True
             sb_params_dict["fracture_weighted_healing"] = True
             sb_params_dict["fracture_density.borstad_limit"] = True
-            fracture_rate = combination["fracture_rate"]
-            fracture_threshold = combination["fracture_threshold"]
-            fracture_healing_rate = combination["fracture_healing_rate"]
-            fracture_healing_threshold = combination["fracture_healing_threshold"]
-            sb_params_dict[
-                "fracture_parameters"
-            ] = f"{fracture_rate},{fracture_threshold},{fracture_healing_rate},{fracture_healing_threshold}"
             sb_params_dict["write_fd_fields"] = True
             sb_params_dict["scheme_fd2d"] = True
+            sb_params_dict["fracture_gamma"] = combination["fracture_gamma"]
+            sb_params_dict["fracture_gamma_h"] = combination["fracture_gamma_h"]
+            sb_params_dict["fracture_softening"] = combination["fracture_softening"]
+            sb_params_dict["fracture_initiation_threshold"] = combination[
+                "fracture_initiation_threshold"
+            ]
+            sb_params_dict["healing_threshold"] = combination["healing_threshold"]
 
         stress_balance_params_dict = generate_stress_balance(
             stress_balance, sb_params_dict

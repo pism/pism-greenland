@@ -8,44 +8,91 @@ from scipy.stats.distributions import uniform, randint, truncnorm, gamma
 
 from SALib.sample import saltelli
 
-default_values = {
-    "climate": "given",
-    "hydrology": "routing",
-    "frontal_melt": "discharge_routing",
-    "frontal_melt_file": "jib_ocean_forcing_ctrl_1980_2020.nc",
-    "climate_file": "DMI-HIRHAM5_GL2_ERAI_1980_2016_EPSG3413_4500M_DM.nc",
-    "runoff_file": "DMI-HIRHAM5_GL2_ERAI_1980_2016_MRROS_EPSG3413_4500M_DM.nc",
-    "salinity": "",
-    "pseudo_plastic_q": 0.6,
-    "sia_e": 1.25,
-    "ssa_n": 3.0,
-    "fractures": "true",
-    "fracture_rate": 0.5,
-    "gamma_T": 1.25e-4,
-    "thickness_calving_threshold": 300,
-}
 
 dists = {
-    "fractures": {
-        "vcm": uniform(loc=0.75, scale=0.5),
-        "fracture_softening": uniform(loc=0.60, scale=0.40),
-        "fracture_threshold": uniform(loc=40e3, scale=110e3),
-        "fracture_healing_rate": uniform(loc=0.0, scale=2.0),
-        "fracture_healing_threshold": uniform(loc=1e-11, scale=9.9e-10),
+    "fractures_steady": {
+        "uq": {
+            "fracture_gamma": uniform(loc=0, scale=1),
+            "fracture_gamma_h": uniform(loc=0, scale=1),
+            "fracture_initiation_threshold": uniform(loc=40e3, scale=110e3),
+            "healing_threshold": uniform(loc=1e-11, scale=9.9e-10),
+        },
+        "default_values": {
+            "climate": "given",
+            "hydrology": "routing",
+            "frontal_melt": "discharge_routing",
+            "frontal_melt_file": "jib_ocean_forcing_ctrl_1980_2020.nc",
+            "climate_file": "DMI-HIRHAM5_GL2_ERAI_1980_2016_EPSG3413_4500M_DM.nc",
+            "runoff_file": "DMI-HIRHAM5_GL2_ERAI_1980_2016_MRROS_EPSG3413_4500M_DM.nc",
+            "salinity": "",
+            "pseudo_plastic_q": 0.6,
+            "sia_e": 1.25,
+            "ssa_n": 3.0,
+            "gamma_T": 1.25e-4,
+            "thickness_calving_threshold": 300,
+            "fractures": "true",
+            "fracture_gamma": 0.4697265625,
+            "fracture_gamma_h": 0.0,
+            "fracture_softening": 0.8466796875,
+            "fracture_initiation_threshold": 127548.828125,
+            "healing_threshold": 4.3249023437500005e-10,
+            "vcm": 0.5,
+        },
     },
-    "all": {
-        "vcm": uniform(loc=0.75, scale=0.5),
-        "fracture_softening": uniform(loc=0.50, scale=0.50),
-        "fracture_threshold": uniform(loc=40e3, scale=110e3),
-        "fracture_healing_rate": uniform(loc=0.0, scale=2.0),
-        "fracture_healing_threshold": uniform(loc=1e-11, scale=9.9e-10),
-        "calving_rate_scaling_file": randint(0, 2),
-        "frontal_melt_file": randint(0, 10),
-        "thickness_calving_threshold": randint(200, 400),
-        "gamma_T": uniform(loc=1.00e-4, scale=0.5e-4),
+    "fractures_melt": {
+        "uq": {
+            "fracture_softening": uniform(loc=0.90, scale=0.10),
+            "gamma_T": uniform(loc=1.20e-4, scale=0.4e-4),
+            "vcm": uniform(loc=0.45, scale=0.2),
+        },
+        "default_values": {
+            "climate": "given",
+            "hydrology": "routing",
+            "frontal_melt": "discharge_routing",
+            "frontal_melt_file": "jib_ocean_forcing_id_fjord_ctrl_1980_2020.nc",
+            "climate_file": "DMI-HIRHAM5_GL2_ERAI_1980_2016_EPSG3413_4500M_DM.nc",
+            "runoff_file": "DMI-HIRHAM5_GL2_ERAI_1980_2016_MRROS_EPSG3413_4500M_DM.nc",
+            "salinity": "",
+            "pseudo_plastic_q": 0.6,
+            "sia_e": 1.25,
+            "ssa_n": 3.0,
+            "gamma_T": 1.25e-4,
+            "thickness_calving_threshold": 300,
+            "fractures": "true",
+            "fracture_gamma": 0.4697265625,
+            "fracture_gamma_h": 0.0,
+            "fracture_softening": 0.8466796875,
+            "fracture_initiation_threshold": 127548.828125,
+            "healing_threshold": 4.3249023437500005e-10,
+            "vcm": 0.5,
+        },
+    },
+    "ocean": {
+        "uq": {
+            "frontal_melt_file": randint(0, 10),
+        },
+        "default_values": {
+            "climate": "given",
+            "hydrology": "routing",
+            "frontal_melt": "discharge_routing",
+            "climate_file": "DMI-HIRHAM5_GL2_ERAI_1980_2016_EPSG3413_4500M_DM.nc",
+            "runoff_file": "DMI-HIRHAM5_GL2_ERAI_1980_2016_MRROS_EPSG3413_4500M_DM.nc",
+            "salinity": "",
+            "pseudo_plastic_q": 0.6,
+            "sia_e": 1.25,
+            "ssa_n": 3.0,
+            "gamma_T": 1.5e-4,
+            "thickness_calving_threshold": 300,
+            "fractures": "true",
+            "fracture_gamma": 0.4697265625,
+            "fracture_gamma_h": 0.0,
+            "fracture_softening": 0.96767578125,
+            "fracture_initiation_threshold": 127548.828125,
+            "healing_threshold": 4.3249023437500005e-10,
+            "vcm": 0.5,
+        },
     },
 }
-
 
 parser = ArgumentParser()
 parser.description = "Draw samples using the Saltelli methods"
@@ -84,7 +131,7 @@ outfile = options.OUTFILE[-1]
 distribution_name = options.distribution
 
 print(f"\nDrawing {n_samples} samples from distribution set {distribution_name}")
-distributions = dists[distribution_name]
+distributions = dists[distribution_name]["uq"]
 
 problem = {
     "num_vars": len(distributions.keys()),
@@ -121,7 +168,7 @@ df = pd.DataFrame(dist_sample, columns=distributions.keys())
 df.to_csv(outfile, index=True, index_label="id")
 
 print("\nAdding default values\n")
-for key, val in default_values.items():
+for key, val in dists[distribution_name]["default_values"].items():
     if key not in df.columns:
         df[key] = val
         print(f"{key}: {val}")

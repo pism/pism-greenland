@@ -141,6 +141,32 @@ spatial_ts_vars["standard"] = [
     "vonmises_stress",
 ]
 
+spatial_ts_vars["fractures"] = [
+    "bmelt",
+    "dHdt",
+    "fracture_density",
+    "fracture_growth_rate",
+    "fracture_healing_rate",
+    "fracture_flow_enhancement",
+    "fracture_toughness",
+    "height_above_flotation",
+    "grounding_line_flux",
+    "frontal_melt_rate",
+    "frontal_melt_retreat_rate",
+    "ice_mass",
+    "mask",
+    "mass_fluxes",
+    "sftgif",
+    "strain_rates",
+    "thk",
+    "topg",
+    "usurf",
+    "velbase_mag",
+    "velsurf_mag",
+    "vonmises_calving_rate",
+    "vonmises_stress",
+]
+
 spatial_ts_vars["hydro"] = [
     "basal_melt_rate_grounded",
     "bwat",
