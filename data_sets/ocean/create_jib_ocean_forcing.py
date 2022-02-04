@@ -52,8 +52,8 @@ class MultitaskGPModel(gpytorch.models.ExactGP):
     def __init__(self, train_x, train_y, likelihood, num_tasks):
         super(MultitaskGPModel, self).__init__(train_x, train_y, likelihood)
         self.mean_modules = [gpytorch.means.ConstantMean() for i in range(num_tasks)]
-        # self.covar_module = gpytorch.kernels.RBFKernel()
-        self.covar_module = gpytorch.kernels.MaternKernel(nu=1.5)
+        self.covar_module = gpytorch.kernels.RBFKernel()
+        # self.covar_module = gpytorch.kernels.MaternKernel(nu=1.5)
 
         # Surprisingly the Gram matrix of a rank-1 outer product appears to be sufficient
         # for parameterizing the inter-task covariance matrix, as increasing the rank

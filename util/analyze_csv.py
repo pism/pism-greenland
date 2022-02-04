@@ -132,15 +132,16 @@ if __name__ == "__main__":
     parser.description = "A"
     parser.add_argument("--beta", default=1.0)
     parser.add_argument(
-        "--ensemble_file", default="../historical/2021_12_all/uq/jib_all.csv"
+        "--ensemble_file",
+        default="../historical/2022_01_fractures_melt/uq/jib_fractures_melt.csv",
     )
     parser.add_argument("--variable", default="total_grounding_line_flux (Gt year-1)")
     parser.add_argument(
         "--mean_file",
-        default="../historical/2021_12_all/csv/fldmean_ts.csv",
+        default="../historical/2022_01_fractures_melt/csv/fldmean_ts.csv",
     )
     parser.add_argument(
-        "--sum_file", default="../historical/2021_12_all/csv/fldsum_ts.csv"
+        "--sum_file", default="../historical/2022_01_fractures_melt/csv/fldsum_ts.csv"
     )
     parser.add_argument("--threshold_range", default=[20, 40])
     parser.add_argument("--smoothing_length", type=int, default=1)

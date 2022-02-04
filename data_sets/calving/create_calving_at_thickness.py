@@ -123,7 +123,9 @@ def create_nc(nc_outfile, tct, grid_spacing, time_dict):
     time_var.axis = "T"
 
     # create time bounds variable
-    time_bnds_var = nc.createVariable(bnds_var_name, "d", dimensions=(time_dim, bnds_dim))
+    time_bnds_var = nc.createVariable(
+        bnds_var_name, "d", dimensions=(time_dim, bnds_dim)
+    )
     time_bnds_var[:, 0] = time_bnds[0:-1]
     time_bnds_var[:, 1] = time_bnds[1::]
 
@@ -178,7 +180,9 @@ def create_nc(nc_outfile, tct, grid_spacing, time_dict):
     var_out[:] = gc_lat
 
     var = "thickness_calving_threshold"
-    var_out = nc.createVariable(var, "f", dimensions=("time", "y", "x"), fill_value=-2e9, zlib=True, complevel=2)
+    var_out = nc.createVariable(
+        var, "f", dimensions=("time", "y", "x"), fill_value=-2e9, zlib=True, complevel=2
+    )
     var_out.units = "m"
     var_out.long_name = "threshold used by the 'calving at threshold' calving method"
     var_out.grid_mapping = "mapping"
@@ -206,11 +210,11 @@ if __name__ == "__main__":
     parser = ArgumentParser()
     parser.add_argument("FILE", nargs=1)
     parser.add_argument("--threshold_a", type=float, help="Threshold a", default=300)
-    parser.add_argument("--threshold_e", type=float, help="Threshold e", default=600)
+    parser.add_argument("--threshold_e", type=float, help="Threshold e", default=500)
 
-    parser.add_argument("--date_a", type=str, help="Date a", default="1996-01-01")
+    parser.add_argument("--date_a", type=str, help="Date a", default="1998-01-01")
 
-    parser.add_argument("--date_e", type=str, help="Date e", default="1998-01-01")
+    parser.add_argument("--date_e", type=str, help="Date e", default="2000-01-01")
 
     options = parser.parse_args()
     args = options.FILE
@@ -234,12 +238,23 @@ if __name__ == "__main__":
     sampling_interval = "daily"
     dates = pd.date_range(start=start_date, end=end_date, freq="1D")
 
-    rd = {"daily": rrule.DAILY, "weekly": rrule.WEEKLY, "monthly": rrule.MONTHLY, "yearly": rrule.YEARLY}
+    rd = {
+        "daily": rrule.DAILY,
+        "weekly": rrule.WEEKLY,
+        "monthly": rrule.MONTHLY,
+        "yearly": rrule.YEARLY,
+    }
 
-    bnds_datelist = list(rrule.rrule(rd[sampling_interval], dtstart=start_date, until=end_date_yearly))
+    bnds_datelist = list(
+        rrule.rrule(rd[sampling_interval], dtstart=start_date, until=end_date_yearly)
+    )
     # calculate the days since refdate, including refdate, with time being the
-    bnds_interval_since_refdate = cftime.date2num(bnds_datelist, units, calendar=calendar)
-    time_interval_since_refdate = bnds_interval_since_refdate[0:-1] + np.diff(bnds_interval_since_refdate) / 2
+    bnds_interval_since_refdate = cftime.date2num(
+        bnds_datelist, units, calendar=calendar
+    )
+    time_interval_since_refdate = (
+        bnds_interval_since_refdate[0:-1] + np.diff(bnds_interval_since_refdate) / 2
+    )
 
     time_dict = {
         "calendar": calendar,
@@ -253,7 +268,10 @@ if __name__ == "__main__":
 
     idx_a = np.where(dates == datetime.fromisoformat(options.date_a))[0][0]
     no_idx = len(
-        dates[(dates > datetime.fromisoformat(options.date_a)) & (dates < datetime.fromisoformat(options.date_e))]
+        dates[
+            (dates > datetime.fromisoformat(options.date_a))
+            & (dates < datetime.fromisoformat(options.date_e))
+        ]
     )
     a = (options.threshold_e - options.threshold_a) / no_idx
 

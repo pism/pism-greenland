@@ -1,6 +1,16 @@
 #!/bin/bash
 
-wget -nc --reject "index.html*" -r -np -nH --cut-dirs=4 -l40 http://ensemblesrt3.dmi.dk/data/prudence/temp/nichan/Daily2D_GrIS/
+hh5_dir=hirham5_zip
+hh5_nc_dir=hirham5_nc
+mkdir -p $hh5_dir
+mkdir -p $hh5_nc_dir
+
+for year in {1980..2021}; do
+    wget -nc -P $hh5_dir http://ensemblesrt3.dmi.dk/data/prudence/temp/nichan/Daily2D_GrIS/${year}.zip
+    unzip -u ${hh5_dir}/${year}.zip
+    cdo -O -f nc4 -z zip_2 -r settbounds,day -setattribute,gld@units="kg m-2 day-1",rogl@units="kg m-2 day-1",snfall@units="kg m-2 day-1",rainfall@units="kg m-2 day-1" -selvar,gld,tas,rogl,snfall,rainfall -mergetime ${year}/Daily2D_*.nc ${hh5_nc_dir}/${year}.nc
+done
+
 
 start_year=2019
 end_year=2020

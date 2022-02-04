@@ -44,7 +44,7 @@ n=24
 
 python historical.py --hydrology routing --spatial_ts standard --exstep monthly --tsstep daily -b rm --dataset_version 1_RAGIS -d ${d} --o_dir ${odir} --start 1980-1-1 --end 2010-1-1 -q t2small -s chinook -w 24:00:00 -n ${n} -g ${grid} -e ../uncertainty_quantification/ensemble_jib_${uq}.csv 2022_01_init/state/jib_g600m_v1_RAGIS_id_INIT-TM-0.5-250-1.5_1980-1-1_1990-1-1.nc
 
-uq=fractures_healing
+uq=calving
 odir=2022_01_${uq}
 grid=600
 d=jib
