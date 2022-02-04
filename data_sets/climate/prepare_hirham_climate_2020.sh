@@ -5,11 +5,14 @@ hh5_nc_dir=hirham5_nc
 mkdir -p $hh5_dir
 mkdir -p $hh5_nc_dir
 
-for year in {1980..2021}; do
+start_year=1980
+end_year=1982
+for year in $(seq $start_year $end_year); do
     wget -nc -P $hh5_dir http://ensemblesrt3.dmi.dk/data/prudence/temp/nichan/Daily2D_GrIS/${year}.zip
     unzip -u ${hh5_dir}/${year}.zip
     cdo -O -f nc4 -z zip_2 -r settbounds,day -setattribute,gld@units="kg m-2 day-1",rogl@units="kg m-2 day-1",snfall@units="kg m-2 day-1",rainfall@units="kg m-2 day-1" -selvar,gld,tas,rogl,snfall,rainfall -mergetime ${year}/Daily2D_*.nc ${hh5_nc_dir}/${year}.nc
 done
+cdo -O -f nc4 -z zip_2 mergetime ${hh5_nc_dir}/*.nc DMI-HIRHAM5_${start_year}_${end_year}.nc
 
 
 start_year=2019
