@@ -49,11 +49,18 @@ class DataModule(pl.LightningDataModule):
 
 
 class MultitaskGPModel(gpytorch.models.ExactGP):
-    def __init__(self, train_x, train_y, likelihood, num_tasks):
+    def __init__(
+        self,
+        train_x,
+        train_y,
+        likelihood,
+        num_tasks,
+        covar_module,
+    ):
         super(MultitaskGPModel, self).__init__(train_x, train_y, likelihood)
         self.mean_modules = [gpytorch.means.ConstantMean() for i in range(num_tasks)]
-        self.covar_module = gpytorch.kernels.RBFKernel()
-        # self.covar_module = gpytorch.kernels.MaternKernel(nu=1.5)
+        print(f"Setting up MultitaksGPModel with {covar_module}")
+        self.covar_module = covar_module
 
         # Surprisingly the Gram matrix of a rank-1 outer product appears to be sufficient
         # for parameterizing the inter-task covariance matrix, as increasing the rank
@@ -79,7 +86,14 @@ class MultitaskGPModel(gpytorch.models.ExactGP):
 class PLMultitaskGPModel(pl.LightningModule):
     """batch independent multioutput exact gp model."""
 
-    def __init__(self, full_train_x, full_train_y, full_train_i, num_tasks):
+    def __init__(
+        self,
+        full_train_x,
+        full_train_y,
+        full_train_i,
+        num_tasks,
+        covar_module=gpytorch.kernels.RBFKernel(),
+    ):
         """Initialize gp model with mean and covar."""
         super().__init__()
 
@@ -88,7 +102,11 @@ class PLMultitaskGPModel(pl.LightningModule):
         self.likelihood = gpytorch.likelihoods.GaussianLikelihood()
 
         self.model = MultitaskGPModel(
-            (full_train_x, full_train_i), full_train_y, self.likelihood, num_tasks
+            (full_train_x, full_train_i),
+            full_train_y,
+            self.likelihood,
+            num_tasks,
+            covar_module,
         )
 
         self.mll = gpytorch.mlls.ExactMarginalLogLikelihood(self.likelihood, self.model)
@@ -624,8 +642,14 @@ if __name__ == "__main__":
     all_Y_pred = {}
     ctrl = {}
 
+    covar_module_dict = {
+        "Temperature [Celsius]": gpytorch.kernels.MaternKernel(nu=1.5),
+        "Salinity [g/kg]": gpytorch.kernels.RBFKernel(),
+    }
     for key, data in all_data_cat.items():
         print(f"Training {key}")
+
+        covar_module = covar_module_dict[key]
         # Put them all together
         full_train_i = torch.cat(
             [
@@ -647,7 +671,13 @@ if __name__ == "__main__":
 
         logger = TensorBoardLogger("tb_logs", name="ocean_forcing")
         num_tasks = len(data)
-        model = PLMultitaskGPModel(full_train_x, full_train_y, full_train_i, num_tasks)
+        model = PLMultitaskGPModel(
+            full_train_x,
+            full_train_y,
+            full_train_i,
+            num_tasks,
+            covar_module,
+        )
         lr_monitor = LearningRateMonitor(logging_interval="step")
         early_stop_callback = EarlyStopping(
             monitor="loss",
