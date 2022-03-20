@@ -28,7 +28,7 @@ for var in mask velsurf_mag thk; do
     cdo -f nc4 -z zip_2 seldate,2009-7-16 -selvar,$var ../processed/masked_ex_${file}.nc ../processed/${var}_masked_ex_${file}_2009-7-16.nc
 done
 
-cdo fldsum  ../processed/masked_ex_${file}.nc ../processed/fldsum_masked_ex_${file}.nc
+cdo fldsum ../processed/masked_ex_${file}.nc ../processed/fldsum_masked_ex_${file}.nc
 cdo fldmean ../processed/masked_ex_${file}.nc ../processed/fldmean_masked_ex_${file}.nc
 
 extract_interface.py --ensemble_file ../uncertainty_quantification/$ensfile -e 3413 -t ice_ocean -o ../io/io_masked_ex_${file}_1985-7-16.gpkg ../processed/mask_masked_ex_${file}_1985-7-16.nc

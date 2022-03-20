@@ -1,7 +1,8 @@
 #!/usr/bin/env python
-# Copyright (C) 2019-21 Andy Aschwanden
+# Copyright (C) 2019-22 Andy Aschwanden
 
-# Historical simulations for ISMIP6
+# Historical simulations for
+# "A reanalyis of the Greenland Ice Sheet"
 
 import itertools
 from collections import OrderedDict
@@ -584,27 +585,25 @@ for n, row in enumerate(uq_df.iterrows()):
             combination["hydrology"], **hydrology_parameters
         )
 
-        frontal_melt_file_p = (
-            f"""$input_dir/data_sets/ocean/{combination["frontal_melt_file"]}"""
-        )
+        ocean_file_p = f"""$input_dir/data_sets/ocean/{combination["ocean_file"]}"""
         frontal_melt = combination["frontal_melt"]
         if frontal_melt == "discharge_routing":
-            hydrology_parameters["hydrology.surface_input.file"] = frontal_melt_file_p
+            hydrology_parameters["hydrology.surface_input.file"] = ocean_file_p
 
             frontalmelt_parameters = {
                 "frontal_melt": "routing",
-                "frontal_melt.routing.file": frontal_melt_file_p,
+                "frontal_melt.routing.file": ocean_file_p,
             }
         else:
             frontalmelt_parameters = {
                 "frontal_melt": "discharge_given",
-                "frontal_melt.discharge_given.file": frontal_melt_file_p,
+                "frontal_melt.discharge_given.file": ocean_file_p,
             }
 
         frontalmelt_params_dict = frontalmelt_parameters
 
         ocean_parameters = {
-            "ocean.th.file": frontal_melt_file_p,
+            "ocean.th.file": ocean_file_p,
             "ocean.th.clip_salinity": False,
             "ocean.th.gamma_T": combination["gamma_T"],
         }
@@ -700,8 +699,8 @@ for n, row in enumerate(uq_df.iterrows()):
             check_files.append(climate_file_p)
         if runoff_file_p:
             check_files.append(runoff_file_p)
-        if frontal_melt_file_p:
-            check_files.append(frontal_melt_file_p)
+        if ocean_file_p:
+            check_files.append(ocean_file_p)
         if hasattr(combination, "calving_rate_scaling_file"):
             check_files.append(calving_rate_scaling_file_p)
         if vonmises_calving_threshold_file_p:

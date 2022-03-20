@@ -1,5 +1,13 @@
 #!/bin/bash
 
+odir=2022_02_init
+grid=600
+ensfile=jib_init.csv
+
+for file in jib_g600m_v1_RAGIS_id_INIT-TM-0.4-250-1.5_1980-1-1_1990-1-1 jib_g600m_v1_RAGIS_id_INIT-TM-0.5-250-1.5_1980-1-1_1990-1-1 jib_g600m_v1_RAGIS_id_INIT-TM-0.5-300-1.5_1980-1-1_1990-1-1 jib_g600m_v1_RAGIS_id_INIT-TM-0.6-200-1.5_1980-1-1_1990-1-1 jib_g600m_v1_RAGIS_id_INIT-TM-0.6-300-1.5_1980-1-1_1990-1-1 jib_g600m_v1_RAGIS_id_INIT-TM-0.8-100-1.0_1980-1-1_1990-1-1 jib_g600m_v1_RAGIS_id_INIT-TM-1.0-100-1.0_1980-1-1_1990-1-1; do
+    qsub postprocess_jib.sh $odir $file $grid $ensfile
+done
+
 odir=2021_12_ctrl
 grid=600
 ensfile=jib_ctrl.csv
@@ -78,7 +86,7 @@ done
 
 python  ../util/nc2csv.py -o $odir/csv/scalar_ts.csv $odir/processed_scalar/ts_jib_g600m_v1_RAGIS_id_*MM.nc
 
-e=fractures_melt
+e=calving
 odir=2022_01_${e}
 grid=600
 ensfile=jib_${e}.csv
