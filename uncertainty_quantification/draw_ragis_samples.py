@@ -12,16 +12,17 @@ from SALib.sample import saltelli
 dists = {
     "calving": {
         "uq": {
-            "vcm": uniform(loc=0.25, scale=0.5),
+            "vcm": uniform(loc=0.25, scale=0.75),
         },
         "default_values": {
             "climate": "given",
             "hydrology": "routing",
             "frontal_melt": "discharge_routing",
-            "ocean_file": "jib_ocean_forcing_id_fjord_ctrl_1980_2020.nc",
-            "climate_file": "DMI-HIRHAM5_ERA_1980_2020_EPSG3413_4500M_DM.nc",
-            "runoff_file": "DMI-HIRHAM5_ERA_1980_2020_EPSG3413_4500M_DM.nc",
-            "salinity": "",
+            "ocean_file": "MAR3.9_MIROC-ESM-CHEM_rcp85_ocean_1960-2100_v4.nc",
+            "climate_file": "DMI-HIRHAM5_ERA_1980_2020_EPSG3413_4500M_MM.nc",
+            "runoff_file": "DMI-HIRHAM5_ERA_1980_2020_EPSG3413_4500M_MM.nc",
+            "gamma_T": 1.00e-4,
+            "salinity": 34,
             "pseudo_plastic_q": 0.6,
             "sia_e": 1.25,
             "ssa_n": 3.0,
@@ -47,7 +48,7 @@ parser.add_argument(
     dest="distribution",
     choices=dists.keys(),
     help="""Choose set.""",
-    default="all",
+    default="calving",
 )
 parser.add_argument(
     "--calc_second_order",

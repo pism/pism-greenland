@@ -105,6 +105,21 @@ spatial_ts_vars["basic"] = [
     "vonmises_stress",
 ]
 
+spatial_ts_vars["ragis"] = [
+    "dHdt",
+    "grounding_line_flux",
+    "ice_mass",
+    "mask",
+    "mass_fluxes",
+    "sftgif",
+    "thk",
+    "usurf",
+    "velsurf_mag",
+]
+spatial_ts_vars["ragis"] = [
+    "mass_fluxes",
+]
+
 spatial_ts_vars["standard"] = [
     "bmelt",
     "basal_mass_flux_floating",

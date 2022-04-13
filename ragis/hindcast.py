@@ -162,6 +162,13 @@ parser.add_argument(
     default="custom",
 )
 parser.add_argument(
+    "--test_climate_models",
+    dest="test_climate_models",
+    action="store_true",
+    help="Turn off ice dynamics and mass transport to test climate models",
+    default=False,
+)
+parser.add_argument(
     "-s",
     "--system",
     dest="system",
@@ -180,9 +187,9 @@ parser.add_argument(
 parser.add_argument(
     "--spatial_ts",
     dest="spatial_ts",
-    choices=["basic", "standard", "none", "ismip6", "strain", "fractures"],
+    choices=["basic", "standard", "none", "ismip6", "strain", "fractures", "ragis"],
     help="output size type",
-    default="fractures",
+    default="ragis",
 )
 parser.add_argument(
     "--hydrology",
@@ -255,7 +262,7 @@ walltime = options.walltime
 system = options.system
 
 spatial_ts = options.spatial_ts
-
+test_climate_models = options.test_climate_models
 bed_type = options.bed_type
 exstep = options.exstep
 tsstep = options.tsstep
@@ -518,6 +525,8 @@ for n, row in enumerate(uq_df.iterrows()):
         general_params_dict["i"] = pism_dataname
         general_params_dict["regrid_file"] = input_file
         general_params_dict["regrid_vars"] = regridvars
+        if test_climate_models:
+            general_params_dict["test_climate_models"] = ""
 
         if osize != "custom":
             general_params_dict["o_size"] = osize
