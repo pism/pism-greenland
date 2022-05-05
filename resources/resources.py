@@ -951,6 +951,18 @@ systems["pleiades"] = {
     "queue": {"long": 20, "normal": 20},
 }
 
+systems["stampede2"] = {
+    "mpido": "ibrun",
+    "submit": "sbatch",
+    "work_dir": "SLURM_SUBMIT_DIR",
+    "job_id": "SLURM_JOBID",
+    "queue": {
+        "normal": 68,
+        "development": 68,
+    },
+}
+
+
 systems["pleiades_haswell"] = systems["pleiades"].copy()
 systems["pleiades_haswell"]["queue"] = {"long": 24, "normal": 24}
 
@@ -1009,6 +1021,36 @@ ulimit -s unlimited
 ulimit
 
 """
+
+systems["stampede2"][
+    "header"
+] = """#!/bin/sh
+#SBATCH --ntasks={cores}
+#SBATCH --tasks-per-node={ppn}
+#SBATCH --time={walltime}
+#SBATCH -p {queue}
+#SBATCH --mail-type=BEGIN
+#SBATCH --mail-type=END
+#SBATCH --mail-type=FAIL
+#SBATCH --output=pism.%j
+
+module list
+
+umask 007
+
+cd $SLURM_SUBMIT_DIR
+
+# Generate a list of compute node hostnames reserved for this job,
+# this ./nodes file is necessary for slurm to spawn mpi processes
+# across multiple compute nodes
+srun -l /bin/hostname | sort -n | awk '{{print $2}}' > ./nodes_$SLURM_JOBID
+
+ulimit -l unlimited
+ulimit -s unlimited
+ulimit
+
+"""
+
 
 systems["chinook"][
     "footer"
