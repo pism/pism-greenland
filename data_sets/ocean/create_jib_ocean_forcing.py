@@ -637,6 +637,9 @@ if __name__ == "__main__":
     )
     fig.subplots_adjust(hspace=0.1)
 
+    fig_t = plt.figure(figsize=[6.2, 1.6])
+    ax_t = fig_t.add_subplot(111)
+
     idx = 0
     all_samples = {}
     all_Y_pred = {}
@@ -791,6 +794,36 @@ if __name__ == "__main__":
                 label=f"{k} Sample Mean",
             )
 
+            if idx == 0:
+                ax_t.fill_between(
+                    X_test.numpy().squeeze(),
+                    lower,
+                    upper,
+                    color=col_dict[k],
+                    alpha=0.40,
+                    linewidth=0.25,
+                    label=f"{k} Sample $\pm$1-$\sigma$",
+                )
+                # plot the data and the true latent function
+                ax_t.plot(
+                    x,
+                    y,
+                    "o",
+                    color=col_dict[k],
+                    ms=ms,
+                    mec="k",
+                    mew=mew,
+                    label=f"{k} Observation",
+                    alpha=0.75,
+                )
+                ax_t.plot(
+                    X_test.numpy(),
+                    mean,
+                    color=col_dict[k],
+                    linewidth=1.0,
+                    label=f"{k} Sample Mean",
+                )
+
         ax[idx].set_ylabel(key)
 
         idx += 1
@@ -875,22 +908,6 @@ if __name__ == "__main__":
             depth, salinity_mean
         )
         salinity_timmean = S_cf + np.zeros_like(ctrl["Salinity [g/kg]"][loc])
-        # ax[0].plot(
-        #     X_new,
-        #     temperature_timmean,
-        #     color=col_dict[loc],
-        #     linewidth=0.75,
-        #     linestyle="dotted",
-        #     label=f"{loc} Constant",
-        # )
-        # ax[1].plot(
-        #     X_new,
-        #     salinity_timmean,
-        #     color=col_dict[loc],
-        #     linewidth=0.75,
-        #     linestyle="dotted",
-        #     label=f"{loc} Constant",
-        # )
 
         ofile = f"jib_ocean_forcing_id_{loc.lower()}_tm_1985_1995.nc"
         if write_nc:
@@ -937,13 +954,17 @@ if __name__ == "__main__":
     else:
         ofile = "jib_ocean_forcing_1980_2020.pdf"
     fig.savefig(ofile)
+    ax_t.set_xlim(1980, 2021)
+    ax_t.set_axis_off()
+    fig_t.savefig("jib_temperature_forcing_1980_2020.pdf", transparent=True)
 
     # Observations only
     fig, ax = plt.subplots(
         2,
         1,
         sharex="col",
-        figsize=[3.4, 3.4],
+        figsize=[6.2, 3.6],
+        gridspec_kw=dict(height_ratios=[3, 2]),
         num="Observations",
         clear=True,
     )

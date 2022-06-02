@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 # Copyright (C) 2021 Andy Aschwanden
 
+from joblib import Parallel, delayed
+
 from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
 import matplotlib
 import matplotlib.cm as cmx
@@ -17,6 +19,117 @@ import ffmpeg
 
 matplotlib.use("agg")
 
+
+def make_plot(t, nt, date):
+    print(f"""Processing {date.dt.strftime("%Y-%m-%d").values}""")
+    fig, axs = plt.subplots(
+        5,
+        1,
+        sharex="col",
+        figsize=[10, 6],
+        gridspec_kw=dict(height_ratios=[0.5, 2, 2, 2, 3]),
+    )
+    colorVals = scalarMap.to_rgba(range(0, t))
+    axs[0].imshow([colors], extent=[profile_axis.min(), profile_axis.max(), 0, 1])
+    pos = t / nt
+    axs[0].axvline(pos * (profile_axis.max() - profile_axis.min()), color="k", lw=2.0)
+    # axs[0].plot(profile_axis, speed_rolling[0:t, ...].T, color="k", lw=0.5)
+    [
+        axs[1].plot(profile_axis, speed_rolling[mt, ...].T, color=colorVals[mt], lw=0.5)
+        for mt in range(0, t)
+    ]
+    axs[1].plot(profile_axis, speed_rolling[t, ...], color="k", lw=2.0)
+    [
+        axs[2].plot(
+            profile_axis, basal_melt_rolling[mt, ...].T, color=colorVals[mt], lw=0.5
+        )
+        for mt in range(0, t)
+    ]
+
+    axs[2].plot(profile_axis, basal_melt_rolling[t, ...], color="k", lw=2.0)
+    ax_dHdt = axs[2].twinx()
+    ax_dHdt.plot(profile_axis, dHdt_rolling[t, ...], color="#238b45", lw=2.0)
+    [
+        axs[3].plot(
+            profile_axis,
+            shelf_thickness_rolling[mt, ...].T,
+            color=colorVals[mt],
+            lw=0.5,
+        )
+        for mt in range(0, t)
+    ]
+
+    axs[3].plot(profile_axis, shelf_thickness_rolling[t, ...], color="k", lw=2.0)
+
+    axs[-1].fill_between(
+        profile_axis,
+        topography[t, ...] * 0 - 2000,
+        topography[t, ...] * 0,
+        color="#c6dbef",
+        linewidth=0.3,
+    )
+
+    axs[-1].fill_between(
+        profile_axis,
+        bottom[t, ...],
+        surface[t, ...],
+        color="k",
+        linewidth=1.0,
+    )
+    axs[-1].fill_between(
+        profile_axis,
+        bottom[t, ...],
+        surface[t, ...],
+        color="#bdbdbd",
+        linewidth=0.0,
+    )
+
+    axs[-1].fill_between(
+        profile_axis,
+        topography[t, ...] * 0 - 2000,
+        topography[t, ...],
+        color="#fdbe85",
+        linewidth=0.3,
+    )
+    [
+        axs[-1].axvline(dist, color=scalarMap.to_rgba(int((year - 1980) * 12)))
+        for year, dist in front_positions.items()
+    ]
+    [
+        axs[-1].text(dist, 1000, year, color=scalarMap.to_rgba(int((year - 1980) * 12)))
+        for year, dist in front_positions.items()
+    ]
+    axs[-1].plot(profile_axis, topography[t, ...], color="k", lw=0.5)
+    axs[-1].plot(profile_axis, bottom[t, ...], color="k", lw=0.5)
+    axs[-1].plot(profile_axis, surface[t, ...], color="k", lw=0.5)
+    axs[1].set_ylabel("""Speed\n(m/yr)""")
+    axs[2].set_ylabel("""Subshelf\nmelt rate\n(m/yr)""")
+    axs[3].set_ylabel("""Shelf thickness\n(m)""")
+    axs[-1].set_xlabel(f"""Distance ({profile_axis.attrs["units"]})""")
+    axs[-1].set_ylabel(f"""Altitude ({surface.attrs["units"]})""")
+    ax_dHdt.set_ylabel("dHdt (m/yr)")
+    axs[0].text(
+        pos,
+        1.2,
+        date.dt.strftime("%Y-%m-%d").values,
+        horizontalalignment="center",
+        verticalalignment="center",
+        transform=axs[0].transAxes,
+    )
+    axs[0].axes.xaxis.set_visible(False)
+    axs[0].axes.yaxis.set_visible(False)
+    axs[1].set_ylim(0, 15000)
+    axs[2].set_ylim(100, 300)
+    axs[3].set_ylim(0, 1000)
+    axs[-1].set_ylim(-1500, 1000)
+    ax_dHdt.set_ylim(-50, 50)
+    for ax in axs:
+        ax.set_xlim(x_min, x_max)
+    fig.savefig(f"{odir}/{p_name}_{t:03d}.png", dpi=300)
+    plt.close(plt.gcf())
+    del fig, axs
+
+
 parser = ArgumentParser(formatter_class=ArgumentDefaultsHelpFormatter)
 parser.description = "Generating scripts for warming experiments."
 parser.add_argument(
@@ -26,11 +139,18 @@ parser.add_argument(
     help="""Base directory.""",
     default="2021_12_fractures_melt",
 )
+parser.add_argument(
+    "--n_jobs",
+    type=int,
+    help="""Number of parallel jobs.""",
+    default=4,
+)
 parser.add_argument("FILE", nargs=1)
 options = parser.parse_args()
 
 infile = options.FILE[0]
 basedir = options.basedir
+n_jobs = options.n_jobs
 smoothing_length = 1
 m_id = re.search("id_(.+?)_", infile).group(1)
 
@@ -94,120 +214,8 @@ for profile_id in ds.variables["profile_id"]:
     colors = cmap(np.arange(cmap.N))
 
     nt = len(time)
-    for t, date in enumerate(time):
-        print(f"""Processing {date.dt.strftime("%Y-%m-%d").values}""")
-        fig, axs = plt.subplots(
-            5,
-            1,
-            sharex="col",
-            figsize=[10, 6],
-            gridspec_kw=dict(height_ratios=[0.5, 2, 2, 2, 3]),
-        )
-        colorVals = scalarMap.to_rgba(range(0, t))
-        axs[0].imshow([colors], extent=[profile_axis.min(), profile_axis.max(), 0, 1])
-        pos = t / nt
-        axs[0].axvline(
-            pos * (profile_axis.max() - profile_axis.min()), color="k", lw=2.0
-        )
-        # axs[0].plot(profile_axis, speed_rolling[0:t, ...].T, color="k", lw=0.5)
-        [
-            axs[1].plot(
-                profile_axis, speed_rolling[mt, ...].T, color=colorVals[mt], lw=0.5
-            )
-            for mt in range(0, t)
-        ]
-        axs[1].plot(profile_axis, speed_rolling[t, ...], color="k", lw=2.0)
-        [
-            axs[2].plot(
-                profile_axis, basal_melt_rolling[mt, ...].T, color=colorVals[mt], lw=0.5
-            )
-            for mt in range(0, t)
-        ]
-
-        axs[2].plot(profile_axis, basal_melt_rolling[t, ...], color="k", lw=2.0)
-        ax_dHdt = axs[2].twinx()
-        ax_dHdt.plot(profile_axis, dHdt_rolling[t, ...], color="#238b45", lw=2.0)
-        [
-            axs[3].plot(
-                profile_axis,
-                shelf_thickness_rolling[mt, ...].T,
-                color=colorVals[mt],
-                lw=0.5,
-            )
-            for mt in range(0, t)
-        ]
-
-        axs[3].plot(profile_axis, shelf_thickness_rolling[t, ...], color="k", lw=2.0)
-
-        axs[-1].fill_between(
-            profile_axis,
-            topography[t, ...] * 0 - 2000,
-            topography[t, ...] * 0,
-            color="#c6dbef",
-            linewidth=0.3,
-        )
-
-        axs[-1].fill_between(
-            profile_axis,
-            bottom[t, ...],
-            surface[t, ...],
-            color="k",
-            linewidth=1.0,
-        )
-        axs[-1].fill_between(
-            profile_axis,
-            bottom[t, ...],
-            surface[t, ...],
-            color="#bdbdbd",
-            linewidth=0.0,
-        )
-
-        axs[-1].fill_between(
-            profile_axis,
-            topography[t, ...] * 0 - 2000,
-            topography[t, ...],
-            color="#fdbe85",
-            linewidth=0.3,
-        )
-        [
-            axs[-1].axvline(dist, color=scalarMap.to_rgba(int((year - 1980) * 12)))
-            for year, dist in front_positions.items()
-        ]
-        [
-            axs[-1].text(
-                dist, 1000, year, color=scalarMap.to_rgba(int((year - 1980) * 12))
-            )
-            for year, dist in front_positions.items()
-        ]
-        axs[-1].plot(profile_axis, topography[t, ...], color="k", lw=0.5)
-        axs[-1].plot(profile_axis, bottom[t, ...], color="k", lw=0.5)
-        axs[-1].plot(profile_axis, surface[t, ...], color="k", lw=0.5)
-        axs[1].set_ylabel("""Speed\n(m/yr)""")
-        axs[2].set_ylabel("""Subshelf\nmelt rate\n(m/yr)""")
-        axs[3].set_ylabel("""Shelf thickness\n(m)""")
-        axs[-1].set_xlabel(f"""Distance ({profile_axis.attrs["units"]})""")
-        axs[-1].set_ylabel(f"""Altitude ({surface.attrs["units"]})""")
-        ax_dHdt.set_ylabel("dHdt (m/yr)")
-        axs[0].text(
-            pos,
-            1.2,
-            date.dt.strftime("%Y-%m-%d").values,
-            horizontalalignment="center",
-            verticalalignment="center",
-            transform=axs[0].transAxes,
-        )
-        axs[0].axes.xaxis.set_visible(False)
-        axs[0].axes.yaxis.set_visible(False)
-        axs[1].set_ylim(0, 15000)
-        axs[2].set_ylim(100, 300)
-        axs[3].set_ylim(0, 1000)
-        axs[-1].set_ylim(-1500, 1000)
-        ax_dHdt.set_ylim(-50, 50)
-        for ax in axs:
-            ax.set_xlim(x_min, x_max)
-        fig.savefig(f"{odir}/{p_name}_{t:03d}.png", dpi=300)
-        plt.close(plt.gcf())
-        del fig, axs
+    with Parallel(n_jobs=n_jobs) as parallel:
+        parallel(delayed(make_plot)(t, nt, date) for t, date in enumerate(time))
 
     mdir = os.path.join(basedir, "flowline")
     (
