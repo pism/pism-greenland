@@ -16,7 +16,7 @@ dists = {
             "fracture_gamma_h": uniform(loc=0, scale=1),
             "fracture_initiation_threshold": uniform(loc=40e3, scale=110e3),
             "healing_threshold": uniform(loc=1e-11, scale=9.9e-10),
-            "fracture_softening": uniform(loc=0.75, scale=0.25),
+            "fracture_softening": uniform(loc=0.65, scale=0.35),
             "vcm": uniform(loc=0.4, scale=0.4),
         },
         "default_values": {
