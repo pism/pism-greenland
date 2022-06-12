@@ -105,6 +105,7 @@ def compute_sobol_indices(
         if id_df_missing is not None:
             response = s_df[["id", m_var]]
             X = id_df_missing.drop(columns="id")
+            print(X)
             f = NearestNDInterpolator(params, response.values[:, 1], rescale=True)
             data = f(*np.transpose(X.values))
             filled = pd.DataFrame(
