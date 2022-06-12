@@ -35,6 +35,31 @@ dists = {
             "fractures": "true",
         },
     },
+    "fractures_all": {
+        "uq": {
+            "fracture_gamma": uniform(loc=0, scale=1),
+            "fracture_gamma_h": uniform(loc=0, scale=1),
+            "fracture_initiation_threshold": uniform(loc=40e3, scale=110e3),
+            "healing_threshold": uniform(loc=1e-11, scale=9.9e-10),
+            "fracture_softening": uniform(loc=0.60, scale=0.40),
+            "thickness_calving_threshold": uniform(loc=100, scale=400),
+            "vcm": uniform(loc=0.4, scale=0.4),
+        },
+        "default_values": {
+            "climate": "given",
+            "hydrology": "routing",
+            "frontal_melt": "discharge_routing",
+            "frontal_melt_file": "jib_ocean_forcing_id_fjord_ctrl_1980_2020.nc",
+            "climate_file": "DMI-HIRHAM5_ERA_1980_2020_EPSG3413_4500M_DM.nc",
+            "runoff_file": "DMI-HIRHAM5_ERA_1980_2020_EPSG3413_4500M_DM.nc",
+            "salinity": "",
+            "pseudo_plastic_q": 0.6,
+            "sia_e": 1.25,
+            "ssa_n": 3.0,
+            "gamma_T": 1.25e-4,
+            "fractures": "true",
+        },
+    },
     "fractures_steady": {
         "uq": {
             "fracture_gamma": uniform(loc=0, scale=1),
