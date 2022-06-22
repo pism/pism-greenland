@@ -92,4 +92,4 @@ for p_id, profile in enumerate(profiles):
     # legend_1.get_frame().set_alpha(0.0)
 
     set_size(6, 2)
-    fig.savefig(f"pt_{profile.values}_test.pdf")
+    fig.savefig(f"pt_{profile.values}.pdf")

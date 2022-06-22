@@ -10,6 +10,12 @@ import matplotlib.colors as colors
 
 import numpy as np
 import pylab as plt
+
+plt.rcParams.update({"font.size": 20})
+plt.rcParams["font.size"] = 18
+plt.rc("ytick", labelsize=16)
+
+
 import xarray as xr
 import cf_xarray.units  # must be imported before pint_xarray
 import pint_xarray
@@ -29,8 +35,8 @@ def make_plot(t, nt, date):
         5,
         1,
         sharex="col",
-        figsize=[10, 6],
-        gridspec_kw=dict(height_ratios=[0.5, 2, 2, 2, 3]),
+        figsize=[12, 10],
+        gridspec_kw=dict(height_ratios=[0.5, 2, 2, 2, 4]),
     )
     colorVals = scalarMap.to_rgba(range(0, t))
     axs[0].imshow([colors], extent=[profile_axis.min(), profile_axis.max(), 0, 1])
@@ -50,17 +56,17 @@ def make_plot(t, nt, date):
     ]
 
     axs[2].plot(profile_axis, basal_melt_rolling[t, ...], color="k", lw=2.0)
-    ax_dHdt = axs[2].twinx()
-    ax_dHdt.plot(profile_axis, dHdt_rolling[t, ...], color="#238b45", lw=2.0)
-    [
-        axs[3].plot(
-            profile_axis,
-            shelf_thickness_rolling[mt, ...].T,
-            color=colorVals[mt],
-            lw=0.5,
-        )
-        for mt in range(0, t)
-    ]
+    # ax_dHdt = axs[2].twinx()
+    # ax_dHdt.plot(profile_axis, dHdt_rolling[t, ...], color="#238b45", lw=2.0)
+    # [
+    #     axs[3].plot(
+    #         profile_axis,
+    #         shelf_thickness_rolling[mt, ...].T,
+    #         color=colorVals[mt],
+    #         lw=0.5,
+    #     )
+    #     for mt in range(0, t)
+    # ]
 
     axs[3].plot(profile_axis, shelf_thickness_rolling[t, ...], color="k", lw=2.0)
 
@@ -86,7 +92,6 @@ def make_plot(t, nt, date):
         color="#bdbdbd",
         linewidth=0.0,
     )
-
     axs[-1].fill_between(
         profile_axis,
         topography[t, ...] * 0 - 2000,
@@ -110,7 +115,7 @@ def make_plot(t, nt, date):
     axs[3].set_ylabel("""Shelf thickness\n(m)""")
     axs[-1].set_xlabel(f"""Distance ({profile_axis.attrs["units"]})""")
     axs[-1].set_ylabel(f"""Altitude ({surface.attrs["units"]})""")
-    ax_dHdt.set_ylabel("dHdt (m/yr)")
+    # ax_dHdt.set_ylabel("dHdt (m/yr)")
     axs[0].text(
         pos,
         1.2,
@@ -125,7 +130,7 @@ def make_plot(t, nt, date):
     axs[2].set_ylim(100, 300)
     axs[3].set_ylim(0, 1000)
     axs[-1].set_ylim(-1500, 1000)
-    ax_dHdt.set_ylim(-50, 50)
+    # ax_dHdt.set_ylim(-50, 50)
     for ax in axs:
         ax.set_xlim(x_min, x_max)
     fig.savefig(f"{odir}/{p_name}_{t:03d}.png", dpi=300)
@@ -171,6 +176,7 @@ config = ds.variables["pism_config"]
 thickness_threshold = config.attrs["calving.thickness_calving.threshold"]
 
 front_positions = {1985: 10.5, 2000: 12.5, 2003: 19.75, 2005: 24, 2010: 26}
+# front_positions = {}
 
 for profile_id in ds.variables["profile_id"]:
     profile_name = ds.variables["profile_name"][profile_id]
@@ -193,7 +199,6 @@ for profile_id in ds.variables["profile_id"]:
     basal_melt = ds.variables["bmelt"][profile_id, ...]
     basal_melt = basal_melt.where((mask == 3) & (thickness > thickness_threshold))
     shelf_thickness = thickness.where((mask == 3) & (thickness > thickness_threshold))
-
     if smoothing_length > 1:
         basal_melt_rolling = (
             xr.DataArray(basal_melt).rolling(time=smoothing_length).mean()

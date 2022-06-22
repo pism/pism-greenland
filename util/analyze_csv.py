@@ -186,6 +186,7 @@ if __name__ == "__main__":
         ax.plot(
             df.index,
             df[m_var],
+            smoothing_length,
             alpha=0.5,
             **kwargs,
         )
@@ -193,13 +194,13 @@ if __name__ == "__main__":
     if smoothing_length > 1:
         kwargs = {"color": "0.25", "lw": 0.25}
         [
-            plot_ts(f, ax, m_var, kwargs)
+            plot_ts(f, ax, m_var, **kwargs)
             for f in sum_df.groupby(by="id").rolling(smoothing_length, on="time")
         ]
         kwargs = {"color": "#6a51a3", "lw": 0.5}
         [
             plot_ts(f, ax, m_var, **kwargs)
-            for f in dum_df[mean_df["id"].isin(ids_pass)]
+            for f in sum_df[mean_df["id"].isin(ids_pass)]
             .groupby(by="id")
             .rolling(smoothing_length, on="time")
         ]
@@ -220,7 +221,7 @@ if __name__ == "__main__":
         d_man["Discharge [Gt/yr]"] - d_man["Discharge Error [Gt/yr]"],
         d_man["Discharge [Gt/yr]"] + d_man["Discharge Error [Gt/yr]"],
         color="#238b45",
-        alpha=0.5,
+        alpha=0.75,
         lw=1.0,
     )
 
@@ -229,7 +230,7 @@ if __name__ == "__main__":
         d_mou["Discharge (Gt/yr)"] - d_mou["Discharge Error (Gt/yr)"],
         d_mou["Discharge (Gt/yr)"] + d_mou["Discharge Error (Gt/yr)"],
         color="#bdd7e7",
-        alpha=0.5,
+        alpha=0.75,
         lw=1.0,
     )
 
@@ -237,21 +238,25 @@ if __name__ == "__main__":
         d_man.index,
         d_man["Discharge [Gt/yr]"],
         color="#238b45",
-        lw=1.0,
-        label="Mankoff",
+        lw=2.0,
+        label="D (Mankoff)",
     )
     ax.plot(
         d_mou.index,
         d_mou["Discharge (Gt/yr)"],
         color="#2171b5",
-        lw=1.0,
-        label="Mouginot",
+        lw=2.0,
+        label="D (Mouginot)",
     )
 
     ax.set_xlim(datetime(1980, 1, 1), datetime(2020, 1, 1))
     ax.set_xlabel("Year")
     ax.set_ylabel("Flux (Gt/yr)")
     ax.set_ylim(0, 100)
+    legend = ax.legend()
+    legend.get_frame().set_linewidth(0.0)
+    legend.get_frame().set_alpha(0.0)
+
     set_size(6, 3)
     ofile = "jib_{}.pdf".format(m_var.split(" ")[0])
     print("  saving to {}".format(ofile))

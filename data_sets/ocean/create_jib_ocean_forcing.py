@@ -373,7 +373,7 @@ col_dict = {
     "Fjord": "#2171b5",
     "Bay": "#525252",
 }
-ms = 2
+ms = 5
 mew = 0.25
 
 fontsize = 6

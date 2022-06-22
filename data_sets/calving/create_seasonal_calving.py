@@ -128,6 +128,9 @@ for year in range(start_year, end_year):
             ) * np.sqrt(np.mod(t - winter_e, year_length))
         else:
             frac_calving_rate[t] = 1
+            # frac_calving_rate[t] = (
+            #     frac_calving_rate_max / np.sqrt(spring_e - winter_e)
+            # ) * np.sqrt(np.mod(t - winter_e, year_length))
 
     frac_calving_rate = np.roll(frac_calving_rate, -90) * scaling_factor
     var_out[idx::] = frac_calving_rate
@@ -203,11 +206,11 @@ labels = [
 fig = plt.figure()
 ax = fig.add_subplot(111)
 ax.plot(range(len(frac_calving_rate)), np.roll(frac_calving_rate, 90))
-ax.set_ylim(-0.01, 1.1)
+ax.set_ylim(-0.01, 3.1)
 ax.set_xlim(0, len(frac_calving_rate))
 plt.xticks(positions, labels)
 plt.yticks([0, frac_calving_rate_max], [0, "Max"])
 ax.set_xlabel("Time [months]")
 ax.set_ylabel("Calving Rate Fraction\n[1]")
 set_size(3.2, 1.0)
-fig.savefig("jib_seasonal_calving.pdf")
+fig.savefig(f"jib_seasonal_calving_{scaling_factor}_{start_year}_{end_year}.pdf")
