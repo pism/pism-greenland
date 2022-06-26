@@ -128,9 +128,10 @@ for year in range(start_year, end_year):
             ) * np.sqrt(np.mod(t - winter_e, year_length))
         else:
             frac_calving_rate[t] = 1
-            # frac_calving_rate[t] = (
-            #     frac_calving_rate_max / np.sqrt(spring_e - winter_e)
-            # ) * np.sqrt(np.mod(t - winter_e, year_length))
+            if year > 2001:
+                frac_calving_rate[t] = (
+                    frac_calving_rate_max / np.sqrt(spring_e - winter_e)
+                ) * np.sqrt(np.mod(t - winter_e, year_length))
 
     frac_calving_rate = np.roll(frac_calving_rate, -90) * scaling_factor
     var_out[idx::] = frac_calving_rate
