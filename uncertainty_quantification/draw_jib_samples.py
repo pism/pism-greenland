@@ -33,6 +33,7 @@ dists = {
             "gamma_T": 1.25e-4,
             "thickness_calving_threshold": 50,
             "fractures": "true",
+            "parameter_a": 3e-4,
         },
     },
     "fractures_all": {
@@ -58,6 +59,7 @@ dists = {
             "ssa_n": 3.0,
             "gamma_T": 1.25e-4,
             "fractures": "true",
+            "parameter_a": 3e-4,
         },
     },
     "fractures_steady": {
@@ -87,6 +89,7 @@ dists = {
             "fracture_initiation_threshold": 127548.828125,
             "healing_threshold": 4.3249023437500005e-10,
             "vcm": 0.5,
+            "parameter_a": 3e-4,
         },
     },
     "fractures_melt": {
@@ -115,6 +118,7 @@ dists = {
             "fracture_initiation_threshold": 127548.828125,
             "healing_threshold": 4.3249023437500005e-10,
             "vcm": 0.5,
+            "parameter_a": 3e-4,
         },
     },
     "calving": {
@@ -140,6 +144,7 @@ dists = {
             "fracture_softening": 0.9969726562500001,
             "fracture_initiation_threshold": 127548.828125,
             "healing_threshold": 4.3249023437500005e-10,
+            "parameter_a": 3e-4,
         },
     },
     "ocean": {
@@ -165,6 +170,7 @@ dists = {
             "fracture_initiation_threshold": 127548.828125,
             "healing_threshold": 4.3249023437500005e-10,
             "vcm": 0.5,
+            "parameter_a": 3e-4,
         },
     },
     "full": {

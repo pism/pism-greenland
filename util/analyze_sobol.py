@@ -9,7 +9,7 @@ import pylab as plt
 import seaborn as sns
 from SALib.analyze import sobol
 import numpy as np
-from scipy.interpolate import LinearNDInterpolator, NearestNDInterpolator
+from scipy.interpolate import griddata
 from datetime import datetime
 
 
@@ -39,21 +39,6 @@ def to_decimal_year(date):
     return date.year + fraction
 
 
-# Set up the option parser
-parser = ArgumentParser()
-parser.description = "A"
-parser.add_argument("--ensemble_file", default=None)
-parser.add_argument("--second_order", action="store_true", default=False)
-parser.add_argument("--variable", default="total_grounding_line_flux (Gt year-1)")
-parser.add_argument("FILE", nargs=1)
-options = parser.parse_args()
-calc_second_order = options.second_order
-ensemble_file = options.ensemble_file
-m_var = options.variable
-ifile = options.FILE[0]
-m_id = "id"
-
-
 def prepare_df(ifile):
     df = pd.read_csv(ifile, parse_dates=["time"])
 
@@ -67,7 +52,9 @@ def compute_sobol_indices(
     calc_variable="total_grounding_line_flux (Gt year-1)",
 ):
 
-    id_df = pd.read_csv(ensemble_file)
+    # remove True/False
+    id_df = (pd.read_csv(ensemble_file) * 1).replace(np.nan, 0)
+
     param_names = id_df.drop(columns="id").columns.values.tolist()
     for k, col in id_df.iteritems():
         if is_string_dtype(col):
@@ -100,18 +87,18 @@ def compute_sobol_indices(
     df = pd.merge(id_df, df, on="id")
 
     ST_df = []
+    ST_conf_df = []
     for m_date, s_df in df.groupby(by="time"):
         print(f"Processing {m_date}")
         if id_df_missing is not None:
             response = s_df[["id", m_var]]
-            X = id_df_missing.drop(columns="id")
-            print(X)
-            f = NearestNDInterpolator(params, response.values[:, 1], rescale=True)
-            data = f(*np.transpose(X.values))
+            X = id_df_missing.drop(columns="id").values
+            data = griddata(params, response.values[:, 1], X, method=interp_method)
+
             filled = pd.DataFrame(
                 data=np.transpose([missing_ids, data]), columns=["id", m_var]
             )
-            response_filled = response.append(filled)
+            response_filled = pd.concat([response, filled])
             response_filled = response_filled.sort_values(by="id")
             response_matrix = response_filled[response_filled.columns[-1]].values
         else:
@@ -134,11 +121,37 @@ def compute_sobol_indices(
         )
         t_df["Date"] = m_date
         t_df.set_index("Date")
+        t_conf_df = pd.DataFrame(
+            data=total_Si["ST_conf"].values.reshape(1, -1),
+            columns=total_Si.transpose().columns,
+        )
+        t_conf_df["Date"] = m_date
+        t_conf_df.set_index("Date")
         ST_df.append(t_df)
+        ST_conf_df.append(t_conf_df)
     ST_df = pd.concat(ST_df)
     ST_df.reset_index(inplace=True, drop=True)
     ST_df.set_index(ST_df["Date"], inplace=True)
-    return ST_df
+    return ST_df, ST_conf_df
+
+
+# Set up the option parser
+parser = ArgumentParser()
+parser.description = "A"
+parser.add_argument("--ensemble_file", default=None)
+parser.add_argument(
+    "--interpolation_method", default="nearest", choices=["nearest", "linear"]
+)
+parser.add_argument("--second_order", action="store_true", default=False)
+parser.add_argument("--variable", default="total_grounding_line_flux (Gt year-1)")
+parser.add_argument("FILE", nargs=1)
+options = parser.parse_args()
+calc_second_order = options.second_order
+ensemble_file = options.ensemble_file
+interp_method = options.interpolation_method
+m_var = options.variable
+ifile = options.FILE[0]
+m_id = "id"
 
 
 df = prepare_df(ifile)
@@ -149,7 +162,10 @@ ST_df = compute_sobol_indices(
     calc_second_order=calc_second_order,
 )
 
-fig = plt.figure()
+fig = plt.figure(figsize=[12, 6])
 ax = fig.add_subplot(111)
-sns.lineplot(data=ST_df, ax=ax).set_title("Sobol Indices")
+sns.lineplot(data=ST_df.drop(columns=["Date"]), ax=ax).set_title(
+    f"Sobol Indices {m_var}"
+)
+ax.set_ylim(0, 2)
 fig.savefig("total_sobol_indices.pdf", bbox_inches="tight")
