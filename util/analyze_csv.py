@@ -200,7 +200,7 @@ if __name__ == "__main__":
         kwargs = {"color": "#6a51a3", "lw": 0.5}
         [
             plot_ts(f, ax, m_var, **kwargs)
-            for f in sum_df[mean_df["id"].isin(ids_pass)]
+            for f in sbum_df[mean_df["id"].isin(ids_pass)]
             .groupby(by="id")
             .rolling(smoothing_length, on="time")
         ]

@@ -85,9 +85,7 @@ def compute_sobol_indices(
         id_df_missing = None
 
     df = pd.merge(id_df, df, on="id")
-
-    ST_df = []
-    ST_conf_df = []
+    Sobol_dfs = []
     for m_date, s_df in df.groupby(by="time"):
         print(f"Processing {m_date}")
         if id_df_missing is not None:
@@ -110,29 +108,40 @@ def compute_sobol_indices(
             num_resamples=100,
             print_to_console=False,
         )
-        if calc_second_order:
-            total_Si, first_Si, second_Si = Si.to_df()
-        else:
-            total_Si, first_Si = Si.to_df()
+        sobol_indices = ["ST", "S1"]
+        Si_df = Si.to_df()
 
-        t_df = pd.DataFrame(
-            data=total_Si["ST"].values.reshape(1, -1),
-            columns=total_Si.transpose().columns,
-        )
-        t_df["Date"] = m_date
-        t_df.set_index("Date")
-        t_conf_df = pd.DataFrame(
-            data=total_Si["ST_conf"].values.reshape(1, -1),
-            columns=total_Si.transpose().columns,
-        )
-        t_conf_df["Date"] = m_date
-        t_conf_df.set_index("Date")
-        ST_df.append(t_df)
-        ST_conf_df.append(t_conf_df)
-    ST_df = pd.concat(ST_df)
-    ST_df.reset_index(inplace=True, drop=True)
-    ST_df.set_index(ST_df["Date"], inplace=True)
-    return ST_df, ST_conf_df
+        S2_vars = None
+        if calc_second_order:
+            sobol_indices.append("S2")
+            S2_vars = Si_df[2].index
+
+        s_dfs = []
+        for k, s_index in enumerate(sobol_indices):
+            m_df = pd.DataFrame(
+                data=Si_df[k][s_index].values.reshape(1, -1),
+                columns=Si_df[k].transpose().columns,
+            )
+            m_df["Date"] = m_date
+            m_df.set_index("Date")
+            m_df["Si"] = s_index
+
+            m_conf_df = pd.DataFrame(
+                data=Si_df[k][s_index + "_conf"].values.reshape(1, -1),
+                columns=Si_df[k].transpose().columns,
+            )
+            m_conf_df["Date"] = m_date
+            m_conf_df.set_index("Date")
+            m_conf_df["Si"] = s_index + "_conf"
+            s_dfs.append(pd.concat([m_df, m_conf_df]))
+
+        s_df = pd.concat(s_dfs)
+        Sobol_dfs.append(s_df)
+
+    Sobol_df = pd.concat(Sobol_dfs)
+    Sobol_df.reset_index(inplace=True, drop=True)
+    Sobol_df.set_index(Sobol_df["Date"], inplace=True)
+    return Sobol_df, sobol_indices, S2_vars
 
 
 # Set up the option parser
@@ -155,17 +164,40 @@ m_id = "id"
 
 
 df = prepare_df(ifile)
-ST_df = compute_sobol_indices(
+Sobol_df, sobol_indices, S2_vars = compute_sobol_indices(
     df,
     ensemble_file=ensemble_file,
     calc_variable=m_var,
     calc_second_order=calc_second_order,
 )
 
-fig = plt.figure(figsize=[12, 6])
-ax = fig.add_subplot(111)
-sns.lineplot(data=ST_df.drop(columns=["Date"]), ax=ax).set_title(
-    f"Sobol Indices {m_var}"
+
+fig, axs = plt.subplots(
+    len(sobol_indices),
+    1,
+    sharex="col",
+    figsize=[12, 10],
 )
-ax.set_ylim(0, 2)
-fig.savefig("total_sobol_indices.pdf", bbox_inches="tight")
+
+for k, si in enumerate(sobol_indices[:-1]):
+    ax = axs[k]
+    p_df = (
+        Sobol_df[Sobol_df["Si"] == si]
+        .drop(columns=S2_vars)
+        .drop(columns=["Date", "Si"])
+    )
+
+    p_conf_df = (
+        Sobol_df[Sobol_df["Si"] == si + "_conf"]
+        .drop(columns=S2_vars)
+        .drop(columns=["Date", "Si"])
+    )
+    [ax.errorbar(p_df.index, p_df[v], yerr=p_conf_df[v], label=v) for v in p_df.keys()]
+if "S2" in sobol_indices:
+    ax = axs[-1]
+    p_df = Sobol_df[Sobol_df["Si"] == "S2"].drop(columns=["Date", "Si"])
+    p_conf_df = Sobol_df[Sobol_df["Si"] == "S2_conf"].drop(columns=["Date", "Si"])
+    [ax.errorbar(p_df.index, p_df[v], yerr=p_conf_df[v], label=v) for v in S2_vars]
+
+# axs[0].title(f"Sobol indices for {m_var}")
+legend = axs[0].legend()
