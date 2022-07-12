@@ -594,6 +594,8 @@ for n, row in enumerate(uq_df.iterrows()):
             frontalmelt_parameters = {
                 "frontal_melt": "routing",
                 "frontal_melt.routing.file": frontal_melt_file_p,
+                "frontal_melt.routing.parameter_a": combination["parameter_a"],
+                "frontal_melt.routing.power_alpha": combination["power_alpha"],
             }
         else:
             frontalmelt_parameters = {
