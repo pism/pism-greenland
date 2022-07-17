@@ -92,7 +92,10 @@ class PLMultitaskGPModel(pl.LightningModule):
         full_train_y,
         full_train_i,
         num_tasks,
+        hparams,
+        *args,
         covar_module=gpytorch.kernels.RBFKernel(),
+        **kwargs,
     ):
         """Initialize gp model with mean and covar."""
         super().__init__()
@@ -110,6 +113,15 @@ class PLMultitaskGPModel(pl.LightningModule):
         )
 
         self.mll = gpytorch.mlls.ExactMarginalLogLikelihood(self.likelihood, self.model)
+
+    @staticmethod
+    def add_model_specific_args(parent_parser):
+        parser = parent_parser.add_argument_group("MultitaskGPModel")
+        parser.add_argument("--batch_size", type=int, default=128)
+        parser.add_argument("--n_hidden", default=128)
+        parser.add_argument("--learning_rate", type=float, default=0.1)
+
+        return parent_parser
 
     def forward(self, train_x, train_i):
         """Compute prediction."""
@@ -415,6 +427,11 @@ if __name__ == "__main__":
         action="store_false",
         default=True,
     )
+    parser = PLMultitaskGPModel.add_model_specific_args(parser)
+    parser = pl.Trainer.add_argparse_args(parser)
+    args = parser.parse_args()
+    hparams = vars(args)
+
     options = parser.parse_args()
     write_nc = options.write_nc
 
@@ -690,7 +707,8 @@ if __name__ == "__main__":
             mode="min",
             strict=True,
         )
-        trainer = pl.Trainer(
+        trainer = pl.Trainer.from_argparse_args(
+            args,
             max_epochs=max_epochs,
             callbacks=[lr_monitor, early_stop_callback],
             logger=logger,
