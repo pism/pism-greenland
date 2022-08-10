@@ -424,11 +424,6 @@ sub.call(cmd)
 
 ssa_n = 3.25
 ssa_e = 1.0
-tefo = 0.020
-phi_min = 5.0
-phi_max = 40.0
-topg_min = -700
-topg_max = 700
 
 uq_df = pd.read_csv(ensemble_file)
 uq_df.fillna(False, inplace=True)
@@ -445,8 +440,11 @@ post_header = make_batch_post_header(system)
 for n, row in enumerate(uq_df.iterrows()):
     combination = row[1]
     print(combination)
-
-    ttphi = "{},{},{},{}".format(phi_min, phi_max, topg_min, topg_max)
+    phi_min = combination["phi_min"]
+    phi_max = combination["phi_max"]
+    z_min = combination["z_min"]
+    z_max = combination["z_min"]
+    ttphi = "{},{},{},{}".format(phi_min, phi_max, z_min, z_max)
 
     name_options = {}
     try:
