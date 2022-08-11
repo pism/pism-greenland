@@ -23,7 +23,7 @@ short2long = {
 dists = {
     "calving": {
         "uq": {
-            "vcm": uniform(loc=0.25, scale=0.75),
+            "vcm": uniform(loc=0.25, scale=0.25),
         },
         "default_values": {
             "climate": "given",
@@ -37,7 +37,7 @@ dists = {
             "pseudo_plastic_q": 0.6,
             "sia_e": 1.25,
             "ssa_n": 3.0,
-            "thickness_calving_threshold": 50,
+            "thickness_calving_threshold": 100,
             "fractures": "false",
         },
     },
