@@ -540,7 +540,9 @@ for n, row in enumerate(uq_df.iterrows()):
             "ssa_e": ssa_e,
             "ssa_n": ssa_n,
             "pseudo_plastic_q": combination["pseudo_plastic_q"],
-            "till_effective_fraction_overburden": tefo,
+            "till_effective_fraction_overburden": combination[
+                "till_effective_fraction_overburden"
+            ],
             "vertical_velocity_approximation": vertical_velocity_approximation,
             "stress_balance.blatter.enhancement_factor": combination["sia_e"],
         }
