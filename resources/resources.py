@@ -108,6 +108,7 @@ spatial_ts_vars["basic"] = [
 spatial_ts_vars["ragis"] = [
     "dHdt",
     "grounding_line_flux",
+    "bmelt",
     "ice_mass",
     "mask",
     "mass_fluxes",
@@ -115,9 +116,6 @@ spatial_ts_vars["ragis"] = [
     "thk",
     "usurf",
     "velsurf_mag",
-]
-spatial_ts_vars["ragis"] = [
-    "mass_fluxes",
 ]
 
 spatial_ts_vars["standard"] = [
