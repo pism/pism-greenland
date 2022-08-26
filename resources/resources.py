@@ -1023,8 +1023,8 @@ ulimit
 systems["stampede2"][
     "header"
 ] = """#!/bin/sh
-#SBATCH -N {cores}
-#SBATCH -n {nodes}
+#SBATCH -n {cores}
+#SBATCH -N {nodes}
 #SBATCH --time={walltime}
 #SBATCH -p {queue}
 #SBATCH --mail-type=BEGIN
