@@ -18,6 +18,15 @@ for id in {0..255}; do
     qsub postprocess_jib.sh $odir $file $grid $ensfile
 done
 
+odir=2022_06_frontal_ablation
+grid=600
+ensfile=jib_full.csv
+
+for id in {0..255}; do
+    file=jib_g600m_v1_RAGIS_id_${id}_1980-1-1_1984-1-1
+    qsub postprocess_jib.sh $odir $file $grid $ensfile
+done
+
 
 odir=2022_02_init
 grid=600

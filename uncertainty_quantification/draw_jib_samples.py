@@ -34,6 +34,7 @@ dists = {
             "thickness_calving_threshold": 50,
             "fractures": "true",
             "parameter_a": 3e-4,
+            "power_alpha": 0.39,
         },
     },
     "fractures_all": {
@@ -60,6 +61,7 @@ dists = {
             "gamma_T": 1.25e-4,
             "fractures": "true",
             "parameter_a": 3e-4,
+            "power_alpha": 0.39,
         },
     },
     "fractures_steady": {
@@ -90,6 +92,7 @@ dists = {
             "healing_threshold": 4.3249023437500005e-10,
             "vcm": 0.5,
             "parameter_a": 3e-4,
+            "power_alpha": 0.39,
         },
     },
     "fractures_melt": {
@@ -119,6 +122,7 @@ dists = {
             "healing_threshold": 4.3249023437500005e-10,
             "vcm": 0.5,
             "parameter_a": 3e-4,
+            "power_alpha": 0.39,
         },
     },
     "calving": {
@@ -145,6 +149,7 @@ dists = {
             "fracture_initiation_threshold": 127548.828125,
             "healing_threshold": 4.3249023437500005e-10,
             "parameter_a": 3e-4,
+            "power_alpha": 0.39,
         },
     },
     "ocean": {
@@ -171,6 +176,7 @@ dists = {
             "healing_threshold": 4.3249023437500005e-10,
             "vcm": 0.5,
             "parameter_a": 3e-4,
+            "power_alpha": 0.39,
         },
     },
     "full": {
@@ -181,6 +187,40 @@ dists = {
             "gamma_T": uniform(loc=1.00e-4, scale=0.6e-4),
             "power_alpha": uniform(loc=0.5, scale=0.5),
             "parameter_a": uniform(loc=1e-4, scale=5e-4),
+        },
+        "default_values": {
+            "climate": "given",
+            "hydrology": "routing",
+            "frontal_melt": "discharge_routing",
+            "climate_file": "DMI-HIRHAM5_ERA_1980_2020_EPSG3413_4500M_DM.nc",
+            "runoff_file": "DMI-HIRHAM5_ERA_1980_2020_EPSG3413_4500M_DM.nc",
+            "fractures": "false",
+            "fracture_gamma": 0.4697265625,
+            "fracture_gamma_h": 0.0,
+            "fracture_softening": 0.96767578125,
+            "fracture_initiation_threshold": 127548.828125,
+            "healing_threshold": 4.3249023437500005e-10,
+            "climate": "given",
+            "hydrology": "routing",
+            "frontal_melt": "discharge_routing",
+            "frontal_melt_file": "jib_ocean_forcing_id_fjord_ctrl_1980_2020.nc",
+            "climate_file": "DMI-HIRHAM5_ERA_1980_2020_EPSG3413_4500M_DM.nc",
+            "runoff_file": "DMI-HIRHAM5_ERA_1980_2020_EPSG3413_4500M_DM.nc",
+            "salinity": "",
+            "pseudo_plastic_q": 0.6,
+            "sia_e": 1.25,
+            "ssa_n": 3.0,
+        },
+    },
+    "frontal_ablation": {
+        "uq": {
+            "frontal_melt_file": randint(0, 10),
+            "vcm": uniform(loc=0.4, scale=0.6),
+            "thickness_calving_threshold": uniform(loc=100, scale=400),
+            "gamma_T": uniform(loc=1.00e-4, scale=0.6e-4),
+            "power_alpha": uniform(loc=0.5, scale=0.5),
+            "parameter_a": uniform(loc=1e-4, scale=5e-4),
+            "calving_rate_scaling_file": randint(0, 2),
         },
         "default_values": {
             "climate": "given",
