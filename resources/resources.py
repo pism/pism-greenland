@@ -772,6 +772,10 @@ def generate_climate(climate, **kwargs):
             ] = "pism_abrupt_glacial_climate_forcing.nc"
         params_dict["surface"] = "pdd"
         params_dict["pdd_std_dev_method"] = "quadratic"  # Wake and Marshall (2015)
+    elif climate in ("lgm"):
+        params_dict["atmosphere"] = "given,delta_T,frac_P"
+        params_dict["surface"] = "pdd"
+        params_dict["pdd_std_dev_method"] = "quadratic"  # Wake and Marshall (2015)
     elif climate in ("warming"):
         params_dict["atmosphere"] = "given,lapse_rate,delta_T,paleo_precip"
         if "atmosphere_delta_T_file" not in kwargs:
