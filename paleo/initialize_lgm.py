@@ -103,7 +103,7 @@ parser.add_argument(
     "--exstep",
     dest="exstep",
     help="Writing interval for spatial time series",
-    default="monthly",
+    default=100,
 )
 parser.add_argument(
     "--tsstep",
@@ -150,6 +150,13 @@ parser.add_argument(
     choices=["small", "medium", "big", "big_2d", "custom"],
     help="output size type",
     default="custom",
+)
+parser.add_argument(
+    "-i",
+    "--initial_state_file",
+    dest="initialstatefile",
+    help="Input file to restart from",
+    default=None,
 )
 parser.add_argument(
     "-s",
@@ -244,6 +251,7 @@ queue = options.queue
 walltime = options.walltime
 system = options.system
 
+initialstatefile = options.initialstatefile
 spatial_ts = options.spatial_ts
 bed_type = options.bed_type
 exstep = options.exstep
@@ -261,7 +269,6 @@ ensemble_file = options.ensemble_file
 domain = options.domain
 pism_exec = generate_domain(domain)
 
-
 pism_dataname = False
 if domain.lower() in ("greenland_ext", "gris_ext"):
     pism_dataname = (
@@ -269,7 +276,7 @@ if domain.lower() in ("greenland_ext", "gris_ext"):
             grid, version, bed_type
         )
     )
-if domain.lower() in ("ismip6"):
+elif domain.lower() in ("ismip6"):
     pism_dataname = "$input_dir/data_sets/bed_dem/pism_Greenland_ismip6_{}m_mcb_jpl_v{}_{}.nc".format(
         grid, version, bed_type
     )
@@ -413,7 +420,7 @@ for n, row in enumerate(uq_df.iterrows()):
     phi_min = combination["phi_min"]
     phi_max = combination["phi_max"]
     z_min = combination["z_min"]
-    z_max = combination["z_min"]
+    z_max = combination["z_max"]
     ttphi = "{},{},{},{}".format(phi_min, phi_max, z_min, z_max)
 
     name_options = {}
@@ -464,6 +471,8 @@ for n, row in enumerate(uq_df.iterrows()):
             ),
             "ys": start_date,
             "ye": end_date,
+            "time.calendar": "365_day",
+            "input.forcing.time_extrapolation": "true",
             "o_format": oformat,
             "output.compression_level": compression_level,
             "config_override": "$config",
@@ -490,10 +499,15 @@ for n, row in enumerate(uq_df.iterrows()):
         outfile = f"{domain}_g{grid_resolution}m_{experiment}.nc"
 
         general_params_dict["o"] = join(dirs["state"], outfile)
-        general_params_dict["bootstrap"] = ""
-        general_params_dict["i"] = pism_dataname
-        general_params_dict["regrid_file"] = input_file
-        general_params_dict["regrid_vars"] = regridvars
+
+        if initialstatefile is None:
+            general_params_dict["bootstrap"] = ""
+            general_params_dict["i"] = pism_dataname
+        else:
+            general_params_dict["bootstrap"] = ""
+            general_params_dict["i"] = pism_dataname
+            general_params_dict["regrid_file"] = initialstatefile
+            general_params_dict["regrid_vars"] = regridvars
 
         if osize != "custom":
             general_params_dict["o_size"] = osize
@@ -523,33 +537,36 @@ for n, row in enumerate(uq_df.iterrows()):
 
         pr_paleo_file_p = False
         tas_paleo_file_p = False
+        atmosphere_given_file_p = False
         pr_paleo_file_p = (
             f"""$input_dir/data_sets/climate/{combination["pr_paleo_file"]}"""
         )
         tas_paleo_file_p = (
             f"""$input_dir/data_sets/climate/{combination["tas_paleo_file"]}"""
         )
-
+        atmosphere_given_file_p = f"""$input_dir/data_sets/climate/gris_g4500m_MARv3.5.2-20km-monthly-20CRv2c-1900_2000_TM.nc"""
         rho_ice = 910.0
+
         climate_parameters = {
+            "atmosphere.given.file": atmosphere_given_file_p,
             "atmosphere.frac_P.file": pr_paleo_file_p,
             "atmosphere.delta_T.file": tas_paleo_file_p,
             "surface.pdd.factor_ice": combination["f_ice"] / rho_ice,
             "surface.pdd.factor_snow": combination["f_snow"] / rho_ice,
         }
 
-        climate_params_dict = generate_climate(
-            combination["climate"], **climate_parameters
-        )
+        climate_params_dict = generate_climate("lgm", **climate_parameters)
 
-        hydro_params_dict = generate_hydrology(
-            combination["hydrology"], **hydrology_parameters
-        )
+        hydrology_parameters = {}
+        hydro_params_dict = generate_hydrology("diffuse", **hydrology_parameters)
 
         ocean_delta_SL_file_p = f"""$input_dir/data_sets/ocean/pism_dSL.nc"""
-        ocean_parameters = {"ocean.delta_T.file": ocean_delta_SL_file_p}
+        ocean_parameters = {
+            "sea_level": "constant,delta_sl",
+            "ocean.delta_sl.file": ocean_delta_SL_file_p,
+        }
 
-        ocean_params_dict = generate_ocean("constant", **ocean_parameters)
+        ocean_params_dict = generate_ocean("const", **ocean_parameters)
 
         calving_parameters = {
             "float_kill_calve_near_grounding_line": float_kill_calve_near_grounding_line,
@@ -575,7 +592,6 @@ for n, row in enumerate(uq_df.iterrows()):
             climate_params_dict,
             ocean_params_dict,
             hydro_params_dict,
-            frontalmelt_params_dict,
             calving_params_dict,
             scalar_ts_dict,
             solver_dict,
@@ -607,6 +623,8 @@ for n, row in enumerate(uq_df.iterrows()):
             check_files.append(pism_dataname)
         if ocean_delta_SL_file_p:
             check_files.append(ocean_delta_SL_file_p)
+        if atmosphere_given_file_p:
+            check_files.append(atmosphere_given_file_p)
         if pr_paleo_file_p:
             check_files.append(pr_paleo_file_p)
         if tas_paleo_file_p:

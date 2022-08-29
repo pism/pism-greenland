@@ -33,10 +33,12 @@ dists = {
             "pseudo_plastic_q": 0.6,
             "sia_e": 1.25,
             "ssa_n": 3.25,
+            "till_effective_fraction_overburden": 0.02,
             "f_ice": 8,
             "f_snow": 3,
             "pr_paleo_file": "pr_Badgeley_etal_2020_id_main-mean.nc",
             "tas_paleo_file": "tas_Badgeley_etal_2020_id_main-mean_fldmean.nc",
+            "thickness_calving_threshold": 50,
         },
     },
 }
