@@ -204,9 +204,7 @@ ymin=$((-3349600 - $buffer_y))
 xmax=$((864700 + $buffer_x))
 ymax=$((-657600 + $buffer_y))
 
-
-# for GRID in 18000 9000 6000 4500 3600 3000 2400 1800 1500 1200 900 600 450 300; do
-for GRID in  150; do
+for GRID in 18000 9000 6000 4500 3600 3000 2400 1800 1500 1200 900 600 450 300 150; do
     outfile_prefix=pism_Greenland_ext_${GRID}m_mcb_jpl_v${ver}
     outfile=${outfile_prefix}.nc
     outfile_ctrl=${outfile_prefix}_ctrl.nc
@@ -215,40 +213,40 @@ for GRID in  150; do
     outfile_sm_ctrl=${outfile_sm_prefix}_ctrl.nc
     outfile_sm_nb=${outfile_sm_prefix}_wc.nc
     
-    # for var in "bed"; do
-    #     rm -f g${GRID}m_${var}_v${ver}.tif g${GRID}m_${var}_v${ver}.nc
-    #     gdalwarp $CUT -overwrite  -r bilinear -s_srs EPSG:3413 -t_srs EPSG:3413 -te $xmin $ymin $xmax $ymax -tr $GRID $GRID -of GTiff NETCDF:$infile:$var g${GRID}m_${var}_v${ver}.tif
-    #     gdal_translate -co "FORMAT=NC4" -of netCDF g${GRID}m_${var}_v${ver}.tif g${GRID}m_${var}_v${ver}.nc 
-    #     ncatted -a nx,global,d,, -a ny,global,d,, -a xmin,global,d,, -a ymax,global,d,, -a spacing,global,d,, g${GRID}m_${var}_v${ver}.nc
+    for var in "bed"; do
+        rm -f g${GRID}m_${var}_v${ver}.tif g${GRID}m_${var}_v${ver}.nc
+        gdalwarp $CUT -overwrite  -r bilinear -s_srs EPSG:3413 -t_srs EPSG:3413 -te $xmin $ymin $xmax $ymax -tr $GRID $GRID -of GTiff NETCDF:$infile:$var g${GRID}m_${var}_v${ver}.tif
+        gdal_translate -co "FORMAT=NC4" -of netCDF g${GRID}m_${var}_v${ver}.tif g${GRID}m_${var}_v${ver}.nc 
+        ncatted -a nx,global,d,, -a ny,global,d,, -a xmin,global,d,, -a ymax,global,d,, -a spacing,global,d,, g${GRID}m_${var}_v${ver}.nc
         
-    # done
-    # for var in "surface" "thickness"; do
-    #     rm -f g${GRID}m_${var}_v${ver}.tif g${GRID}m_${var}_v${ver}.nc
-    #     gdalwarp -overwrite -r bilinear -te $xmin $ymin $xmax $ymax -tr $GRID $GRID -of GTiff NETCDF:$infile:$var g${GRID}m_${var}_v${ver}.tif
-    #     gdal_translate -a_srs epsg:3413 -co "FORMAT=NC4" -of netCDF g${GRID}m_${var}_v${ver}.tif g${GRID}m_${var}_v${ver}.nc
-    #     ncatted -a _FillValue,$var,d,, g${GRID}m_${var}_v${ver}.nc
-    #     ncap2 -O -s "where(${var}<=0) ${var}=0.;" g${GRID}m_${var}_v${ver}.nc g${GRID}m_${var}_v${ver}.nc
-    # done
-    # for var in "mask"; do
-    #     rm -f g${GRID}m_${var}_v${ver}.tif g${GRID}m_${var}_v${ver}.nc
-    #     gdalwarp -overwrite -r near -te $xmin $ymin $xmax $ymax -tr $GRID $GRID -of GTiff NETCDF:$infile:$var g${GRID}m_${var}_v${ver}.tif
-    #     gdal_translate -co "FORMAT=NC4" -of netCDF g${GRID}m_${var}_v${ver}.tif g${GRID}m_${var}_v${ver}.nc 
-    # done
+    done
+    for var in "surface" "thickness"; do
+        rm -f g${GRID}m_${var}_v${ver}.tif g${GRID}m_${var}_v${ver}.nc
+        gdalwarp -overwrite -r bilinear -te $xmin $ymin $xmax $ymax -tr $GRID $GRID -of GTiff NETCDF:$infile:$var g${GRID}m_${var}_v${ver}.tif
+        gdal_translate -a_srs epsg:3413 -co "FORMAT=NC4" -of netCDF g${GRID}m_${var}_v${ver}.tif g${GRID}m_${var}_v${ver}.nc
+        ncatted -a _FillValue,$var,d,, g${GRID}m_${var}_v${ver}.nc
+        ncap2 -O -s "where(${var}<=0) ${var}=0.;" g${GRID}m_${var}_v${ver}.nc g${GRID}m_${var}_v${ver}.nc
+    done
+    for var in "mask"; do
+        rm -f g${GRID}m_${var}_v${ver}.tif g${GRID}m_${var}_v${ver}.nc
+        gdalwarp -overwrite -r near -te $xmin $ymin $xmax $ymax -tr $GRID $GRID -of GTiff NETCDF:$infile:$var g${GRID}m_${var}_v${ver}.tif
+        gdal_translate -co "FORMAT=NC4" -of netCDF g${GRID}m_${var}_v${ver}.tif g${GRID}m_${var}_v${ver}.nc 
+    done
     
-    # ncks -O g${GRID}m_bed_v${ver}.nc $outfile
-    # ncatted -a _FillValue,bed,d,, $outfile
-    # for var in "surface" "thickness" "mask"; do
-    #     ncks -A g${GRID}m_${var}_v${ver}.nc $outfile
-    # done
+    ncks -O g${GRID}m_bed_v${ver}.nc $outfile
+    ncatted -a _FillValue,bed,d,, $outfile
+    for var in "surface" "thickness" "mask"; do
+        ncks -A g${GRID}m_${var}_v${ver}.nc $outfile
+    done
         
-    # # This is not needed, but it can be used by PISM to calculate correct cell volumes, and for remapping scripts"
-    # ncatted -a proj4,global,o,c,"epsg:3413" $outfile
+    # This is not needed, but it can be used by PISM to calculate correct cell volumes, and for remapping scripts"
+    ncatted -a proj4,global,o,c,"epsg:3413" $outfile
 
-    # # Add IBCAO bathymetry for the outer part of the domain
-    # gdalwarp $CUT -overwrite -r bilinear -t_srs EPSG:3413 -te $xmin $ymin $xmax $ymax -tr $GRID $GRID -of GTiff ${ibcaofile}_tif/${ibcaofile}.tif ${ibcaofile}_epsg3413_g${GRID}m.tif
-    # gdal_translate -co "FORMAT=NC4" -of netCDF  ${ibcaofile}_epsg3413_g${GRID}m.tif  ${ibcaofile}_epsg3413_g${GRID}m.nc
-    # ncks -A -v Band1 ${ibcaofile}_epsg3413_g${GRID}m.nc $outfile
-    # ncap2 -O -s "where(bed==-9999) {bed=Band1;}; where(Band1<=-9990) {bed=-9999;};" $outfile $outfile
+    # Add IBCAO bathymetry for the outer part of the domain
+    gdalwarp $CUT -overwrite -r bilinear -t_srs EPSG:3413 -te $xmin $ymin $xmax $ymax -tr $GRID $GRID -of GTiff ${ibcaofile}_tif/${ibcaofile}.tif ${ibcaofile}_epsg3413_g${GRID}m.tif
+    gdal_translate -co "FORMAT=NC4" -of netCDF  ${ibcaofile}_epsg3413_g${GRID}m.tif  ${ibcaofile}_epsg3413_g${GRID}m.nc
+    ncks -A -v Band1 ${ibcaofile}_epsg3413_g${GRID}m.nc $outfile
+    ncap2 -O -s "where(bed==-9999) {bed=Band1;}; where(Band1<=-9990) {bed=-9999;};" $outfile $outfile
     ncks -O -v Band1,topg -x $outfile $outfile
 
     # Remap SeaRISE fields
