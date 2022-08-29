@@ -36,7 +36,7 @@ dists = {
             "f_ice": 8,
             "f_snow": 3,
             "pr_paleo_file": "pr_Badgeley_etal_2020_id_main-mean.nc",
-            "tas_paleo_file": "tas_Badgeley_etal_2020_id_main-mean.nc",
+            "tas_paleo_file": "tas_Badgeley_etal_2020_id_main-mean_fldmean.nc",
         },
     },
 }
