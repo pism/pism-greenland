@@ -16,6 +16,25 @@ n=24
 
 python historical.py --hydrology routing --spatial_ts standard --exstep monthly --tsstep daily -b rm --dataset_version 1_RAGIS -d ${d} --o_dir ${odir} --start 1980-1-1 --end 1984-1-1 -q t2small -s chinook -w 6:00:00 -n ${n} -g ${grid} -e ../uncertainty_quantification/ensemble_jib_${uq}.csv 2022_02_init_2/state/jib_g600m_v1_RAGIS_id_INIT-TM-0.6-300-1.5_1980-1-1_1990-1-1.nc
 
+
+uq=frontal_ablation
+odir=2022_06_${uq}
+grid=600
+d=jib
+n=24
+
+python historical.py --hydrology routing --spatial_ts standard --exstep monthly --tsstep daily -b rm --dataset_version 1_RAGIS -d ${d} --o_dir ${odir} --start 1980-1-1 --end 1983-1-1 -q t2small -s chinook -w 12:00:00 -n ${n} -g ${grid} -e ../uncertainty_quantification/ensemble_jib_${uq}.csv 2022_02_init_2/state/jib_g600m_v1_RAGIS_id_INIT-TM-0.6-300-1.5_1980-1-1_1990-1-1.nc
+
+
+uq=frontal_ablation
+odir=2022_06_${uq}_crevasse
+grid=600
+d=jib
+n=24
+
+python historical.py --hydrology routing --spatial_ts standard --exstep monthly --tsstep daily -b rm --dataset_version 1_RAGIS -d ${d} --o_dir ${odir} --start 1980-1-1 --end 2020-1-1 -q t2small -s chinook -w 36:00:00 -n ${n} -g ${grid} -e ../uncertainty_quantification/ensemble_jib_${uq}.csv 2022_02_init_2/state/jib_g600m_v1_RAGIS_id_INIT-TM-0.6-300-1.5_1980-1-1_1990-1-1.nc
+
+
 uq=fractures_all
 odir=2022_06_${uq}_float
 grid=600

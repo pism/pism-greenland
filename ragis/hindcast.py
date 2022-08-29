@@ -443,7 +443,7 @@ for n, row in enumerate(uq_df.iterrows()):
     phi_min = combination["phi_min"]
     phi_max = combination["phi_max"]
     z_min = combination["z_min"]
-    z_max = combination["z_min"]
+    z_max = combination["z_max"]
     ttphi = "{},{},{},{}".format(phi_min, phi_max, z_min, z_max)
 
     name_options = {}
