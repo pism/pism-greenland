@@ -204,6 +204,13 @@ parser.add_argument(
     default=True,
 )
 parser.add_argument(
+    "--gid",
+    dest="gid",
+    choices=["s2457", "s2524"],
+    help="Choose GID for Pleiades",
+    default="s2457",
+)
+parser.add_argument(
     "--stress_balance",
     dest="stress_balance",
     choices=["sia", "ssa+sia", "ssa", "blatter"],
@@ -251,6 +258,7 @@ osize = options.osize
 queue = options.queue
 walltime = options.walltime
 system = options.system
+gid = options.gid
 
 initialstatefile = options.initialstatefile
 spatial_ts = options.spatial_ts
@@ -412,7 +420,7 @@ scripts_post = []
 simulation_start_year = options.start
 simulation_end_year = options.end
 
-batch_header, batch_system = make_batch_header(system, nn, walltime, queue)
+batch_header, batch_system = make_batch_header(system, nn, walltime, queue, gid=gid)
 post_header = make_batch_post_header(system)
 
 for n, row in enumerate(uq_df.iterrows()):

@@ -1118,7 +1118,7 @@ systems["pleiades_broadwell"][
 #PBS -N cfd
 #PBS -l walltime={walltime}
 #PBS -m e
-#PBS -W group_list=s2457
+#PBS -W group_list={gid}
 #PBS -q {queue}
 #PBS -lselect={nodes}:ncpus={ppn}:mpiprocs={ppn}:model=bro
 #PBS -j oe
@@ -1135,7 +1135,7 @@ systems["pleiades_sandy"][
 #PBS -N cfd
 #PBS -l walltime={walltime}
 #PBS -m e
-#PBS -W group_list=s2457
+#PBS -W group_list={gid}
 #PBS -q {queue}
 #PBS -lselect={nodes}:ncpus={ppn}:mpiprocs={ppn}:model=san
 #PBS -j oe
@@ -1152,7 +1152,7 @@ systems["pleiades_haswell"][
 #PBS -N cfd
 #PBS -l walltime={walltime}
 #PBS -m e
-#PBS -W group_list=s2457
+#PBS -W group_list={gid}
 #PBS -q {queue}
 #PBS -lselect={nodes}:ncpus={ppn}:mpiprocs={ppn}:model=has
 #PBS -j oe
@@ -1169,7 +1169,7 @@ systems["pleiades_ivy"][
 #PBS -N cfd
 #PBS -l walltime={walltime}
 #PBS -m e
-#PBS -W group_list=s2457
+#PBS -W group_list={gid}
 #PBS -q {queue}
 #PBS -lselect={nodes}:ncpus={ppn}:mpiprocs={ppn}:model=ivy
 #PBS -j oe
@@ -1186,7 +1186,7 @@ systems["electra_skylake"][
 #PBS -N cfd
 #PBS -l walltime={walltime}
 #PBS -m e
-#PBS -W group_list=s2457
+#PBS -W group_list={gid}
 #PBS -q {queue}
 #PBS -lselect={nodes}:ncpus={ppn}:mpiprocs={ppn}:model=sky_ele
 #PBS -j oe
@@ -1242,7 +1242,7 @@ ulimit
 """
 
 
-def make_batch_header(system_name, n_cores, walltime, queue):
+def make_batch_header(system_name, n_cores, walltime, queue, gid="s2457"):
     """
     Generate header file for different HPC system.
 
