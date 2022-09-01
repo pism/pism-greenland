@@ -105,6 +105,24 @@ spatial_ts_vars["basic"] = [
     "vonmises_stress",
 ]
 
+spatial_ts_vars["paleo"] = [
+    "climatic_mass_balance",
+    "effective_air_temp",
+    "effective_precipitation",
+    "dHdt",
+    "grounding_line_flux",
+    "ice_mass",
+    "mask",
+    "mass_fluxes",
+    "sftgif",
+    "thk",
+    "topg",
+    "usurf",
+    "velbase_mag",
+    "velsurf_mag",
+    "vonmises_calving_rate",
+]
+
 spatial_ts_vars["ragis"] = [
     "dHdt",
     "grounding_line_flux",
@@ -518,7 +536,7 @@ def generate_grid_description(grid_resolution, domain, restart=False):
 
         if grid_resolution < 1200:
             skip_max = 200
-            mz = 201
+            mz = 401
             mzb = 21
         elif (grid_resolution >= 1200) and (grid_resolution < 4500):
             skip_max = 100
@@ -530,7 +548,7 @@ def generate_grid_description(grid_resolution, domain, restart=False):
             mzb = 21
         else:
             skip_max = 20
-            mz = 101
+            mz = 201
             mzb = 11
 
     elif domain.lower() in ("synth_ellps"):

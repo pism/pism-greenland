@@ -123,6 +123,7 @@ parser.add_argument(
     "-L",
     "--comp_level",
     dest="compression_level",
+    type=int,
     help="Compression level for output file.",
     default=2,
 )
@@ -172,14 +173,14 @@ parser.add_argument(
     dest="bed_type",
     choices=list_bed_types(),
     help="output size type",
-    default="wc",
+    default="ctrl",
 )
 parser.add_argument(
     "--spatial_ts",
     dest="spatial_ts",
     choices=["basic"],
     help="output size type",
-    default="basic",
+    default="paleo",
 )
 parser.add_argument(
     "--hydrology",
@@ -191,9 +192,9 @@ parser.add_argument(
 parser.add_argument(
     "--calving",
     dest="calving",
-    choices=["vonmises_calving", "hayhurst_calving"],
+    choices=["vonmises_calving", "hayhurst_calving", "hybrid_calving"],
     help="Choose calving law",
-    default="vonmises_calving",
+    default="hybrid_calving",
 )
 parser.add_argument(
     "--stable_gl",
@@ -473,6 +474,7 @@ for n, row in enumerate(uq_df.iterrows()):
             "ye": end_date,
             "time.calendar": "365_day",
             "input.forcing.time_extrapolation": "true",
+            "age.enabled": "true",
             "o_format": oformat,
             "output.compression_level": compression_level,
             "config_override": "$config",
@@ -573,6 +575,7 @@ for n, row in enumerate(uq_df.iterrows()):
             "calving.vonmises_calving.use_custom_flow_law": True,
             "calving.vonmises_calving.Glen_exponent": 3.0,
             "geometry.front_retreat.use_cfl": True,
+            "calving.eigen_calving.K": combination["eigen_calving_K"],
             "calving.vonmises_calving.sigma_max": combination["vcm"],
             "calving.thickness_calving.threshold": combination[
                 "thickness_calving_threshold"

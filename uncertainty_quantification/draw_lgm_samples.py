@@ -20,6 +20,37 @@ short2long = {
     "ZMAX": "z_max",
 }
 
+pr2num = {
+    0: "low-5",
+    1: "low-mean",
+    2: "low-95",
+    3: "main-5",
+    4: "main-mean",
+    5: "main-95",
+    6: "high-5",
+    7: "high-mean",
+    8: "high-95",
+}
+
+tas2num = {
+    0: "main-5",
+    1: "main-mean",
+    2: "main-95",
+    3: "S1-5",
+    4: "S1-mean",
+    5: "S1-95",
+    6: "S2-5",
+    7: "S2-mean",
+    8: "S2-95",
+    9: "S3-5",
+    10: "S3-mean",
+    11: "S3-95",
+    12: "S4-5",
+    13: "S4-mean",
+    14: "S4-95",
+}
+
+
 dists = {
     "calving": {
         "uq": {
@@ -37,8 +68,30 @@ dists = {
             "f_ice": 8,
             "f_snow": 3,
             "pr_paleo_file": "pr_Badgeley_etal_2020_id_main-mean.nc",
-            "tas_paleo_file": "tas_Badgeley_etal_2020_id_main-mean_fldmean.nc",
+            "tas_paleo_file": "tas_Badgeley_etal_2020_id_main-mean.nc",
             "thickness_calving_threshold": 50,
+            "eigen_calving_K": 1e19,
+        },
+    },
+    "climate": {
+        "uq": {
+            "pr_paleo_file": randint(0, len(pr2num)),
+            "tas_paleo_file": randint(0, len(tas2num)),
+        },
+        "default_values": {
+            "phi_min": 5,
+            "phi_max": 40,
+            "z_min": -700,
+            "z_max": 700,
+            "pseudo_plastic_q": 0.6,
+            "sia_e": 1.25,
+            "ssa_n": 3.25,
+            "till_effective_fraction_overburden": 0.02,
+            "f_ice": 8,
+            "f_snow": 3,
+            "thickness_calving_threshold": 50,
+            "eigen_calving_K": 1e19,
+            "vcm": 400000,
         },
     },
 }
@@ -118,18 +171,22 @@ else:
 
 n_samples = unif_sample.shape[0]
 # To hold the transformed variables
-dist_sample = np.zeros_like(unif_sample)
+dist_sample = np.zeros_like(unif_sample, dtype=object)
 
 # For each variable, transform with the inverse of the CDF (inv(CDF)=ppf)
 for i, key in enumerate(keys_prior):
-    if key == "calving_rate_scaling_file":
-        dist_sample[:, i] = [
-            f"seasonal_calving_{int(id)}_1980_2020.nc"
+    if key == "pr_paleo_file":
+        [
+            print(f"pr_Badgeley_etal_2020_id_{pr2num[id]}.nc")
             for id in distributions[key].ppf(unif_sample[:, i])
         ]
-    elif key == "frontal_melt_file":
         dist_sample[:, i] = [
-            f"jib_ocean_forcing_{int(id)}_1980_2020.nc"
+            f"pr_Badgeley_etal_2020_id_{pr2num[id]}.nc"
+            for id in distributions[key].ppf(unif_sample[:, i])
+        ]
+    elif key == "tas_paleo_file":
+        dist_sample[:, i] = [
+            f"tas_Badgeley_etal_2020_id_{tas2num[id]}.nc"
             for id in distributions[key].ppf(unif_sample[:, i])
         ]
     else:
