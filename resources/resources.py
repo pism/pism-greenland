@@ -1281,7 +1281,12 @@ def make_batch_header(system_name, n_cores, walltime, queue, gid="s2457"):
 
     system["mpido"] = system["mpido"].format(cores=n_cores)
     system["header"] = system["header"].format(
-        queue=queue, walltime=walltime, nodes=nodes, ppn=ppn, cores=n_cores
+        queue=queue,
+        walltime=walltime,
+        nodes=nodes,
+        ppn=ppn,
+        cores=n_cores,
+        gid=gid,
     )
     system["header"] += version_header()
 
