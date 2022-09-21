@@ -95,7 +95,7 @@ parser.add_argument(
     "-d",
     "--domain",
     dest="domain",
-    choices=["gris_ext"],
+    choices=["gris", "gris_ext"],
     help="sets the modeling domain",
     default="gris_ext",
 )
@@ -173,7 +173,7 @@ parser.add_argument(
     dest="bed_type",
     choices=list_bed_types(),
     help="output size type",
-    default="ctrl",
+    default="wc",
 )
 parser.add_argument(
     "--spatial_ts",
@@ -220,9 +220,9 @@ parser.add_argument(
 parser.add_argument(
     "--dataset_version",
     dest="version",
-    choices=["2021"],
+    choices=["2021", "2022"],
     help="input data set version",
-    default="2021",
+    default="2022",
 )
 parser.add_argument(
     "--vertical_velocity_approximation",
