@@ -23,12 +23,12 @@ fi
 N=$NN
 
 
-infile=BedMachineGreenland-2018-08-28.nc
+infile=BedMachineGreenland-v5.nc
 if [ -n "$2" ]; then
     infile=$2
 fi
 
-ver=4
+ver=2022
 if [ -n "$3" ]; then
     ver=$3
 fi
@@ -103,12 +103,12 @@ ymax=$((-570000 + $buffer_y))
 
 
 for GRID in 1000; do
-    outfile_prefix=pism_Greenland_ismip6_${GRID}m_mcb_jpl_v${ver}
+    outfile_prefix=pism_Greenland_ismip6_${GRID}m_v${ver}
     outfile=${outfile_prefix}.nc
     outfile_ctrl=${outfile_prefix}_ctrl.nc
     outfile_nb=${outfile_prefix}_wc.nc
     outfile_rm=${outfile_prefix}_rm.nc
-    outfile_sm_prefix=pism_Greenland_${GRID}m_mcb_jpl_v${ver}
+    outfile_sm_prefix=pism_Greenland_${GRID}m_v${ver}
     outfile_sm_ctrl=${outfile_sm_prefix}_ctrl.nc
     outfile_sm_nb=${outfile_sm_prefix}_wc.nc
     outfile_sm_rm=${outfile_sm_prefix}_rm.nc
@@ -279,11 +279,11 @@ for GRID in 18000 9000 6000 4500 3600 3000 2400 1800 1500 1200 900 600 450 300 1
 
     # Here we cut out the topography of the Canadian Archipelago
     var=thickness
-    gdalwarp -overwrite -dstnodata 0 -cutline  ../shape_files/gris-domain-ismip6.shp NETCDF:$outfile_nb:$var g${GRID}m_nb_${var}_v${ver}.tif
+    gdalwarp -overwrite -dstnodata 0 -cutline  ../shape_files/gris-domain-paleo.shp NETCDF:$outfile_nb:$var g${GRID}m_nb_${var}_v${ver}.tif
     gdal_translate -of netCDF -co "FORMAT=NC4" g${GRID}m_nb_${var}_v${ver}.tif g${GRID}m_nb_${var}_v${ver}.nc
     ncks -A -v $var g${GRID}m_nb_${var}_v${ver}.nc $outfile_nb
     var=bed
-    gdalwarp -overwrite -dstnodata -9999 -cutline  ../shape_files/gris-domain-ismip6.shp NETCDF:$outfile_nb:$var g${GRID}m_nb_${var}_v${ver}.tif
+    gdalwarp -overwrite -dstnodata -9999 -cutline  ../shape_files/gris-domain-paleo.shp NETCDF:$outfile_nb:$var g${GRID}m_nb_${var}_v${ver}.tif
     gdal_translate -of netCDF -co "FORMAT=NC4" g${GRID}m_nb_${var}_v${ver}.tif g${GRID}m_nb_${var}_v${ver}.nc
     ncks -A -C -v $var g${GRID}m_nb_${var}_v${ver}.nc $outfile_nb
     ncatted -a _FillValue,bed,d,, -a _FillValue,thickness,d,, $outfile_nb

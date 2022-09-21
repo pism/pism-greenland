@@ -214,9 +214,9 @@ parser.add_argument(
 parser.add_argument(
     "--dataset_version",
     dest="version",
-    choices=["2", "3", "3a", "4", "1980", "1980a", "1980v3", "1_RAGIS"],
+    choices=["2", "3", "3a", "4", "1980", "1980a", "1980v3", "1_RAGIS", "5_RAGIS"],
     help="input data set version",
-    default="1_RAGIS",
+    default="5_RAGIS",
 )
 parser.add_argument(
     "--vertical_velocity_approximation",
@@ -287,19 +287,19 @@ else:
 pism_dataname = False
 if domain.lower() in ("greenland_ext", "gris_ext"):
     pism_dataname = (
-        "$input_dir/data_sets/bed_dem/pism_Greenland_ext_{}m_mcb_jpl_v{}_{}.nc".format(
+        "$input_dir/data_sets/bed_dem/pism_Greenland_ext_{}m_v{}_{}.nc".format(
             grid, version, bed_type
         )
     )
 if domain.lower() in ("ismip6"):
-    pism_dataname = "$input_dir/data_sets/bed_dem/pism_Greenland_ismip6_{}m_mcb_jpl_v{}_{}.nc".format(
-        grid, version, bed_type
-    )
-else:
     pism_dataname = (
-        "$input_dir/data_sets/bed_dem/pism_Greenland_{}m_mcb_jpl_v{}_{}.nc".format(
+        "$input_dir/data_sets/bed_dem/pism_Greenland_ismip6_{}m_v{}_{}.nc".format(
             grid, version, bed_type
         )
+    )
+else:
+    pism_dataname = "$input_dir/data_sets/bed_dem/pism_Greenland_{}m_v{}_{}.nc".format(
+        grid, version, bed_type
     )
 
 # Removed "thk" from regrid vars
