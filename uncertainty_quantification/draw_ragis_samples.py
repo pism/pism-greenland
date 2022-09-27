@@ -38,6 +38,10 @@ dists = {
             "thickness_calving_threshold": 100,
             "vcm": 0.5,
             "fractures": "false",
+            "z_min": -700,
+            "z_max": 700,
+            "phi_min": 5,
+            "phi_max": 40,
         },
     },
     "calving": {
