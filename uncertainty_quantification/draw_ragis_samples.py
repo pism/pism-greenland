@@ -21,6 +21,30 @@ short2long = {
 }
 
 dists = {
+    "init": {
+        "uq": {},
+        "default_values": {
+            "climate": "given",
+            "hydrology": "routing",
+            "frontal_melt": "discharge_routing",
+            "ocean_file": "MAR3.9_MIROC-ESM-CHEM_rcp85_ocean_1960-2100_v4.nc",
+            "climate_file": "DMI-HIRHAM5_ERA_1980_2020_EPSG3413_4500M_MM.nc",
+            "runoff_file": "DMI-HIRHAM5_ERA_1980_2020_EPSG3413_4500M_MM.nc",
+            "gamma_T": 1.00e-4,
+            "salinity": 34,
+            "pseudo_plastic_q": 0.6,
+            "sia_e": 1.25,
+            "ssa_n": 3.0,
+            "thickness_calving_threshold": 100,
+            "vcm": 0.5,
+            "fractures": "false",
+            "z_min": -700,
+            "z_max": 700,
+            "phi_min": 5,
+            "phi_max": 40,
+            "till_effective_fraction_overburden": 0.02,
+        },
+    },
     "calving": {
         "uq": {
             "vcm": uniform(loc=0.25, scale=0.25),
@@ -41,10 +65,30 @@ dists = {
             "fractures": "false",
         },
     },
+    "ocean": {
+        "uq": {
+            "vcm": uniform(loc=0.25, scale=0.25),
+            "gamma": uniform(loc=1e-4, scale=0.5e-4),
+            "thickness_calving_threshold": uniform(loc=100, scale=300),
+        },
+        "default_values": {
+            "climate": "given",
+            "hydrology": "routing",
+            "frontal_melt": "discharge_routing",
+            "ocean_file": "MAR3.9_MIROC-ESM-CHEM_rcp85_ocean_1960-2100_v4.nc",
+            "climate_file": "DMI-HIRHAM5_ERA_1980_2020_EPSG3413_4500M_MM.nc",
+            "runoff_file": "DMI-HIRHAM5_ERA_1980_2020_EPSG3413_4500M_MM.nc",
+            "salinity": 34,
+            "pseudo_plastic_q": 0.6,
+            "sia_e": 1.25,
+            "ssa_n": 3.0,
+            "fractures": "false",
+        },
+    },
 }
 
 parser = ArgumentParser()
-parser.description = "Draw samples using the Saltelli methods"
+parser.description = "Generate UQ using Latin Hypercube or Sobol Sequences."
 parser.add_argument(
     "-s",
     "--n_samples",

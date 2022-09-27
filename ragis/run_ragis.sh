@@ -13,3 +13,12 @@ PISM_PREFIX=$WORK/local/pism-dev/bin/ python3 hindcast.py --hydrology routing --
 
 sbatch $SCRATCH/${odir}/run_scripts/gris_g1800m_v1_RAGIS_id_${id}_1980-1-1_2020-1-1.sh
 done
+
+n=20
+grid=1800
+odir=2022_09_init
+uq=gris_ragis_init
+PISM_PREFIX=$HOME/local/pism-dev/bin/ python3 hindcast.py --hydrology routing --spatial_ts standard --exstep monthly --tsstep daily  -d gris --o_dir ${odir} --start 1980-1-1 --end 1990-1-1 -q normal -s pleiades_ivy -w 6:00:00 -n $n -g ${grid} -e ../uncertainty_quantification/ensemble_${uq}.csv ../data_sets/initial_states/gris_g${grid}m_v5_RAGIS_id_0_0_50.nc
+
+
+
