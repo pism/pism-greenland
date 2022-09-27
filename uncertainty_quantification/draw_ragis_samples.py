@@ -42,6 +42,7 @@ dists = {
             "z_max": 700,
             "phi_min": 5,
             "phi_max": 40,
+            "till_effective_fraction_overburden": 0.02,
         },
     },
     "calving": {
