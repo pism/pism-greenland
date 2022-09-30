@@ -92,23 +92,27 @@ def compute_sobol_indices(
             params = np.array(id_df.drop(columns="id").values, dtype=np.float32)
             id_df_missing = None
         if id_df_missing is not None:
-            response = s_df[["id", m_var]]
-            X = id_df_missing.drop(columns="id").values
-            data = griddata(params, response.values[:, 1], X, method=interp_method)
+            if method == "sobol":
+                response = s_df[["id", m_var]]
+                X = id_df_missing.drop(columns="id").values
+                data = griddata(params, response.values[:, 1], X, method=interp_method)
 
-            filled = pd.DataFrame(
-                data=np.transpose([missing_ids, data]), columns=["id", m_var]
-            )
-            response_filled = pd.concat([response, filled])
-            response_filled = response_filled.sort_values(by="id")
-            response_matrix = response_filled[response_filled.columns[-1]].values
+                filled = pd.DataFrame(
+                    data=np.transpose([missing_ids, data]), columns=["id", m_var]
+                )
+                response_filled = pd.concat([response, filled])
+                response_filled = response_filled.sort_values(by="id")
+                response_matrix = response_filled[response_filled.columns[-1]].values
+            else:
+                id_df = id_df_missing_removed
+                response_matrix = s_df[m_var].values
         else:
             response_matrix = s_df[m_var].values
         S2_vars = None
         if method == "sobol":
             Si = sobol.analyze(
                 problem,
-                response_matrix[0:96],
+                response_matrix,
                 calc_second_order=calc_second_order,
                 num_resamples=100,
                 print_to_console=False,
