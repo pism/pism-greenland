@@ -35,7 +35,7 @@ for infile in infiles:
     if os.path.isfile(infile):
         ds = xr.open_dataset(infile)
         m_id = int(re.search("id_(.+?)_", infile).group(1))
-        m_dx = int(re.search("_g(.+?)m", infile).group(1))
+        m_dx = int(re.search("gris_g(.+?)m", infile).group(1))
         datetimeindex = ds.indexes["time"]
         nt = len(datetimeindex)
         id_S = pd.Series(data=np.repeat(m_id, nt), index=datetimeindex, name="id")

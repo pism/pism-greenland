@@ -85,6 +85,28 @@ dists = {
             "fractures": "false",
         },
     },
+    "dem": {
+        "uq": {
+            "vcm": uniform(loc=0.5, scale=0.5),
+            "gamma_T": uniform(loc=1e-4, scale=0.5e-4),
+            "thickness_calving_threshold": uniform(loc=50, scale=350),
+            "surface.pdd.factor_ice": truncnorm(-3 / 3.0, 3.0 / 3, loc=5, scale=3),
+            "surface.pdd.factor_snow": truncnorm(-3.0 / 3, 3 / 3, loc=3.1, scale=2.0),
+        },
+        "default_values": {
+            "climate": "given_pdd",
+            "hydrology": "diffuse",
+            "frontal_melt": "off",
+            "ocean_file": "MAR3.9_CNRM-ESM2_ssp585_ocean_1960-2100_v4.nc",
+            "climate_file": "DMI-HIRHAM5_ERA_1980_2020_EPSG3413_4500M_MM.nc",
+            "runoff_file": "DMI-HIRHAM5_ERA_1980_2020_EPSG3413_4500M_MM.nc",
+            "salinity": 34,
+            "pseudo_plastic_q": 0.6,
+            "sia_e": 1.25,
+            "ssa_n": 3.0,
+            "fractures": "false",
+        },
+    },
 }
 
 parser = ArgumentParser()

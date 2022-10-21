@@ -135,7 +135,7 @@ parser.add_argument(
     type=int,
     choices=grid_choices,
     help="horizontal grid resolution",
-    default=9000,
+    default=1800,
 )
 parser.add_argument(
     "-r",
@@ -222,7 +222,7 @@ parser.add_argument(
 parser.add_argument(
     "--dataset_version",
     dest="version",
-    choices=["2", "3", "3a", "4", "1980", "1980a", "1980v3", "1_RAGIS", "5_RAGIS"],
+    choices=["1_RAGIS", "5_RAGIS"],
     help="input data set version",
     default="5_RAGIS",
 )
@@ -577,6 +577,13 @@ for n, row in enumerate(uq_df.iterrows()):
             "surface_given_file": climate_file_p,
         }
 
+        if combination["climate"] == "pdd_given":
+            climate_parameters["surface.pdd.factor_ice"] = combination[
+                "surface.pdd.factor_ice"
+            ]
+            climate_parameters["surface.pdd.factor_snow"] = combination[
+                "surface.pdd.factor_snow"
+            ]
         climate_params_dict = generate_climate(
             combination["climate"], **climate_parameters
         )
@@ -603,6 +610,9 @@ for n, row in enumerate(uq_df.iterrows()):
                 "frontal_melt": "routing",
                 "frontal_melt.routing.file": ocean_file_p,
             }
+        elif frontal_melt == "off":
+            frontalmelt_parameters = {}
+
         else:
             frontalmelt_parameters = {
                 "frontal_melt": "discharge_given",
