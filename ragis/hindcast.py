@@ -574,6 +574,7 @@ for n, row in enumerate(uq_df.iterrows()):
         )
         climate_parameters = {
             "climate_forcing.buffer_size": 367,
+            "atmosphere_given_file": climate_file_p,
             "surface_given_file": climate_file_p,
         }
 

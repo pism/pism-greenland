@@ -22,3 +22,9 @@ PISM_PREFIX=$HOME/local/pism-dev/bin/ python3 hindcast.py --hydrology routing --
 
 
 
+uq=gris_ragis_dem_lhs_20_w_posterior
+grid=1800
+n=20
+odir=2022_10_dem
+
+PISM_PREFIX=$HOME/local/pism-dev/bin/ python3 hindcast.py --spatial_ts standard --exstep yearly --tsstep daily  -d gris --o_dir ${odir} --start 1980-1-1 --end 1990-1-1 -q normal -s pleiades_ivy -w 4:00:00 -n $n -g ${grid} -e ../uncertainty_quantification/ensemble_${uq}.csv ../data_sets/initial_states/gris_g${grid}m_v5_RAGIS_id_0_0_50.nc
