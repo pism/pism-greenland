@@ -578,7 +578,7 @@ for n, row in enumerate(uq_df.iterrows()):
             "surface_given_file": climate_file_p,
         }
 
-        if combination["climate"] == "pdd_given":
+        if combination["climate"] == "given_pdd":
             climate_parameters["surface.pdd.factor_ice"] = combination[
                 "surface.pdd.factor_ice"
             ]
