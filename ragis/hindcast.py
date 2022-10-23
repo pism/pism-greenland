@@ -579,12 +579,12 @@ for n, row in enumerate(uq_df.iterrows()):
         }
 
         if combination["climate"] == "given_pdd":
-            climate_parameters["surface.pdd.factor_ice"] = combination[
-                "surface.pdd.factor_ice"
-            ]
-            climate_parameters["surface.pdd.factor_snow"] = combination[
-                "surface.pdd.factor_snow"
-            ]
+            climate_parameters["surface.pdd.factor_ice"] = (
+                combination["surface.pdd.factor_ice"] / 910.0
+            )
+            climate_parameters["surface.pdd.factor_snow"] = (
+                combination["surface.pdd.factor_snow"] / 910.0
+            )
         climate_params_dict = generate_climate(
             combination["climate"], **climate_parameters
         )
