@@ -381,28 +381,6 @@ ensemble_outfile_2 = join(uq_dir, ensemble_infile_2)
 cmd = f"cp {ensemble_file} {ensemble_outfile}"
 sub.call(shlex.split(cmd))
 
-pism_timefile = join(
-    time_dir, "timefile_{start}_{end}.nc".format(start=start_date, end=end_date)
-)
-try:
-    os.remove(pism_timefile)
-except OSError:
-    pass
-
-# periodicity = "daily"
-# cmd = [
-#     "create_timeline.py",
-#     "-a",
-#     start_date,
-#     "-e",
-#     end_date,
-#     "-p",
-#     periodicity,
-#     "-d",
-#     "2008-01-01",
-#     pism_timefile,
-# ]
-# sub.call(cmd)
 
 # ########################################################
 # set up model initialization
@@ -483,6 +461,7 @@ for n, row in enumerate(uq_df.iterrows()):
             "time.calendar": "365_day",
             "input.forcing.time_extrapolation": "true",
             "age.enabled": "true",
+            "energy.bedrock_thermal.file" = f"$input_dir/data_sets/bheatflux/Geothermal_Heat_Flux_Greenland_corrected_g{grid}m.nc",
             "o_format": oformat,
             "output.compression_level": compression_level,
             "config_override": "$config",
@@ -502,9 +481,6 @@ for n, row in enumerate(uq_df.iterrows()):
             "bp_snes_ksp_ew_version": 3,
             "stress_balance.ice_free_thickness_standard": 5,
         }
-
-        if "-regional" in pism and refinement_factor is not None:
-            general_params_dict["refinement_factor"] = refinement_factor
 
         outfile = f"{domain}_g{grid_resolution}m_{experiment}.nc"
 
