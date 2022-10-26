@@ -105,7 +105,7 @@ parser.add_argument(
     dest="oformat",
     choices=["netcdf3", "netcdf4_parallel", "netcdf4_serial", "pnetcdf"],
     help="output format",
-    default="netcdf4_serial",
+    default="netcdf4_parallel",
 )
 parser.add_argument(
     "-g",
@@ -195,7 +195,7 @@ parser.add_argument(
     dest="version",
     choices=["2", "3", "3a", "4", "1980", "1980v3", "1_RAGIS"],
     help="Input data set version",
-    default="4",
+    default="5",
 )
 parser.add_argument(
     "--vertical_velocity_approximation",
@@ -391,13 +391,11 @@ batch_header, batch_system = make_batch_header(system, nn, walltime, queue)
 for n, row in enumerate(uq_df.iterrows()):
     combination = row[1]
     print(combination)
-
-    ttphi = "{},{},{},{}".format(
-        combination["PHIMIN"],
-        combination["PHIMAX"],
-        combination["ZMIN"],
-        combination["ZMAX"],
-    )
+    phi_min = combination["phi_min"]
+    phi_max = combination["phi_max"]
+    z_min = combination["z_min"]
+    z_max = combination["z_max"]
+    ttphi = "{},{},{},{}".format(phi_min, phi_max, z_min, z_max)
 
     vversion = "v" + str(version)
 
@@ -520,17 +518,24 @@ for n, row in enumerate(uq_df.iterrows()):
                         grid, domain, restart=True
                     )
 
-                if "UTHRESH" in comination:
-                    u_threshold = comination["UTHRESH"]
-                else:
-                    u_threshold = 100.0
+                sliding_law = "pseudo_plastic"
+                if "sliding_law" in combination:
+                    sliding_law = combination["sliding_law"]
+
+                u_threshold = 100.0
+                if "u_threshold" in combination:
+                    u_threshold = combination["u_threshold"]
                 sb_params_dict = {
-                    "sia_e": combination["SIAE"],
+                    sliding_law: "",
+                    "sia_e": combination["sia_e"],
+                    "ssa_n": combination["ssa_n"],
                     "ssa_e": 1.0,
-                    "ssa_n": combination["SSAN"],
-                    "pseudo_plastic_q": combination["PPQ"],
-                    "till_effective_fraction_overburden": combination["TEFO"],
+                    "pseudo_plastic_q": combination["pseudo_plastic_q"],
+                    "till_effective_fraction_overburden": combination[
+                        "till_effective_fraction_overburden"
+                    ],
                     "vertical_velocity_approximation": vertical_velocity_approximation,
+                    "stress_balance.blatter.enhancement_factor": combination["sia_e"],
                     "basal_yield_stress.mohr_coulomb.till_log_factor_transportable_water": tlftw,
                     "basal_resistance.pseudo_plastic.u_threshold": u_threshold,
                 }
