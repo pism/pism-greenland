@@ -1,1 +1,1 @@
-# crios2pism
+# PISM-Greenland
