@@ -121,6 +121,10 @@ spatial_ts_vars["paleo"] = [
     "velbase_mag",
     "velsurf_mag",
     "vonmises_calving_rate",
+    "uvel",
+    "vvel",
+    "wvel",
+    "wvel_rel",
 ]
 
 spatial_ts_vars["ragis"] = [
