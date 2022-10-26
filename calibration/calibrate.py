@@ -151,9 +151,9 @@ parser.add_argument(
 parser.add_argument(
     "--spatial_ts",
     dest="spatial_ts",
-    choices=["basic", "standard", "none", "hydro"],
+    choices=["basic", "standard", "none", "hydro", "calib"],
     help="output size type",
-    default="basic",
+    default="calib",
 )
 parser.add_argument(
     "--hydrology",
