@@ -105,6 +105,13 @@ spatial_ts_vars["basic"] = [
     "vonmises_stress",
 ]
 
+spatial_ts_vars["calib"] = [
+    "beta",
+    "velsurf_mag",
+    "tillwat",
+]
+
+
 spatial_ts_vars["paleo"] = [
     "climatic_mass_balance",
     "effective_air_temp",
