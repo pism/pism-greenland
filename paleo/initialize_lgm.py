@@ -461,7 +461,7 @@ for n, row in enumerate(uq_df.iterrows()):
             "time.calendar": "365_day",
             "input.forcing.time_extrapolation": "true",
             "age.enabled": "true",
-            "energy.bedrock_thermal.file" = f"$input_dir/data_sets/bheatflux/Geothermal_Heat_Flux_Greenland_corrected_g{grid}m.nc",
+            "energy.bedrock_thermal.file": f"$input_dir/data_sets/bheatflux/Geothermal_Heat_Flux_Greenland_corrected_g{grid}m.nc",
             "o_format": oformat,
             "output.compression_level": compression_level,
             "config_override": "$config",
