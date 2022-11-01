@@ -45,6 +45,30 @@ dists = {
             "till_effective_fraction_overburden": 0.02,
         },
     },
+    "stress_balance": {
+        "uq": {"stress_balance": randint(0, 2)},
+        "default_values": {
+            "climate": "given",
+            "hydrology": "diffuse",
+            "frontal_melt": "off",
+            "ocean_file": "MAR3.9_CNRM-ESM2_ssp585_ocean_1960-2100_v4.nc",
+            "climate_file": "DMI-HIRHAM5_ERA_1980_2020_EPSG3413_4500M_MM.nc",
+            "runoff_file": "DMI-HIRHAM5_ERA_1980_2020_EPSG3413_4500M_MM.nc",
+            "gamma_T": 1.00e-4,
+            "salinity": 34,
+            "pseudo_plastic_q": 0.6,
+            "sia_e": 1.25,
+            "ssa_n": 3.0,
+            "thickness_calving_threshold": 100,
+            "vcm": 0.75,
+            "fractures": "false",
+            "z_min": -700,
+            "z_max": 700,
+            "phi_min": 5,
+            "phi_max": 40,
+            "till_effective_fraction_overburden": 0.02,
+        },
+    },
     "calving": {
         "uq": {
             "vcm": uniform(loc=0.25, scale=0.25),
@@ -105,6 +129,8 @@ dists = {
             "sia_e": 1.25,
             "ssa_n": 3.0,
             "fractures": "false",
+            "surface.pdd.std_dev.value": 5.0,
+            "surface.pdd.refreeze": 0.6,
         },
     },
 }
@@ -184,8 +210,9 @@ else:
 
 n_samples = unif_sample.shape[0]
 # To hold the transformed variables
-dist_sample = np.zeros_like(unif_sample)
+dist_sample = np.zeros_like(unif_sample, dtype="object")
 
+sb_dict = {0: "ssa+sia", 1: "blatter"}
 # For each variable, transform with the inverse of the CDF (inv(CDF)=ppf)
 for i, key in enumerate(keys_prior):
     if key == "calving_rate_scaling_file":
@@ -193,6 +220,11 @@ for i, key in enumerate(keys_prior):
             f"seasonal_calving_{int(id)}_1980_2020.nc"
             for id in distributions[key].ppf(unif_sample[:, i])
         ]
+    elif key == "stress_balance":
+        dist_sample[:, i] = [
+            f"{sb_dict[int(id)]}" for id in distributions[key].ppf(unif_sample[:, i])
+        ]
+
     elif key == "frontal_melt_file":
         dist_sample[:, i] = [
             f"jib_ocean_forcing_{int(id)}_1980_2020.nc"
