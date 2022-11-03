@@ -24,7 +24,7 @@ dists = {
     "init": {
         "uq": {},
         "default_values": {
-            "climate": "given",
+            "climate": "surface_given",
             "hydrology": "routing",
             "frontal_melt": "discharge_routing",
             "ocean_file": "MAR3.9_CNRM-ESM2_ssp585_ocean_1960-2100_v4.nc",
@@ -48,7 +48,7 @@ dists = {
     "stress_balance": {
         "uq": {"stress_balance": randint(0, 2)},
         "default_values": {
-            "climate": "given",
+            "climate": "surface_given",
             "hydrology": "diffuse",
             "frontal_melt": "off",
             "ocean_file": "MAR3.9_CNRM-ESM2_ssp585_ocean_1960-2100_v4.nc",
@@ -74,7 +74,7 @@ dists = {
             "vcm": uniform(loc=0.25, scale=0.25),
         },
         "default_values": {
-            "climate": "given",
+            "climate": "surface_given",
             "hydrology": "routing",
             "frontal_melt": "discharge_routing",
             "ocean_file": "MAR3.9_CNRM-ESM2_ssp585_ocean_1960-2100_v4.nc",
@@ -96,7 +96,7 @@ dists = {
             "thickness_calving_threshold": uniform(loc=100, scale=300),
         },
         "default_values": {
-            "climate": "given",
+            "climate": "surface_given",
             "hydrology": "routing",
             "frontal_melt": "discharge_routing",
             "ocean_file": "MAR3.9_CNRM-ESM2_ssp585_ocean_1960-2100_v4.nc",
