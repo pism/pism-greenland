@@ -1,0 +1,5 @@
+id,vcm,thickness_calving_threshold,climate,hydrology,frontal_melt,frontal_melt_file,climate_file,runoff_file,salinity,pseudo_plastic_q,sia_e,ssa_n,gamma_T,fractures,parameter_a,power_alpha
+0,0.8754765616879576,204.74258873209183,given,routing,discharge_routing,jib_ocean_forcing_ctrl_1980_1990_TM.nc,DMI-HIRHAM5_ERA_1980_1990_EPSG3413_4500M_TM.nc,DMI-HIRHAM5_ERA_1980_1990_EPSG3413_4500M_TM.nc,,0.6,1.25,3.0,0.000125,false,0.0003,0.39
+1,0.7473174588016134,198.96717049216556,given,routing,discharge_routing,jib_ocean_forcing_ctrl_1980_1990_TM.nc,DMI-HIRHAM5_ERA_1980_1990_EPSG3413_4500M_TM.nc,DMI-HIRHAM5_ERA_1980_1990_EPSG3413_4500M_TM.nc,,0.6,1.25,3.0,0.000125,false,0.0003,0.39
+2,0.6264991707412098,102.0100079408775,given,routing,discharge_routing,jib_ocean_forcing_ctrl_1980_1990_TM.nc,DMI-HIRHAM5_ERA_1980_1990_EPSG3413_4500M_TM.nc,DMI-HIRHAM5_ERA_1980_1990_EPSG3413_4500M_TM.nc,,0.6,1.25,3.0,0.000125,false,0.0003,0.39
+3,0.9841609337755137,263.2188827038883,given,routing,discharge_routing,jib_ocean_forcing_ctrl_1980_1990_TM.nc,DMI-HIRHAM5_ERA_1980_1990_EPSG3413_4500M_TM.nc,DMI-HIRHAM5_ERA_1980_1990_EPSG3413_4500M_TM.nc,,0.6,1.25,3.0,0.000125,false,0.0003,0.39

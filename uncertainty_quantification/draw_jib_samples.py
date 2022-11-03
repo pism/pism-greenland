@@ -28,7 +28,7 @@ dists = {
             "sia_e": 1.25,
             "ssa_n": 3.0,
             "gamma_T": 1.25e-4,
-            "fractures": "true",
+            "fractures": "false",
             "parameter_a": 3e-4,
             "power_alpha": 0.39,
         },

@@ -287,18 +287,18 @@ else:
 pism_dataname = False
 if domain.lower() in ("greenland_ext", "gris_ext"):
     pism_dataname = (
-        "$input_dir/data_sets/bed_dem/pism_Greenland_ext_{}m_v{}_{}.nc".format(
+        "$input_dir/data_sets/bed_dem/pism_Greenland_ext_{}m_mcb_jpl_v{}_{}.nc".format(
             grid, version, bed_type
         )
     )
 if domain.lower() in ("ismip6"):
     pism_dataname = (
-        "$input_dir/data_sets/bed_dem/pism_Greenland_ismip6_{}m_v{}_{}.nc".format(
+        "$input_dir/data_sets/bed_dem/pism_Greenland_ismip6_{}m_mcb_jpl_v{}_{}.nc".format(
             grid, version, bed_type
         )
     )
 else:
-    pism_dataname = "$input_dir/data_sets/bed_dem/pism_Greenland_{}m_v{}_{}.nc".format(
+    pism_dataname = "$input_dir/data_sets/bed_dem/pism_Greenland_{}m_mcb_jpl_v{}_{}.nc".format(
         grid, version, bed_type
     )
 
