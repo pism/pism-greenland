@@ -7,9 +7,32 @@ import pandas as pd
 from scipy.stats.distributions import uniform, randint, truncnorm, gamma
 
 from SALib.sample import saltelli
+from pyDOE import lhs
 
 
 dists = {
+    "init": {
+        "uq": {
+            "vcm": uniform(loc=0.6, scale=0.4),
+            "thickness_calving_threshold": uniform(loc=100, scale=200),
+        },
+        "default_values": {
+            "climate": "given",
+            "hydrology": "routing",
+            "frontal_melt": "discharge_routing",
+            "frontal_melt_file": "jib_ocean_forcing_ctrl_1980_1990_TM.nc",
+            "climate_file": "DMI-HIRHAM5_ERA_1980_1990_EPSG3413_4500M_TM.nc",
+            "runoff_file": "DMI-HIRHAM5_ERA_1980_1990_EPSG3413_4500M_TM.nc",
+            "salinity": "",
+            "pseudo_plastic_q": 0.6,
+            "sia_e": 1.25,
+            "ssa_n": 3.0,
+            "gamma_T": 1.25e-4,
+            "fractures": "true",
+            "parameter_a": 3e-4,
+            "power_alpha": 0.39,
+        },
+    },
     "fractures": {
         "uq": {
             "fracture_gamma": uniform(loc=0, scale=1),
@@ -267,6 +290,15 @@ parser.add_argument(
     default="all",
 )
 parser.add_argument(
+    "-m",
+    "--method",
+    dest="method",
+    type=str,
+    choices=["lhs", "saltelli"],
+    help="""number of samples to draw. default=saltelli.""",
+    default="saltelli",
+)
+parser.add_argument(
     "--calc_second_order",
     action="store_true",
     help="""Second order interactions.""",
@@ -279,12 +311,13 @@ parser.add_argument(
     default="velocity_calibration_samples.csv",
 )
 options = parser.parse_args()
-n_samples = options.n_samples
+n_draw_samples = options.n_samples
 calc_second_order = options.calc_second_order
+method = options.method
 outfile = options.OUTFILE[-1]
 distribution_name = options.distribution
 
-print(f"\nDrawing {n_samples} samples from distribution set {distribution_name}")
+print(f"\nDrawing {n_draw_samples} samples from distribution set {distribution_name}")
 distributions = dists[distribution_name]["uq"]
 
 problem = {
@@ -293,8 +326,17 @@ problem = {
     "bounds": [[0, 1]] * len(distributions.keys()),
 }
 
-# Generate samples
-unif_sample = saltelli.sample(problem, n_samples, calc_second_order=calc_second_order)
+keys_prior = list(distributions.keys())
+
+# Generate uniform samples (i.e. one unit hypercube)
+if method == "saltelli":
+    unif_sample = saltelli.sample(
+        problem, n_draw_samples, calc_second_order=calc_second_order
+    )
+elif method == "lhs":
+    unif_sample = lhs(len(keys_prior), n_draw_samples)
+else:
+    print(f"Method {method} not available")
 
 
 # To hold the transformed variables
