@@ -819,6 +819,8 @@ def generate_climate(climate, **kwargs):
         if "atmosphere_delta_T_file" not in kwargs:
             params_dict["atmosphere_delta_T_file"] = "pism_warming_climate_forcing.nc"
         params_dict["surface"] = "pdd"
+    elif climate in ("surface_given"):
+        params_dict["surface"] = "given"
     elif climate in ("paleo_const"):
         params_dict["atmosphere"] = "searise_greenland"
         params_dict["surface"] = "given"

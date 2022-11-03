@@ -17,7 +17,7 @@ dists = {
             "thickness_calving_threshold": uniform(loc=100, scale=200),
         },
         "default_values": {
-            "climate": "given",
+            "climate": "surface_given",
             "hydrology": "routing",
             "frontal_melt": "discharge_routing",
             "frontal_melt_file": "jib_ocean_forcing_ctrl_1980_1990_TM.nc",
@@ -43,7 +43,7 @@ dists = {
             "vcm": uniform(loc=0.4, scale=0.4),
         },
         "default_values": {
-            "climate": "given",
+            "climate": "surface_given",
             "hydrology": "routing",
             "frontal_melt": "discharge_routing",
             "frontal_melt_file": "jib_ocean_forcing_id_fjord_ctrl_1980_2020.nc",
@@ -71,7 +71,7 @@ dists = {
             "vcm": uniform(loc=0.4, scale=0.4),
         },
         "default_values": {
-            "climate": "given",
+            "climate": "surface_given",
             "hydrology": "routing",
             "frontal_melt": "discharge_routing",
             "frontal_melt_file": "jib_ocean_forcing_id_fjord_ctrl_1980_2020.nc",
@@ -95,7 +95,7 @@ dists = {
             "healing_threshold": uniform(loc=1e-11, scale=9.9e-10),
         },
         "default_values": {
-            "climate": "given",
+            "climate": "surface_given",
             "hydrology": "routing",
             "frontal_melt": "discharge_routing",
             "frontal_melt_file": "jib_ocean_forcing_ctrl_1980_2020.nc",
@@ -125,7 +125,7 @@ dists = {
             "vcm": uniform(loc=0.45, scale=0.2),
         },
         "default_values": {
-            "climate": "given",
+            "climate": "surface_given",
             "hydrology": "routing",
             "frontal_melt": "discharge_routing",
             "frontal_melt_file": "jib_ocean_forcing_id_fjord_ctrl_1980_2020.nc",
@@ -153,7 +153,7 @@ dists = {
             "vcm": uniform(loc=0.5, scale=0.2),
         },
         "default_values": {
-            "climate": "given",
+            "climate": "surface_given",
             "hydrology": "routing",
             "frontal_melt": "discharge_routing",
             "frontal_melt_file": "jib_ocean_forcing_id_fjord_ctrl_1980_2020.nc",
@@ -180,7 +180,7 @@ dists = {
             "frontal_melt_file": randint(0, 10),
         },
         "default_values": {
-            "climate": "given",
+            "climate": "surface_given",
             "hydrology": "routing",
             "frontal_melt": "discharge_routing",
             "climate_file": "DMI-HIRHAM5_ERA_1980_2020_EPSG3413_4500M_DM.nc",
@@ -212,7 +212,7 @@ dists = {
             "parameter_a": uniform(loc=1e-4, scale=5e-4),
         },
         "default_values": {
-            "climate": "given",
+            "climate": "surface_given",
             "hydrology": "routing",
             "frontal_melt": "discharge_routing",
             "climate_file": "DMI-HIRHAM5_ERA_1980_2020_EPSG3413_4500M_DM.nc",
@@ -223,7 +223,6 @@ dists = {
             "fracture_softening": 0.96767578125,
             "fracture_initiation_threshold": 127548.828125,
             "healing_threshold": 4.3249023437500005e-10,
-            "climate": "given",
             "hydrology": "routing",
             "frontal_melt": "discharge_routing",
             "frontal_melt_file": "jib_ocean_forcing_id_fjord_ctrl_1980_2020.nc",
@@ -246,7 +245,7 @@ dists = {
             "calving_rate_scaling_file": randint(0, 2),
         },
         "default_values": {
-            "climate": "given",
+            "climate": "surface_given",
             "hydrology": "routing",
             "frontal_melt": "discharge_routing",
             "climate_file": "DMI-HIRHAM5_ERA_1980_2020_EPSG3413_4500M_DM.nc",
@@ -257,7 +256,6 @@ dists = {
             "fracture_softening": 0.96767578125,
             "fracture_initiation_threshold": 127548.828125,
             "healing_threshold": 4.3249023437500005e-10,
-            "climate": "given",
             "hydrology": "routing",
             "frontal_melt": "discharge_routing",
             "frontal_melt_file": "jib_ocean_forcing_id_fjord_ctrl_1980_2020.nc",
