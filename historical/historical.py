@@ -588,11 +588,16 @@ for n, row in enumerate(uq_df.iterrows()):
                 "frontal_melt.routing.parameter_a": combination["parameter_a"],
                 "frontal_melt.routing.power_alpha": combination["power_alpha"],
             }
-        else:
+        elif frontal_melt == "discharge_given":
             frontalmelt_parameters = {
                 "frontal_melt": "discharge_given",
                 "frontal_melt.discharge_given.file": frontal_melt_file_p,
             }
+        elif frontal_melt == "false":
+            frontalmelt_parameters = {}
+
+        else:
+            print(f"Option {frontal_melt} not recognized")
 
         frontalmelt_params_dict = frontalmelt_parameters
 
