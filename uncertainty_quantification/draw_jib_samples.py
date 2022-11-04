@@ -155,7 +155,7 @@ dists = {
     },
     "calving": {
         "uq": {
-            "vcm": uniform(loc=0.5, scale=0.2),
+            "vcm": uniform(loc=0.4, scale=0.4),
         },
         "default_values": {
             "climate": "surface_given",
@@ -169,8 +169,8 @@ dists = {
             "sia_e": 1.25,
             "ssa_n": 3.0,
             "gamma_T": 0.0001338671875,
-            "thickness_calving_threshold": "thickness_calving_threshold_300_500_1998-01-01_2000-01-01.nc",
-            "fractures": "true",
+            "thickness_calving_threshold": 300,
+            "fractures": "false",
             "fracture_gamma": 0.4697265625,
             "fracture_gamma_h": 0.0,
             "fracture_softening": 0.9969726562500001,
