@@ -496,20 +496,6 @@ for n, row in enumerate(uq_df.iterrows()):
             "o_format": oformat,
             "output.compression_level": compression_level,
             "config_override": "$config",
-            "stress_balance.blatter.coarsening_factor": 4,
-            "blatter_Mz": 17,
-            "bp_ksp_type": "gmres",
-            "bp_pc_type": "mg",
-            "bp_pc_mg_levels": 3,
-            "bp_mg_levels_ksp_type": "richardson",
-            "bp_mg_levels_pc_type": "sor",
-            "bp_mg_coarse_ksp_type": "gmres",
-            "bp_mg_coarse_pc_type": "bjacobi",
-            "bp_snes_monitor_ratio": "",
-            "bp_ksp_monitor": "",
-            "bp_ksp_view_singularvalues": "",
-            "bp_snes_ksp_ew": 1,
-            "bp_snes_ksp_ew_version": 3,
             "stress_balance.ice_free_thickness_standard": 5,
         }
 
@@ -563,6 +549,11 @@ for n, row in enumerate(uq_df.iterrows()):
                 "fracture_initiation_threshold"
             ]
             sb_params_dict["healing_threshold"] = combination["healing_threshold"]
+
+        sliding_law = "pseudo_plastic"
+        if hasattr(combination, "sliding_law"):
+            sliding_law = combination["sliding_law"]
+            sb_params_dict[sliding_law] = ""
 
         stress_balance_params_dict = generate_stress_balance(
             stress_balance, sb_params_dict

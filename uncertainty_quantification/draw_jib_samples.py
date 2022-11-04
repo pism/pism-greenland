@@ -31,6 +31,7 @@ dists = {
             "fractures": "false",
             "parameter_a": 3e-4,
             "power_alpha": 0.39,
+            "sliding_law": "pseudo_plastic",
         },
     },
     "fractures": {
@@ -58,6 +59,7 @@ dists = {
             "fractures": "true",
             "parameter_a": 3e-4,
             "power_alpha": 0.39,
+            "sliding_law": "pseudo_plastic",
         },
     },
     "fractures_all": {
@@ -85,6 +87,7 @@ dists = {
             "fractures": "true",
             "parameter_a": 3e-4,
             "power_alpha": 0.39,
+            "sliding_law": "pseudo_plastic",
         },
     },
     "fractures_steady": {
@@ -116,6 +119,7 @@ dists = {
             "vcm": 0.5,
             "parameter_a": 3e-4,
             "power_alpha": 0.39,
+            "sliding_law": "pseudo_plastic",
         },
     },
     "fractures_melt": {
@@ -146,6 +150,7 @@ dists = {
             "vcm": 0.5,
             "parameter_a": 3e-4,
             "power_alpha": 0.39,
+            "sliding_law": "pseudo_plastic",
         },
     },
     "calving": {
@@ -173,6 +178,7 @@ dists = {
             "healing_threshold": 4.3249023437500005e-10,
             "parameter_a": 3e-4,
             "power_alpha": 0.39,
+            "sliding_law": "pseudo_plastic",
         },
     },
     "ocean": {
@@ -200,6 +206,7 @@ dists = {
             "vcm": 0.5,
             "parameter_a": 3e-4,
             "power_alpha": 0.39,
+            "sliding_law": "pseudo_plastic",
         },
     },
     "full": {
@@ -232,6 +239,7 @@ dists = {
             "pseudo_plastic_q": 0.6,
             "sia_e": 1.25,
             "ssa_n": 3.0,
+            "sliding_law": "pseudo_plastic",
         },
     },
     "frontal_ablation": {
@@ -265,6 +273,7 @@ dists = {
             "pseudo_plastic_q": 0.6,
             "sia_e": 1.25,
             "ssa_n": 3.0,
+            "sliding_law": "pseudo_plastic",
         },
     },
 }

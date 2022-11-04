@@ -692,6 +692,22 @@ def generate_stress_balance(stress_balance, additional_params_dict):
         params_dict["sia_flow_law"] = "gpbld"
         params_dict["tauc_slippery_grounding_lines"] = ""
 
+    if stress_balance == "blatter":
+        params_dict["stress_balance.blatter.coarsening_factor"] = 4
+        params_dict["blatter_Mz"] = 17
+        params_dict["bp_ksp_type"] = "gmres"
+        params_dict["bp_pc_type"] = "mg"
+        params_dict["bp_pc_mg_levels"] = 3
+        params_dict["bp_mg_levels_ksp_type"] = "richardson"
+        params_dict["bp_mg_levels_pc_type"] = "sor"
+        params_dict["bp_mg_coarse_ksp_type"] = "gmres"
+        params_dict["bp_mg_coarse_pc_type"] = "bjacobi"
+        params_dict["bp_snes_monitor_ratio"] = ""
+        params_dict["bp_ksp_monitor"] = ""
+        params_dict["bp_ksp_view_singularvalues"] = ""
+        params_dict["bp_snes_ksp_ew"] = 1
+        params_dict["bp_snes_ksp_ew_version"] = 3
+
     return merge_dicts(additional_params_dict, params_dict)
 
 

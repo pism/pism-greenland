@@ -43,6 +43,7 @@ dists = {
             "phi_min": 5,
             "phi_max": 40,
             "till_effective_fraction_overburden": 0.02,
+            "sliding_law": "pseudo_plastic",
         },
     },
     "stress_balance": {
@@ -67,6 +68,7 @@ dists = {
             "phi_min": 5,
             "phi_max": 40,
             "till_effective_fraction_overburden": 0.02,
+            "sliding_law": "pseudo_plastic",
         },
     },
     "calving": {
@@ -87,6 +89,7 @@ dists = {
             "ssa_n": 3.0,
             "thickness_calving_threshold": 100,
             "fractures": "false",
+            "sliding_law": "pseudo_plastic",
         },
     },
     "ocean": {
@@ -107,6 +110,7 @@ dists = {
             "sia_e": 1.25,
             "ssa_n": 3.0,
             "fractures": "false",
+            "sliding_law": "pseudo_plastic",
         },
     },
     "dem": {
@@ -131,6 +135,7 @@ dists = {
             "fractures": "false",
             "surface.pdd.std_dev.value": 5.0,
             "surface.pdd.refreeze": 0.6,
+            "sliding_law": "pseudo_plastic",
         },
     },
 }
