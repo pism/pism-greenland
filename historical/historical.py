@@ -593,7 +593,7 @@ for n, row in enumerate(uq_df.iterrows()):
                 "frontal_melt": "discharge_given",
                 "frontal_melt.discharge_given.file": frontal_melt_file_p,
             }
-        elif frontal_melt == "false":
+        elif frontal_melt in ("false", False):
             frontalmelt_parameters = {}
 
         else:
