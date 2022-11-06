@@ -1,4 +1,4 @@
-y#!/bin/bash
+#!/bin/bash
 #SBATCH --partition=analysis
 #SBATCH --ntasks=1
 #SBATCH --tasks-per-node=1
@@ -26,7 +26,6 @@ ncatted -a units,total_grounding_line_flux,o,c,"Gt year-1" ../processed/masked_e
 
 for var in mask velsurf_mag thk; do
     cdo -f nc4 -z zip_2 seldate,1985-7-16 -selvar,$var ../processed/masked_ex_${file}.nc ../processed/${var}_masked_ex_${file}_1985-7-16.nc
-    cdo -f nc4 -z zip_2 seldate,2009-7-16 -selvar,$var ../processed/masked_ex_${file}.nc ../processed/${var}_masked_ex_${file}_2009-7-16.nc
 done
 
 cdo fldsum ../processed/masked_ex_${file}.nc ../processed/fldsum_masked_ex_${file}.nc
