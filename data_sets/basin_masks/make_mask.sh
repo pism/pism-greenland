@@ -3,10 +3,10 @@
 UGID=225
 ores=$1
 
-x_min=-282650.0
-x_max=293350.0
-y_min=-2417600.0
-y_max=-2021600.0
+x_min=-282650
+x_max=293350
+y_min=-2417600
+y_max=-2021600
 
 x_min=$((${x_min} - $ores * 2))
 x_max=$((${x_max} + $ores * 2))
