@@ -46,10 +46,10 @@ def generate_domain(domain):
         )
 
     elif domain.lower() in ("jakobshavn", "jib"):
-        x_min = -280000.0
-        x_max = 320000.0
-        y_min = -2410000.0
-        y_max = -2020000.0
+        x_min = -282650.0
+        x_max = 293350.0
+        y_min = -2417600.0
+        y_max = -2021600.0
         pism_exec = """pismr -regional -x_range {x_min},{x_max} -y_range {y_min},{y_max}  -bootstrap -regional.zero_gradient true -regional.no_model_strip 4.5""".format(
             x_min=x_min, x_max=x_max, y_min=y_min, y_max=y_max
         )
@@ -450,8 +450,8 @@ def generate_grid_description(grid_resolution, domain, restart=False):
 
     elif domain.lower() in ("jakobshavn", "jib"):
 
-        mx_max = 4000
-        my_max = 2600
+        mx_max = 3840
+        my_max = 2640
 
         resolution_max = 150
 
@@ -468,6 +468,7 @@ def generate_grid_description(grid_resolution, domain, restart=False):
             3000,
             3600,
             4500,
+            9000,
         )
 
         try:
