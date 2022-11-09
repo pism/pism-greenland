@@ -89,7 +89,7 @@ parser.add_argument(
     "-d",
     "--domain",
     dest="domain",
-    choices=["gris", "gris_ext", "jib"],
+    choices=["gris", "gris_ext", "jib", "qaanaaq"],
     help="sets the modeling domain",
     default="gris",
 )

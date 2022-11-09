@@ -97,9 +97,18 @@ parser.add_argument(
     "-d",
     "--domain",
     dest="domain",
-    choices=["gris", "gris_ext", "jib", "jakobshavn", "nw", "ismip6", "qaamerujup"],
+    choices=[
+        "gris",
+        "gris_ext",
+        "jib",
+        "jakobshavn",
+        "nw",
+        "ismip6",
+        "qaamerujup",
+        "qaanaaq",
+    ],
     help="sets the modeling domain",
-    default="ismip6",
+    default="gris",
 )
 parser.add_argument(
     "--exstep",
