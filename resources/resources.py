@@ -53,6 +53,14 @@ def generate_domain(domain):
         pism_exec = """pismr -regional -x_range {x_min},{x_max} -y_range {y_min},{y_max}  -bootstrap -regional.zero_gradient true -regional.no_model_strip 4.5""".format(
             x_min=x_min, x_max=x_max, y_min=y_min, y_max=y_max
         )
+    elif domain.lower() in ("qaanaaq"):
+        x_min = -507650.0
+        x_max = -363650.0
+        y_min = -1310600.0
+        y_max = -1157600.0
+        pism_exec = """pismr -regional -x_range {x_min},{x_max} -y_range {y_min},{y_max}  -bootstrap -regional.zero_gradient true -regional.no_model_strip 4.5""".format(
+            x_min=x_min, x_max=x_max, y_min=y_min, y_max=y_max
+        )
     elif domain.lower() in ("qaamerujup"):
         x_min = -250000.0
         x_max = -153000.0
@@ -452,6 +460,52 @@ def generate_grid_description(grid_resolution, domain, restart=False):
 
         mx_max = 3840
         my_max = 2640
+
+        resolution_max = 150
+
+        accepted_resolutions = (
+            150,
+            300,
+            450,
+            600,
+            900,
+            1200,
+            1500,
+            1800,
+            2400,
+            3000,
+            3600,
+            4500,
+            9000,
+        )
+
+        try:
+            grid_resolution in accepted_resolutions
+            pass
+        except:
+            print(("grid resolution {}m not recognized".format(grid_resolution)))
+
+        if grid_resolution < 1200:
+            skip_max = 200
+            mz = 201
+            mzb = 21
+        elif (grid_resolution >= 1200) and (grid_resolution < 4500):
+            skip_max = 100
+            mz = 201
+            mzb = 21
+        elif (grid_resolution >= 4500) and (grid_resolution < 18000):
+            skip_max = 50
+            mz = 201
+            mzb = 21
+        else:
+            skip_max = 20
+            mz = 101
+            mzb = 11
+
+    elif domain.lower() in ("qaanaaq"):
+
+        mx_max = 960
+        my_max = 1020
 
         resolution_max = 150
 
