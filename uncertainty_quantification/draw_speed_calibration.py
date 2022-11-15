@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# (C) 2017-2021 Andy Aschwanden, Doug Brinkerhoff
+# (C) 2017-2022 Andy Aschwanden, Doug Brinkerhoff
 
 # This script draws samples with the Sobol Sequences
 # using the Saltelli method
