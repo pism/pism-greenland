@@ -146,14 +146,14 @@ parser.add_argument(
     dest="bed_type",
     choices=list_bed_types(),
     help="output size type",
-    default="ctrl",
+    default="wc",
 )
 parser.add_argument(
     "--spatial_ts",
     dest="spatial_ts",
     choices=["basic", "standard", "none", "hydro", "calib"],
     help="output size type",
-    default="calib",
+    default="none",
 )
 parser.add_argument(
     "--hydrology",
@@ -193,7 +193,7 @@ parser.add_argument(
 parser.add_argument(
     "--dataset_version",
     dest="version",
-    choices=["2", "3", "3a", "4", "1980", "1980v3", "5_RAGIS", "2022"],
+    choices=["2", "3", "3a", "4", "2022", "2022_RAGIS"],
     help="Input data set version",
     default="2022",
 )
@@ -474,21 +474,7 @@ for n, row in enumerate(uq_df.iterrows()):
                     "o_format": oformat,
                     "output.compression_level": compression_level,
                     "config_override": "$config",
-                    #                    "energy.ch_warming.enabled": True,
-                    "stress_balance.blatter.coarsening_factor": 4,
-                    "blatter_Mz": 17,
-                    "bp_ksp_type": "gmres",
-                    "bp_pc_type": "mg",
-                    "bp_pc_mg_levels": 3,
-                    "bp_mg_levels_ksp_type": "richardson",
-                    "bp_mg_levels_pc_type": "sor",
-                    "bp_mg_coarse_ksp_type": "gmres",
-                    "bp_mg_coarse_pc_type": "bjacobi",
-                    "bp_snes_monitor_ratio": "",
-                    "bp_ksp_monitor": "",
-                    "bp_ksp_view_singularvalues": "",
-                    "bp_snes_ksp_ew": 1,
-                    "bp_snes_ksp_ew_version": 3,
+                    "energy.ch_warming.enabled": "false",
                 }
 
                 if start == simulation_start_year:
