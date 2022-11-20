@@ -1068,6 +1068,18 @@ systems["stampede2"] = {
     },
 }
 
+systems["frontera"] = {
+    "mpido": "ibrun",
+    "submit": "sbatch",
+    "work_dir": "SLURM_SUBMIT_DIR",
+    "job_id": "SLURM_JOBID",
+    "queue": {
+        "small": 56,
+        "normal": 56,
+        "development": 56,
+    },
+}
+
 
 systems["pleiades_haswell"] = systems["pleiades"].copy()
 systems["pleiades_haswell"]["queue"] = {"long": 24, "normal": 24}
