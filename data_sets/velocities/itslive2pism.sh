@@ -10,7 +10,7 @@ x_max=905350
 y_max=-635600
 
 itslive=GRE_G0240_0000.nc
-for grid in 1800 1500 1200 900; do
+for grid in 1800 1500 1200 900 600 450; do
     itslivepism=GRE_G${grid}_0000.nc
     gdalwarp $options  -dstnodata 0 -te $x_min $y_min $x_max $y_max -tr $grid $grid  NETCDF:$itslive:v $itslivepism
 done
