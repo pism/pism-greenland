@@ -1,2 +1,0 @@
-id,sia_e,sia_n,ssa_n,pseudo_plastic_q,pseudo_plastic_uthreshold,till_effective_fraction_overburden,phi_min,z_min,z_max
-CTRL,1.25,3.0,3.25,0.6,100.0,0.02,5,-700,700

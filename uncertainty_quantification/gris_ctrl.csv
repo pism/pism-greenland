@@ -1,0 +1,3 @@
+id,sia_e,sia_n,ssa_n,pseudo_plastic_q,pseudo_plastic_uthreshold,till_effective_fraction_overburden,phi_min,z_min,z_max,sliding_law
+CTRL,1.25,3.0,3.25,0.6,100.0,0.02,5,-700,700,pseudo_plastic
+CTRL-REG,1.25,3.0,3.25,0.6,100.0,0.02,5,-700,700,regularized_coulomb
