@@ -27,7 +27,7 @@ dists = {
                 loc=1.0, scale=3.0
             ),  # uniform between 1 and 4    AS16 best value: 1.25
             "sia_n": uniform(
-                loc=3.0, scale=1.0
+                loc=3.0, scale=0.5
             ),  # uniform between 3 and 3.5  AS16 best value: 3.25
             "ssa_n": uniform(
                 loc=3.0, scale=0.5
@@ -37,7 +37,7 @@ dists = {
             ),  # uniform between 0.25 and 0.95
             "pseudo_plastic_uthreshold": uniform(loc=50.0, scale=150.0),
             "till_effective_fraction_overburden": uniform(
-                loc=0.005, scale=0.025
+                loc=0.01, scale=0.02
             ),  # uniform between 0.015 and 0.030
             "phi_min": uniform(loc=5.0, scale=15.0),  # uniform between  5 and 20
             "z_min": uniform(loc=-1000, scale=1000),  # uniform between -1000 and 0
@@ -64,7 +64,7 @@ dists = {
             ),  # uniform between 0.25 and 0.95
             "pseudo_plastic_uthreshold": uniform(loc=50.0, scale=150.0),
             "till_effective_fraction_overburden": uniform(
-                loc=0.005, scale=0.025
+                loc=0.01, scale=0.02
             ),  # uniform between 0.015 and 0.030
             "phi_min": uniform(loc=5.0, scale=15.0),  # uniform between  5 and 20
             "z_min": uniform(loc=-1000, scale=1000),  # uniform between -1000 and 0
@@ -108,7 +108,7 @@ parser.add_argument(
     type=str,
     choices=["lhs", "saltelli"],
     help="""number of samples to draw. default=saltelli.""",
-    default="saltelli",
+    default="lhs",
 )
 parser.add_argument(
     "OUTFILE",
