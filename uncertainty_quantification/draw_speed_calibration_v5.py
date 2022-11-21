@@ -54,7 +54,7 @@ dists = {
                 loc=1.0, scale=3.0
             ),  # uniform between 1 and 4    AS16 best value: 1.25
             "sia_n": uniform(
-                loc=3.0, scale=1.0
+                loc=3.0, scale=0.5
             ),  # uniform between 3 and 3.5  AS16 best value: 3.25
             "ssa_n": uniform(
                 loc=3.0, scale=0.5
