@@ -530,7 +530,7 @@ for n, row in enumerate(uq_df.iterrows()):
         tas_paleo_file_p = (
             f"""$input_dir/data_sets/climate/{combination["tas_paleo_file"]}"""
         )
-        atmosphere_given_file_p = f"""$input_dir/data_sets/climate/gris_g4500m_MARv3.5.2-20km-monthly-20CRv2c-1900_2000_TM.nc"""
+        atmosphere_given_file_p = f"""$input_dir/data_sets/climate/DMI-HIRHAM5_ERA_1980_2020_EPSG3413_4500M_TM.nc"""
         rho_ice = 910.0
 
         climate_parameters = {
