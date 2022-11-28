@@ -115,6 +115,7 @@ dists = {
             "z_max": 700,
             "phi_min": 5,
             "phi_max": 40,
+            "till_effective_fraction_overburden": 0.02,
         },
     },
     "dem": {
@@ -139,6 +140,7 @@ dists = {
             "ssa_n": 3.0,
             "fractures": "false",
             "surface.pdd.refreeze": 0.6,
+            "till_effective_fraction_overburden": 0.02,
             "sliding_law": "pseudo_plastic",
             "phi_min": 5,
             "phi_max": 40,
