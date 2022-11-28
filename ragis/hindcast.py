@@ -231,9 +231,9 @@ parser.add_argument(
 parser.add_argument(
     "--dataset_version",
     dest="version",
-    choices=["1_RAGIS", "5_RAGIS"],
+    choices=["1_RAGIS", "5_RAGIS", "2022_RAGIS"],
     help="input data set version",
-    default="5_RAGIS",
+    default="2022_RAGIS",
 )
 parser.add_argument(
     "--vertical_velocity_approximation",
