@@ -115,11 +115,12 @@ dists = {
     },
     "dem": {
         "uq": {
-            "vcm": uniform(loc=0.5, scale=0.5),
-            "gamma_T": uniform(loc=1e-4, scale=0.5e-4),
+            "vcm": uniform(loc=0.5, scale=0.75),
+            "gamma_T": uniform(loc=0.5e-4, scale=1.0e-4),
             "thickness_calving_threshold": uniform(loc=50, scale=350),
-            "surface.pdd.factor_ice": truncnorm(-3 / 3.0, 3.0 / 3, loc=5, scale=3),
-            "surface.pdd.factor_snow": truncnorm(-3.0 / 3, 3 / 3, loc=3.1, scale=2.0),
+            "surface.pdd.factor_ice": uniform(loc=0.5, scale=8),
+            "surface.pdd.factor_snow": uniform(loc=0.5, scale=3.5),
+            "surface.pdd.std_dev.value": uniform(loc=2, scale=6),
         },
         "default_values": {
             "climate": "given_pdd",
@@ -133,7 +134,6 @@ dists = {
             "sia_e": 1.25,
             "ssa_n": 3.0,
             "fractures": "false",
-            "surface.pdd.std_dev.value": 5.0,
             "surface.pdd.refreeze": 0.6,
             "sliding_law": "pseudo_plastic",
         },
@@ -170,8 +170,8 @@ parser.add_argument(
     dest="method",
     type=str,
     choices=["lhs", "saltelli"],
-    help="""number of samples to draw. default=saltelli.""",
-    default="saltelli",
+    help="""number of samples to draw. default=lhs.""",
+    default="lhs",
 )
 parser.add_argument(
     "--posterior_file",
