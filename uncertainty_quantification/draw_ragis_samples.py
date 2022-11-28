@@ -111,6 +111,10 @@ dists = {
             "ssa_n": 3.0,
             "fractures": "false",
             "sliding_law": "pseudo_plastic",
+            "z_min": -700,
+            "z_max": 700,
+            "phi_min": 5,
+            "phi_max": 40,
         },
     },
     "dem": {
@@ -136,6 +140,10 @@ dists = {
             "fractures": "false",
             "surface.pdd.refreeze": 0.6,
             "sliding_law": "pseudo_plastic",
+            "phi_min": 5,
+            "phi_max": 40,
+            "z_min": -700,
+            "z_max": 700,
         },
     },
 }
