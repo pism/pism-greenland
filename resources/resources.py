@@ -136,11 +136,30 @@ spatial_ts_vars["paleo"] = [
     "velbase_mag",
     "velsurf_mag",
     "vonmises_calving_rate",
+]
+
+spatial_ts_vars["paleo_tracer"] = [
+    "climatic_mass_balance",
+    "effective_air_temp",
+    "effective_precipitation",
+    "dHdt",
+    "grounding_line_flux",
+    "ice_mass",
+    "mask",
+    "mass_fluxes",
+    "sftgif",
+    "thk",
+    "topg",
+    "usurf",
+    "velbase_mag",
+    "velsurf_mag",
+    "vonmises_calving_rate",
     "uvel",
     "vvel",
     "wvel",
     "wvel_rel",
 ]
+
 
 spatial_ts_vars["ragis"] = [
     "dHdt",

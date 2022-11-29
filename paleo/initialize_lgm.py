@@ -220,7 +220,7 @@ parser.add_argument(
 parser.add_argument(
     "--dataset_version",
     dest="version",
-    choices=["2021", "2022"],
+    choices=["2022"],
     help="input data set version",
     default="2022",
 )
@@ -231,8 +231,8 @@ parser.add_argument(
     help="How to approximate vertical velocities",
     default="upstream",
 )
-parser.add_argument("--start", help="Simulation start year", default=0)
-parser.add_argument("--end", help="Simulation end year", default=10000)
+parser.add_argument("--start", help="Simulation start year", default=-100001)
+parser.add_argument("--end", help="Simulation end year", default=-20000)
 parser.add_argument(
     "-e",
     "--ensemble_file",
@@ -530,7 +530,7 @@ for n, row in enumerate(uq_df.iterrows()):
         tas_paleo_file_p = (
             f"""$input_dir/data_sets/climate/{combination["tas_paleo_file"]}"""
         )
-        atmosphere_given_file_p = f"""$input_dir/data_sets/climate/DMI-HIRHAM5_ERA_1980_2020_EPSG3413_4500M_TM.nc"""
+        atmosphere_given_file_p = "$input_dir/data_sets/climate/DMI-HIRHAM5_GL2_ERAI_1980_2016_EPSG3413_4500M_TM.nc "
         rho_ice = 910.0
 
         climate_parameters = {
@@ -546,7 +546,7 @@ for n, row in enumerate(uq_df.iterrows()):
         hydrology_parameters = {}
         hydro_params_dict = generate_hydrology("diffuse", **hydrology_parameters)
 
-        ocean_delta_SL_file_p = f"""$input_dir/data_sets/ocean/pism_dSL.nc"""
+        ocean_delta_SL_file_p = "$input_dir/data_sets/ocean/pism_dSL.nc"
         ocean_parameters = {
             "sea_level": "constant,delta_sl",
             "ocean.delta_sl.file": ocean_delta_SL_file_p,

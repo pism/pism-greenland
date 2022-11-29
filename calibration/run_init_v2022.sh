@@ -76,15 +76,26 @@ odir=$SCRATCH/2022_11_${uq}_test
 PISM_PREFIX=$HOME/local/pism-dev/bin python3 calibrate-v2022.py  --o_dir ${odir} --dataset_version $dataset --step 20 --duration 20 -s $s -q ${q} -n ${n} -g ${grid} -w ${w} --ensemble_file ../uncertainty_quantification/ensemble_gris_${uq}.csv ../data_sets/initial_states/gris_g${grid}m_v${dataset}_id_CTRL_0_5.nc
 
 grid=1800
-n=68
+n=24
 s=stampede2
 q=normal
 w=4:00:00
 dataset=2022
 uq=pseudo_plastic_lhs_500
-odir=$SCRATCH/2022_11_${uq}_test
+odir=$SCRATCH/2022_11_${uq}_test_n24
 
-PISM_PREFIX=$HOME/local/pism-dev/bin python3 calibrate-v2022.py  --o_dir ${odir} --dataset_version $dataset --step 20 --duration 20 -s $s -q ${q} -n ${n} -g ${grid} -w ${w} --ensemble_file ../uncertainty_quantification/ensemble_gris_${uq}.csv ../data_sets/initial_states/gris_g${grid}m_v${dataset}_id_CTRL_0_5.nc
+PISM_PREFIX=$HOME/local/pism-dev/bin python3 calibrate-v2022.py  --o_dir ${odir} --dataset_version $dataset --step 1 --duration 1 -s $s -q ${q} -n ${n} -g ${grid} -w ${w} --ensemble_file ../uncertainty_quantification/ensemble_gris_${uq}.csv ../data_sets/initial_states/gris_g${grid}m_v${dataset}_id_CTRL_0_5.nc
+
+grid=1800
+n=24
+s=stampede2
+q=normal
+w=4:00:00
+dataset=2022
+uq=pseudo_plastic_lhs_500
+odir=$SCRATCH/2022_11_${uq}_test_n24_icc
+
+PISM_PREFIX=$HOME/local/pism-dev/bin python3 calibrate-v2022.py  --o_dir ${odir} --dataset_version $dataset --step 1 --duration 1 -s $s -q ${q} -n ${n} -g ${grid} -w ${w} --ensemble_file ../uncertainty_quantification/ensemble_gris_${uq}.csv ../data_sets/initial_states/gris_g${grid}m_v${dataset}_id_CTRL_0_5.nc
 
 grid=1500
 n=68
@@ -97,3 +108,13 @@ odir=$SCRATCH/2022_11_${uq}_test
 
 PISM_PREFIX=$HOME/local/pism-dev/bin python3 calibrate-v2022.py  --o_dir ${odir} --dataset_version $dataset --step 20 --duration 20 -s $s -q ${q} -n ${n} -g ${grid} -w ${w} --ensemble_file ../uncertainty_quantification/ensemble_gris_${uq}.csv ../data_sets/initial_states/gris_g${grid}m_v${dataset}_id_CTRL_0_5.nc
 
+grid=1800
+n=24
+s=chinook
+q=t2small
+w=4:00:00
+dataset=2022
+uq=pseudo_plastic_lhs_500
+odir=2022_11_${uq}_test
+
+PISM_PREFIX=$HOME/local/pism/bin python3 calibrate-v2022.py  --o_dir ${odir} --dataset_version $dataset --step 1 --duration 1 -s $s -q ${q} -n ${n} -g ${grid} -w ${w} --ensemble_file ../uncertainty_quantification/ensemble_gris_${uq}.csv ../data_sets/initial_states/gris_g${grid}m_v${dataset}_id_CTRL_0_5.nc
