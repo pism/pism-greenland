@@ -135,7 +135,6 @@ spatial_ts_vars["paleo"] = [
     "usurf",
     "velbase_mag",
     "velsurf_mag",
-    "vonmises_calving_rate",
 ]
 
 spatial_ts_vars["paleo_tracer"] = [

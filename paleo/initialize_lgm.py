@@ -57,7 +57,6 @@ grid_choices = [
     450,
     300,
     150,
-    1000,
 ]
 
 # set up the option parser
@@ -85,6 +84,13 @@ parser.add_argument(
     choices=list_queues(),
     help="""queue. default=long.""",
     default="t2small",
+)
+parser.add_argument(
+    "--use_mks",
+    dest="use_mks",
+    help="""Use MKS units in output files.""",
+    action="store_true",
+    default=False,
 )
 parser.add_argument(
     "--options",
@@ -178,7 +184,7 @@ parser.add_argument(
 parser.add_argument(
     "--spatial_ts",
     dest="spatial_ts",
-    choices=["basic"],
+    choices=["basic", "paleo_tracer"],
     help="output size type",
     default="paleo",
 )
@@ -268,6 +274,7 @@ tsstep = options.tsstep
 float_kill_calve_near_grounding_line = options.float_kill_calve_near_grounding_line
 grid = grid_resolution = options.grid
 hydrology = options.hydrology
+use_mks = options.use_mks
 
 stress_balance = options.stress_balance
 vertical_velocity_approximation = options.vertical_velocity_approximation
@@ -465,26 +472,15 @@ for n, row in enumerate(uq_df.iterrows()):
             "o_format": oformat,
             "output.compression_level": compression_level,
             "config_override": "$config",
-            "stress_balance.blatter.coarsening_factor": 4,
-            "blatter_Mz": 17,
-            "bp_ksp_type": "gmres",
-            "bp_pc_type": "mg",
-            "bp_pc_mg_levels": 3,
-            "bp_mg_levels_ksp_type": "richardson",
-            "bp_mg_levels_pc_type": "sor",
-            "bp_mg_coarse_ksp_type": "gmres",
-            "bp_mg_coarse_pc_type": "bjacobi",
-            "bp_snes_monitor_ratio": "",
-            "bp_ksp_monitor": "",
-            "bp_ksp_view_singularvalues": "",
-            "bp_snes_ksp_ew": 1,
-            "bp_snes_ksp_ew_version": 3,
             "stress_balance.ice_free_thickness_standard": 5,
         }
 
         outfile = f"{domain}_g{grid_resolution}m_{experiment}.nc"
 
         general_params_dict["o"] = join(dirs["state"], outfile)
+
+        if use_mks:
+            general_params_dict["output.use_MKS"]: "true"
 
         if initialstatefile is None:
             general_params_dict["bootstrap"] = ""

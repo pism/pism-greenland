@@ -46,4 +46,6 @@ python ~/base/pism-analysis/pismanalysis/extract_profiles.py -v velsurf_mag,uvel
 
 done
 
-python ~/base/pism-analysis/pismanalysis/flux_gate_analysis.py -v velsurf_normal --label_params bed --obs_file ../data_sets/velocities/flux_gates_29_250m_GRE_G0120_0000.nc ../data_sets/flux_gates/flux_gate_29_250m_g900m_const_ctrl_e_1.25_ppq_0.6_tefo_0.02_ssa_n_3.25_philow_5.0_hydro_null_100a.nc 2022_11_tillwat/flux_gates/flux_gate_29_250m_gris_g900m_v2022_id_CTRL_0_5.nc
+python ~/base/pism-analysis/pismanalysis/flux_gate_analysis.py -v velsurf_normal --legend exp --label_params bed --obs_file ../data_sets/velocities/flux_gates_29_250m_GRE_G0120_0000.nc ../data_sets/flux_gates/flux_gate_29_250m_g900m_const_ctrl_e_1.25_ppq_0.6_tefo_0.02_ssa_n_3.25_philow_5.0_hydro_null_100a.nc 2022_11_tillwat/flux_gates/flux_gate_29_250m_gris_g900m_v2022_id_CTRL_0_5.nc
+
+python ~/base/pism-analysis/pismanalysis/flux_gate_analysis.py -v velsurf_normal --legend exp --label_params init --obs_file ../data_sets/velocities/flux_gates_29_250m_GRE_G0120_0000.nc 2022_11_tillwat/flux_gates/flux_gate_29_250m_gris_g900m_v2022_id_CTRL_0_5.nc 2022_11_init/flux_gates/flux_gate_29_250m_gris_g900m_v2022_id_CTRL_0_20.nc
