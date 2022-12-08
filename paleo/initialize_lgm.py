@@ -57,6 +57,7 @@ grid_choices = [
     450,
     300,
     150,
+    1000,
 ]
 
 # set up the option parser
@@ -84,13 +85,6 @@ parser.add_argument(
     choices=list_queues(),
     help="""queue. default=long.""",
     default="t2small",
-)
-parser.add_argument(
-    "--use_mks",
-    dest="use_mks",
-    help="""Use MKS units in output files.""",
-    action="store_true",
-    default=False,
 )
 parser.add_argument(
     "--options",
@@ -184,9 +178,9 @@ parser.add_argument(
 parser.add_argument(
     "--spatial_ts",
     dest="spatial_ts",
-    choices=["basic", "paleo_tracer"],
+    choices=["basic", "paleo", "paleo_tracer"],
     help="output size type",
-    default="paleo",
+    default="basic",
 )
 parser.add_argument(
     "--hydrology",
@@ -208,6 +202,13 @@ parser.add_argument(
     action="store_false",
     help="Stable grounding line",
     default=True,
+)
+parser.add_argument(
+    "--use_mks",
+    dest="use_mks",
+    action="store_true",
+    help="Use MKS units",
+    default=False,
 )
 parser.add_argument(
     "--gid",
@@ -369,12 +370,6 @@ done
     dirs=" ".join(list(dirs.values())),
 )
 
-if system != "debug":
-    cmd = f"""lfs setstripe -c -1 {dirs["output"]}"""
-    sub.call(shlex.split(cmd))
-    cmd = f"""lfs setstripe -c -1 {dirs["spatial_tmp"]}"""
-    sub.call(shlex.split(cmd))
-
 
 ensemble_infile = os.path.split(ensemble_file)[-1]
 ensemble_outfile = join(uq_dir, ensemble_infile)
@@ -475,12 +470,12 @@ for n, row in enumerate(uq_df.iterrows()):
             "stress_balance.ice_free_thickness_standard": 5,
         }
 
+        if use_mks:
+            general_params_dict["output.use_MKS"] = "true"
+
         outfile = f"{domain}_g{grid_resolution}m_{experiment}.nc"
 
         general_params_dict["o"] = join(dirs["state"], outfile)
-
-        if use_mks:
-            general_params_dict["output.use_MKS"]: "true"
 
         if initialstatefile is None:
             general_params_dict["bootstrap"] = ""
@@ -500,6 +495,8 @@ for n, row in enumerate(uq_df.iterrows()):
 
         grid_params_dict = generate_grid_description(grid, domain)
 
+        tlftw = 0.1
+
         sb_params_dict = {
             "sia_e": combination["sia_e"],
             "ssa_e": ssa_e,
@@ -510,6 +507,8 @@ for n, row in enumerate(uq_df.iterrows()):
             ],
             "vertical_velocity_approximation": vertical_velocity_approximation,
             "stress_balance.blatter.enhancement_factor": combination["sia_e"],
+            "basal_yield_stress.add_transportable_water": "yes",
+            "basal_yield_stress.mohr_coulomb.till_log_factor_transportable_water": tlftw,
         }
         sb_params_dict["topg_to_phi"] = ttphi
 
@@ -540,7 +539,7 @@ for n, row in enumerate(uq_df.iterrows()):
         climate_params_dict = generate_climate("lgm", **climate_parameters)
 
         hydrology_parameters = {}
-        hydro_params_dict = generate_hydrology("diffuse", **hydrology_parameters)
+        hydro_params_dict = generate_hydrology(hydrology, **hydrology_parameters)
 
         ocean_delta_SL_file_p = "$input_dir/data_sets/ocean/pism_dSL.nc"
         ocean_parameters = {

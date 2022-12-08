@@ -52,6 +52,28 @@ tas2num = {
 
 
 dists = {
+    "init": {
+        "uq": {
+            "vcm": uniform(loc=400000, scale=400000),
+        },
+        "default_values": {
+            "phi_min": 5,
+            "phi_max": 40,
+            "z_min": -700,
+            "z_max": 700,
+            "pseudo_plastic_q": 0.6,
+            "sia_e": 1.25,
+            "ssa_n": 3.25,
+            "till_effective_fraction_overburden": 0.02,
+            "f_ice": 8,
+            "f_snow": 3,
+            "pr_paleo_file": "pr_Badgeley_etal_2020_id_main-mean.nc",
+            "tas_paleo_file": "tas_Badgeley_etal_2020_id_main-mean.nc",
+            "thickness_calving_threshold": 50,
+            "vcm": 500000,
+            "eigen_calving_K": 1e19,
+        },
+    },
     "calving": {
         "uq": {
             "vcm": uniform(loc=250000, scale=250000),
@@ -126,8 +148,8 @@ parser.add_argument(
     dest="method",
     type=str,
     choices=["lhs", "saltelli"],
-    help="""number of samples to draw. default=saltelli.""",
-    default="saltelli",
+    help="""number of samples to draw. default=lhs.""",
+    default="lhs",
 )
 parser.add_argument(
     "--posterior_file",

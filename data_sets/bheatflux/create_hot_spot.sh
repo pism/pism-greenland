@@ -1,9 +1,5 @@
 #!/bin/bash
 
-# (c) 2021-22 Andy Aschwanden
-
-set -x -e
-
 # Produces geothermal hot spot in variable bheatflx.
 
 # Version 2:  instead of circular hot blob near divide, an elliptical blob
@@ -62,7 +58,16 @@ set -x -e
 
 set -e  -x # exit on error
 
-add_hotspot() {
+INFILE=foo.nc
+if [ $# -gt 0 ] ; then
+  INFILE="$1"
+fi
+
+OUTFILE=bar.nc
+if [ $# -gt 1 ] ; then
+  OUTFILE="$2"
+fi
+
 
 # center:
 XSPOT=206000
@@ -76,7 +81,7 @@ BSPOT=20300
 COSTHETA=0.54655
 SINTHETA=0.83743
 
-GHFSPOT=0.970   # from Fahnstock et al 2001; in W m-2
+GHFSPOT=970   # from Fahnstock et al 2001; in W m-2
 
 ncrename -v bheatflx,bheatflxSR $OUTFILE  # keep Shapiro & Ritzwoller
 
@@ -107,32 +112,13 @@ ncatted -a propose_standard_name,bheatflx,c,c,"lithosphere_upward_heat_flux" $OU
 
 # clear out the temporary variables and only leave additional 'bheatflxSR'
 ncks -O -x -v xx,yy,xi,eta,eleft,eright,hotmask,zero,bheatflxSR $OUTFILE $OUTFILE
-}
 
-
-# First we download the Bamber 2001 SeaRISE data set
-
-bfile=Geothermal_Heat_Flux_Greenland
-cfile=TopoHeat_Greenland_20210224
-wget --no-check-certificate -nc https://store.pangaea.de/Publications/Martos-etal_2018/${bfile}.xyz
-
-# Create a buffer that is a multiple of the grid resolution
-# and works for grid resolutions up to 36km.
-buffer_x=148650
-buffer_y=130000
-xmin=$((-638000 - $buffer_x - 468000))
-ymin=$((-3349600 - $buffer_y))
-xmax=$((864700 + $buffer_x))
-ymax=$((-657600 + $buffer_y))
-
-
-for GRID in 18000 9000 6000 4500 3600 3000 2400 1800 1500 1200 900 600 450; do
-    gdalwarp  -overwrite  -r average -s_srs EPSG:32623 -t_srs EPSG:3413 -te $xmin $ymin $xmax $ymax -tr $GRID $GRID ${bfile}.xyz ${bfile}_g${GRID}m.nc
-    gdalwarp  -overwrite  -r average -s_srs EPSG:3413 -t_srs EPSG:3413 -te $xmin $ymin $xmax $ymax -tr $GRID $GRID NETCDF:${cfile}.nc:correction ${cfile}_g${GRID}m.nc
-    cdo -O -f nc4 -z zip_2 setmisstoc,42.0 -setattribute,bheatflx@units="mW m-2" -chname,Band1,bheatflx -mul ${bfile}_g${GRID}m.nc -addc,1 ${cfile}_g${GRID}m.nc Geothermal_Heat_Flux_Greenland_corrected_g${GRID}m.nc
-    ncatted -a _FillValue,bheatflx,d,, -a missing_value,bheatflx,d,, Geothermal_Heat_Flux_Greenland_corrected_g${GRID}m.nc
-    OUTFILE=Geothermal_Heat_Flux_Greenland_corrected_g${GRID}m.nc
-    add_hotspot
-done
-
-
+echo "PISM-readable file '$OUTFILE' created from '$INFILE':"
+echo "  * variable 'bheatflxSR' is copy of 'bheatflx' from '$INFILE'"
+echo "  * variable 'bheatflx' has added hot spot near source of NE Greenland ice stream:"
+echo "      center: (74 deg N lat, -40 W lon)"
+echo "      radius: $RSPOT m"
+echo "      value : $GHFSPOT W m-2"
+echo "  * reference for hot spot is"
+echo "      M. Fahnestock, et al (2001).  High geothermal heat flow, basal melt, and"
+echo "      the origin of rapid ice flow in central Greenland, Science vol 294, 2338--2342."
