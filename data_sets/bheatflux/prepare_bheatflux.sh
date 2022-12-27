@@ -76,7 +76,7 @@ BSPOT=20300
 COSTHETA=0.54655
 SINTHETA=0.83743
 
-GHFSPOT=0.970   # from Fahnstock et al 2001; in W m-2
+GHFSPOT=970   # from Fahnstock et al 2001; in mW m-2
 
 ncrename -v bheatflx,bheatflxSR $OUTFILE  # keep Shapiro & Ritzwoller
 
@@ -110,12 +110,6 @@ ncks -O -x -v xx,yy,xi,eta,eleft,eright,hotmask,zero,bheatflxSR $OUTFILE $OUTFIL
 }
 
 
-# First we download the Bamber 2001 SeaRISE data set
-
-bfile=Geothermal_Heat_Flux_Greenland
-cfile=TopoHeat_Greenland_20210224
-wget --no-check-certificate -nc https://store.pangaea.de/Publications/Martos-etal_2018/${bfile}.xyz
-
 # Create a buffer that is a multiple of the grid resolution
 # and works for grid resolutions up to 36km.
 buffer_x=148650
@@ -126,12 +120,11 @@ xmax=$((864700 + $buffer_x))
 ymax=$((-657600 + $buffer_y))
 
 
-for GRID in 18000 9000 6000 4500 3600 3000 2400 1800 1500 1200 900 600 450; do
-    gdalwarp  -overwrite  -r average -s_srs EPSG:32623 -t_srs EPSG:3413 -te $xmin $ymin $xmax $ymax -tr $GRID $GRID ${bfile}.xyz ${bfile}_g${GRID}m.nc
-    gdalwarp  -overwrite  -r average -s_srs EPSG:3413 -t_srs EPSG:3413 -te $xmin $ymin $xmax $ymax -tr $GRID $GRID NETCDF:${cfile}.nc:correction ${cfile}_g${GRID}m.nc
-    cdo -O -f nc4 -z zip_2 setmisstoc,42.0 -setattribute,bheatflx@units="mW m-2" -chname,Band1,bheatflx -mul ${bfile}_g${GRID}m.nc -addc,1 ${cfile}_g${GRID}m.nc Geothermal_Heat_Flux_Greenland_corrected_g${GRID}m.nc
-    ncatted -a _FillValue,bheatflx,d,, -a missing_value,bheatflx,d,, Geothermal_Heat_Flux_Greenland_corrected_g${GRID}m.nc
-    OUTFILE=Geothermal_Heat_Flux_Greenland_corrected_g${GRID}m.nc
+for GRID in  450; do
+    OUTFILE=Geothermal_heatflux_map_v2.1_g${GRID}m.nc
+    gdalwarp  -overwrite  -r average -co FORMAT=NC4 -co COMPRESS=DEFLATE -co ZLEVEL=2 -s_srs EPSG:3413 -t_srs EPSG:3413 -te $xmin $ymin $xmax $ymax -tr $GRID $GRID geothermal_heat_flow_map_10km.nc $OUTFILE
+    ncrename -v Band1,bheatflx $OUTFILE 
+    ncatted -a units,bheatflx,o,c,"mW m-2" -a _FillValue,bheatflx,d,, -a missing_value,bheatflx,d,, $OUTFILE
     add_hotspot
 done
 
