@@ -41,13 +41,14 @@ gebco=GEBCO_2022_sub_ice_topo.nc
 default_grid() {
 
 # Create a buffer that is a multiple of the grid resolution
-# and works for grid resolutions up to 36km.
+# and works for grid resolutions up to 18km.
 buffer_x=148650
 buffer_y=130000
-xmin=$((-638000 - $buffer_x - 468000))
-ymin=$((-3349600 - $buffer_y))
-xmax=$((864700 + $buffer_x))
-ymax=$((-657600 + $buffer_y))
+
+xmin=$((-638000 - $buffer_x - 180000))
+ymin=$((-3349600 - $buffer_y -90000))
+xmax=$((864700 + $buffer_x + 180000))
+ymax=$((-657600 + $buffer_y + 90000))
 
 for GRID in 18000 9000 6000 4500 3600 3000 2400 1800 1500 1200 900 600 450 300 150; do
     outfile_prefix=pism_Greenland_ext_${GRID}m_mcb_jpl_v${ver}
