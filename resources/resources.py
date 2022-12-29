@@ -404,8 +404,8 @@ def generate_grid_description(grid_resolution, domain, restart=False):
     if domain.lower() in ("greenland_ext", "gris_ext", "greenland", "gris"):
 
         if domain.lower() in ("greenland_ext", "gris_ext"):
-            mx_max = 15120
-            my_max = 19680
+            mx_max = 14400
+            my_max = 20880
         else:
             mx_max = 10560
             my_max = 18240
@@ -827,10 +827,6 @@ def generate_calving(calving, **kwargs):
     params_dict = OrderedDict()
     if calving in ("thickness_calving"):
         params_dict["calving"] = calving
-    elif calving in ("vonmises_nofloat_calving"):
-        params_dict["calving"] = "vonmises_calving,float_kill"
-    elif calving in ("hayhurst_nofloat_calving"):
-        params_dict["calving"] = "hayhurst_calving,float_kill"
     elif calving in (
         "eigen_calving",
         "vonmises_calving",
@@ -839,12 +835,7 @@ def generate_calving(calving, **kwargs):
         params_dict["calving"] = f"{calving},thickness_calving"
     elif calving in ("hybrid_calving"):
         params_dict["calving"] = "eigen_calving,vonmises_calving,thickness_calving"
-    elif calving in (
-        "float_kill",
-        "float_kill,ocean_kill",
-        "vonmises_calving,ocean_kill",
-        "eigen_calving,ocean_kill",
-    ):
+    elif calving in ("float_kill",):
         params_dict["calving"] = calving
     else:
         print((f"calving {calving} not recognized, exiting"))

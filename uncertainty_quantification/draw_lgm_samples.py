@@ -54,7 +54,7 @@ tas2num = {
 dists = {
     "init": {
         "uq": {
-            "vcm": uniform(loc=400000, scale=400000),
+            "vcm": uniform(loc=400000, scale=600000),
         },
         "default_values": {
             "phi_min": 5,
@@ -69,8 +69,7 @@ dists = {
             "f_snow": 3,
             "pr_paleo_file": "pr_Badgeley_etal_2020_id_main-mean.nc",
             "tas_paleo_file": "tas_Badgeley_etal_2020_id_main-mean.nc",
-            "thickness_calving_threshold": 50,
-            "vcm": 500000,
+            "thickness_calving_threshold": 200,
             "eigen_calving_K": 1e19,
         },
     },
@@ -91,7 +90,7 @@ dists = {
             "f_snow": 3,
             "pr_paleo_file": "pr_Badgeley_etal_2020_id_main-mean.nc",
             "tas_paleo_file": "tas_Badgeley_etal_2020_id_main-mean.nc",
-            "thickness_calving_threshold": 50,
+            "thickness_calving_threshold": 200,
             "eigen_calving_K": 1e19,
         },
     },
@@ -111,7 +110,7 @@ dists = {
             "till_effective_fraction_overburden": 0.02,
             "f_ice": 8,
             "f_snow": 3,
-            "thickness_calving_threshold": 50,
+            "thickness_calving_threshold": 200,
             "eigen_calving_K": 1e19,
             "vcm": 400000,
         },
