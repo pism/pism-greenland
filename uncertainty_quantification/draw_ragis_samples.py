@@ -94,7 +94,7 @@ dists = {
     },
     "ocean": {
         "uq": {
-            "vcm": uniform(loc=0.25, scale=0.5),
+            "vcm": uniform(loc=0.25, scale=0.75),
             "gamma_T": uniform(loc=1e-4, scale=0.5e-4),
             "thickness_calving_threshold": uniform(loc=100, scale=300),
         },
