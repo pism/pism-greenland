@@ -15,22 +15,15 @@ set -x -e
 
 export HDF5_USE_FILE_LOCKING=FALSE
 
-# run ./preprocess.sh 1 if you haven't CDO compiled with OpenMP
-NN=4  # default number of processors
-if [ $# -gt 0 ] ; then
-  NN="$1"
-fi
-N=$NN
-
 
 infile=BedMachineGreenland-v5.nc
-if [ -n "$2" ]; then
-    infile=$2
+if [ -n "$1" ]; then
+    infile=$1
 fi
 
 ver=2022
-if [ -n "$3" ]; then
-    ver=$3
+if [ -n "$2" ]; then
+    ver=$2
 fi
 
 
@@ -46,9 +39,9 @@ buffer_x=148650
 buffer_y=130000
 
 xmin=$((-638000 - $buffer_x - 180000))
-ymin=$((-3349600 - $buffer_y -90000))
+ymin=$((-3349600 - $buffer_y -480000))
 xmax=$((864700 + $buffer_x + 180000))
-ymax=$((-657600 + $buffer_y + 90000))
+ymax=$((-657600 + $buffer_y + 180000))
 
 for GRID in 18000 9000 6000 4500 3600 3000 2400 1800 1500 1200 900 600 450 300 150; do
     outfile_prefix=pism_Greenland_ext_${GRID}m_mcb_jpl_v${ver}
@@ -114,7 +107,7 @@ for GRID in 18000 9000 6000 4500 3600 3000 2400 1800 1500 1200 900 600 450 300 1
     gdal_translate -of netCDF -co "FORMAT=NC4" g${GRID}m_nb_${var}_v${ver}.tif g${GRID}m_nb_${var}_v${ver}.nc
     ncks -A -C -v $var g${GRID}m_nb_${var}_v${ver}.nc $outfile_nb
     ncatted -a _FillValue,bed,d,, -a _FillValue,thickness,d,, $outfile_nb
-    ncap2 -O -s "where(bed==-9999) {mask=0; surface=0; thickness=0; bed=-300;};"  $outfile_nb  $outfile_nb
+    ncap2 -O -s "where(bed==-9999) {mask=0; surface=0; thickness=0; bed=-1500;};"  $outfile_nb  $outfile_nb
 
     
     # Cut out smaller domain used for projections
