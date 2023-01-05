@@ -73,12 +73,13 @@ dists = {
     },
     "calving": {
         "uq": {
-            "vcm": uniform(loc=0.25, scale=0.25),
+            "vcm": uniform(loc=0.25, scale=0.5),
+            "thickness_calving_threshold": uniform(loc=100, scale=300),
         },
         "default_values": {
             "climate": "surface_given",
-            "hydrology": "routing",
-            "frontal_melt": "discharge_routing",
+            "hydrology": "diffuse",
+            "frontal_melt": "off",
             "ocean_file": "MAR3.9_CNRM-ESM2_ssp585_ocean_1960-2100_v4.nc",
             "climate_file": "DMI-HIRHAM5_ERA_1980_2020_EPSG3413_4500M_MM.nc",
             "runoff_file": "DMI-HIRHAM5_ERA_1980_2020_EPSG3413_4500M_MM.nc",
