@@ -192,7 +192,13 @@ parser.add_argument(
 parser.add_argument(
     "--calving",
     dest="calving",
-    choices=["vonmises_calving", "hayhurst_calving", "hybrid_calving"],
+    choices=[
+        "float_kill",
+        "vonmises_calving",
+        "hayhurst_calving",
+        "hybrid_calving",
+        "thickness_calving",
+    ],
     help="Choose calving law",
     default="hybrid_calving",
 )
@@ -232,11 +238,10 @@ parser.add_argument(
     default="2022",
 )
 parser.add_argument(
-    "--vertical_velocity_approximation",
-    dest="vertical_velocity_approximation",
-    choices=["centered", "upstream"],
-    help="How to approximate vertical velocities",
-    default="upstream",
+    "--age",
+    action="store_true",
+    help="Calculate age field. Default=False",
+    default=False,
 )
 parser.add_argument("--start", help="Simulation start year", default=-100001)
 parser.add_argument("--end", help="Simulation end year", default=-20000)
@@ -267,6 +272,7 @@ walltime = options.walltime
 system = options.system
 gid = options.gid
 
+age = options.age
 initialstatefile = options.initialstatefile
 spatial_ts = options.spatial_ts
 bed_type = options.bed_type
@@ -278,7 +284,6 @@ hydrology = options.hydrology
 use_mks = options.use_mks
 
 stress_balance = options.stress_balance
-vertical_velocity_approximation = options.vertical_velocity_approximation
 version = options.version
 
 ensemble_file = options.ensemble_file
@@ -304,9 +309,7 @@ else:
         )
     )
 
-# Removed "thk" from regrid vars
-# regridvars = "litho_temp,enthalpy,age,tillwat,bmelt,ice_area_specific_volume"
-regridvars = "litho_temp,enthalpy,age,tillwat,bmelt,ice_area_specific_volume,thk"
+regridvars = "litho_temp,enthalpy,tillwat,bmelt,ice_area_specific_volume,thk"
 
 dirs = {"output": "$output_dir", "spatial_tmp": "$spatial_tmp_dir"}
 for d in ["performance", "state", "scalar", "spatial", "jobs", "basins"]:
@@ -462,14 +465,15 @@ for n, row in enumerate(uq_df.iterrows()):
             "ye": end_date,
             "time.calendar": "365_day",
             "input.forcing.time_extrapolation": "true",
-            "age.enabled": "true",
-            "energy.bedrock_thermal.file": f"$input_dir/data_sets/bheatflux/Geothermal_Heat_Flux_Greenland_corrected_g{grid}m.nc",
+            "energy.bedrock_thermal.file": "$input_dir/data_sets/bheatflux/Geothermal_heatflux_map_v2.1_g450m.nc",
             "o_format": oformat,
             "output.compression_level": compression_level,
             "config_override": "$config",
             "stress_balance.ice_free_thickness_standard": 5,
         }
 
+        if age:
+            general_params_dict["age.enabled"] = "true"
         if use_mks:
             general_params_dict["output.use_MKS"] = "true"
 
@@ -505,7 +509,7 @@ for n, row in enumerate(uq_df.iterrows()):
             "till_effective_fraction_overburden": combination[
                 "till_effective_fraction_overburden"
             ],
-            "vertical_velocity_approximation": vertical_velocity_approximation,
+            "vertical_velocity_approximation": "upstream",
             "stress_balance.blatter.enhancement_factor": combination["sia_e"],
             "basal_yield_stress.add_transportable_water": "yes",
             "basal_yield_stress.mohr_coulomb.till_log_factor_transportable_water": tlftw,
@@ -598,7 +602,7 @@ for n, row in enumerate(uq_df.iterrows()):
         if commandline_options is not None:
             all_params = f"{all_params} \\\n  {commandline_options[1:-1]}"
 
-        print("Input files:\n")
+        print("\nInput files:\n")
 
         check_files = []
         if pism_dataname:
