@@ -263,7 +263,7 @@ for i, key in enumerate(keys_prior):
         ]
     elif key == "ocean_file":
         dist_sample[:, i] = [
-            f"{gcms[int(id)]}_ocean_1960-2100_v4.nc"
+            f"MAR3.9_{gcms[int(id)]}_ocean_1960-2100_v4.nc"
             for id in distributions[key].ppf(unif_sample[:, i])
         ]
     else:
