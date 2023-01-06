@@ -20,6 +20,20 @@ short2long = {
     "ZMAX": "z_max",
 }
 
+gcms = {
+    0: "ACCESS1-3_rcp85",
+    1: "CNRM-CM6_ssp126",
+    2: "CNRM-CM6_ssp585",
+    3: "CNRM-ESM2_ssp585",
+    4: "CSIRO-Mk3.6_rcp85",
+    5: "HadGEM2-ES_rcp85",
+    6: "IPSL-CM5-MR_rcp85",
+    7: "MIROC-ESM-CHEM_rcp26",
+    8: "MIROC-ESM-CHEM_rcp85",
+    9: "NorESM1-M_rcp85",
+    10: "UKESM1-CM6_ssp585",
+}
+
 dists = {
     "init": {
         "uq": {},
@@ -98,6 +112,7 @@ dists = {
             "vcm": uniform(loc=0.25, scale=0.75),
             "gamma_T": uniform(loc=1e-4, scale=0.5e-4),
             "thickness_calving_threshold": uniform(loc=100, scale=300),
+            "ocean_file": randint(0, len(gcms)),
         },
         "default_values": {
             "climate": "surface_given",
@@ -244,6 +259,11 @@ for i, key in enumerate(keys_prior):
     elif key == "frontal_melt_file":
         dist_sample[:, i] = [
             f"jib_ocean_forcing_{int(id)}_1980_2020.nc"
+            for id in distributions[key].ppf(unif_sample[:, i])
+        ]
+    elif key == "ocean_file":
+        dist_sample[:, i] = [
+            f"{gcms[int(id)]}_ocean_1960-2100_v4.nc"
             for id in distributions[key].ppf(unif_sample[:, i])
         ]
     else:
