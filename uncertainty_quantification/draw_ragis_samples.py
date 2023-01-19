@@ -20,6 +20,20 @@ short2long = {
     "ZMAX": "z_max",
 }
 
+gcms = {
+    0: "ACCESS1-3_rcp85",
+    1: "CNRM-CM6_ssp126",
+    2: "CNRM-CM6_ssp585",
+    3: "CNRM-ESM2_ssp585",
+    4: "CSIRO-Mk3.6_rcp85",
+    5: "HadGEM2-ES_rcp85",
+    6: "IPSL-CM5-MR_rcp85",
+    7: "MIROC-ESM-CHEM_rcp26",
+    8: "MIROC-ESM-CHEM_rcp85",
+    9: "NorESM1-M_rcp85",
+    10: "UKESM1-CM6_ssp585",
+}
+
 dists = {
     "init": {
         "uq": {},
@@ -73,12 +87,13 @@ dists = {
     },
     "calving": {
         "uq": {
-            "vcm": uniform(loc=0.25, scale=0.25),
+            "vcm": uniform(loc=0.25, scale=0.5),
+            "thickness_calving_threshold": uniform(loc=100, scale=300),
         },
         "default_values": {
             "climate": "surface_given",
-            "hydrology": "routing",
-            "frontal_melt": "discharge_routing",
+            "hydrology": "diffuse",
+            "frontal_melt": "off",
             "ocean_file": "MAR3.9_CNRM-ESM2_ssp585_ocean_1960-2100_v4.nc",
             "climate_file": "DMI-HIRHAM5_ERA_1980_2020_EPSG3413_4500M_MM.nc",
             "runoff_file": "DMI-HIRHAM5_ERA_1980_2020_EPSG3413_4500M_MM.nc",
@@ -97,11 +112,39 @@ dists = {
             "vcm": uniform(loc=0.25, scale=0.75),
             "gamma_T": uniform(loc=1e-4, scale=0.5e-4),
             "thickness_calving_threshold": uniform(loc=100, scale=300),
+            "ocean_file": randint(0, len(gcms)),
         },
         "default_values": {
             "climate": "surface_given",
             "hydrology": "routing",
             "frontal_melt": "discharge_routing",
+            "ocean_file": "MAR3.9_CNRM-ESM2_ssp585_ocean_1960-2100_v4.nc",
+            "climate_file": "DMI-HIRHAM5_ERA_1980_2020_EPSG3413_4500M_MM.nc",
+            "runoff_file": "DMI-HIRHAM5_ERA_1980_2020_EPSG3413_4500M_MM.nc",
+            "salinity": 34,
+            "pseudo_plastic_q": 0.6,
+            "sia_e": 1.25,
+            "ssa_n": 3.0,
+            "fractures": "false",
+            "sliding_law": "pseudo_plastic",
+            "z_min": -700,
+            "z_max": 700,
+            "phi_min": 5,
+            "phi_max": 40,
+            "till_effective_fraction_overburden": 0.02,
+        },
+    },
+    "ocean-simple": {
+        "uq": {
+            "vcm": uniform(loc=0.25, scale=0.75),
+            "gamma_T": uniform(loc=1e-4, scale=0.5e-4),
+            "thickness_calving_threshold": uniform(loc=100, scale=300),
+            "ocean_file": randint(0, len(gcms)),
+        },
+        "default_values": {
+            "climate": "surface_given",
+            "hydrology": "diffuse",
+            "frontal_melt": "off",
             "ocean_file": "MAR3.9_CNRM-ESM2_ssp585_ocean_1960-2100_v4.nc",
             "climate_file": "DMI-HIRHAM5_ERA_1980_2020_EPSG3413_4500M_MM.nc",
             "runoff_file": "DMI-HIRHAM5_ERA_1980_2020_EPSG3413_4500M_MM.nc",
@@ -243,6 +286,11 @@ for i, key in enumerate(keys_prior):
     elif key == "frontal_melt_file":
         dist_sample[:, i] = [
             f"jib_ocean_forcing_{int(id)}_1980_2020.nc"
+            for id in distributions[key].ppf(unif_sample[:, i])
+        ]
+    elif key == "ocean_file":
+        dist_sample[:, i] = [
+            f"MAR3.9_{gcms[int(id)]}_ocean_1960-2100_v4.nc"
             for id in distributions[key].ppf(unif_sample[:, i])
         ]
     else:

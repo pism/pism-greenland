@@ -1062,7 +1062,7 @@ systems["pleiades"] = {
     "submit": "qsub",
     "work_dir": "PBS_O_WORKDIR",
     "job_id": "PBS_JOBID",
-    "queue": {"long": 20, "normal": 20},
+    "queue": {"long": 20, "normal": 20, "debug": 20},
 }
 
 systems["stampede2"] = {
@@ -1090,21 +1090,21 @@ systems["frontera"] = {
 
 
 systems["pleiades_haswell"] = systems["pleiades"].copy()
-systems["pleiades_haswell"]["queue"] = {"long": 24, "normal": 24}
+systems["pleiades_haswell"]["queue"] = {"long": 24, "normal": 24, "debug": 24}
 
 systems["pleiades_ivy"] = systems["pleiades"].copy()
-systems["pleiades_ivy"]["queue"] = {"long": 20, "normal": 20}
+systems["pleiades_ivy"]["queue"] = {"long": 20, "normal": 20, "debug": 20}
 
 systems["pleiades_sandy"] = systems["pleiades"].copy()
-systems["pleiades_sandy"]["queue"] = {"long": 16, "normal": 16}
+systems["pleiades_sandy"]["queue"] = {"long": 16, "normal": 16, "debug": 16}
 
 systems["pleiades_broadwell"] = systems["pleiades"].copy()
-systems["pleiades_broadwell"]["queue"] = {"long": 28, "normal": 28}
+systems["pleiades_broadwell"]["queue"] = {"long": 28, "normal": 28, "debug": 28}
 
 systems["electra_broadwell"] = systems["pleiades_broadwell"].copy()
 
 systems["electra_skylake"] = systems["pleiades"].copy()
-systems["electra_skylake"]["queue"] = {"long": 40, "normal": 40}
+systems["electra_skylake"]["queue"] = {"long": 40, "normal": 40, "debug": 40}
 
 
 # headers for batch jobs
@@ -1149,6 +1149,35 @@ ulimit
 """
 
 systems["stampede2"][
+    "header"
+] = """#!/bin/sh
+#SBATCH -n {cores}
+#SBATCH -N {nodes}
+#SBATCH --time={walltime}
+#SBATCH -p {queue}
+#SBATCH --mail-type=BEGIN
+#SBATCH --mail-type=END
+#SBATCH --mail-type=FAIL
+#SBATCH --output=pism.%j
+
+module list
+
+umask 007
+
+cd $SLURM_SUBMIT_DIR
+
+# Generate a list of compute node hostnames reserved for this job,
+# this ./nodes file is necessary for slurm to spawn mpi processes
+# across multiple compute nodes
+srun -l /bin/hostname | sort -n | awk '{{print $2}}' > ./nodes_$SLURM_JOBID
+
+ulimit -l unlimited
+ulimit -s unlimited
+ulimit
+
+"""
+
+systems["frontera"][
     "header"
 ] = """#!/bin/sh
 #SBATCH -n {cores}
