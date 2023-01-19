@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-# Copyright (C) 2021 Andy Aschwanden
+# Copyright (C) 2021-23 Andy Aschwanden
 
 from argparse import ArgumentParser
 import pandas as pd
@@ -11,6 +11,7 @@ from SALib.analyze import sobol, delta
 import numpy as np
 from scipy.interpolate import griddata
 from datetime import datetime
+import Pathlib
 
 
 def set_size(w, h, ax=None):
@@ -40,7 +41,13 @@ def to_decimal_year(date):
 
 
 def prepare_df(ifile):
-    df = pd.read_csv(ifile, parse_dates=["time"])
+    suffix = pathlib.Path(ifile).suffix
+    if suffix in ("csv", "gz"):
+        df = pd.read_csv(ifile, parse_dates=["time"])
+    elif
+        df = pd.read_parquet(ifile, parse_dates=["time"])
+    else:
+        print(f"{suffix} not recognized")
 
     return df
 
