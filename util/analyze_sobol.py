@@ -59,8 +59,6 @@ def compute_sobol_indices(
         "grounding_line_flux (Gt year-1)",
         "tendency_of_ice_mass_due_to_calving (Gt year-1)",
     ],
-    calc_second_order=False,
-    method="delta",
 ):
 
     # remove True/False
@@ -84,10 +82,6 @@ def compute_sobol_indices(
     }
 
     df = pd.merge(id_df, df, on="id")
-    start_date = "1986-1-1"
-    end_date = "1987-1-1"
-    df2 = df.query("time >= @start_date and time <= @end_date")
-    print(df2["vcm"])
     Sobol_dfs = []
     for m_date, s_df in df.groupby(by="time"):
         print(f"Processing {m_date}")
@@ -128,73 +122,36 @@ def compute_sobol_indices(
                     response_matrix = s_df[calc_variable].values
             else:
                 response_matrix = s_df[calc_variable].values
-            S2_vars = None
-            if method == "sobol":
-                Si = sobol.analyze(
-                    problem,
-                    response_matrix,
-                    calc_second_order=calc_second_order,
-                    num_resamples=100,
-                    print_to_console=False,
+            Si = delta.analyze(
+                problem,
+                id_df.drop(columns=["id"]).values,
+                response_matrix,
+                num_resamples=100,
+                print_to_console=False,
+            )
+            sobol_indices = ["delta", "S1"]
+            Si_df = Si.to_df()
+
+            s_dfs = []
+            for s_index in sobol_indices:
+                m_df = pd.DataFrame(
+                    data=Si_df[s_index].values.reshape(1, -1),
+                    columns=Si_df.transpose().columns,
                 )
-                sobol_indices = ["ST", "S1"]
-                Si_df = Si.to_df()
-                if calc_second_order:
-                    sobol_indices.append("S2")
-                    S2_vars = Si_df[2].index
+                m_df["Date"] = m_date
+                m_df.set_index("Date")
+                m_df["Si"] = s_index
+                m_df["Variable"] = calc_variable
 
-                s_dfs = []
-                for k, s_index in enumerate(sobol_indices):
-                    m_df = pd.DataFrame(
-                        data=Si_df[k][s_index].values.reshape(1, -1),
-                        columns=Si_df[k].transpose().columns,
-                    )
-                    m_df["Date"] = m_date
-                    m_df.set_index("Date")
-                    m_df["Si"] = s_index
-
-                    m_conf_df = pd.DataFrame(
-                        data=Si_df[k][s_index + "_conf"].values.reshape(1, -1),
-                        columns=Si_df[k].transpose().columns,
-                    )
-                    m_conf_df["Date"] = m_date
-                    m_conf_df.set_index("Date")
-                    m_conf_df["Si"] = s_index + "_conf"
-                    s_dfs.append(pd.concat([m_df, m_conf_df]))
-            elif method == "delta":
-                Si = delta.analyze(
-                    problem,
-                    id_df.drop(columns=["id"]).values,
-                    response_matrix,
-                    num_resamples=100,
-                    print_to_console=False,
+                m_conf_df = pd.DataFrame(
+                    data=Si_df[s_index + "_conf"].values.reshape(1, -1),
+                    columns=Si_df.transpose().columns,
                 )
-                sobol_indices = ["delta", "S1"]
-                Si_df = Si.to_df()
-
-                s_dfs = []
-                for s_index in sobol_indices:
-                    m_df = pd.DataFrame(
-                        data=Si_df[s_index].values.reshape(1, -1),
-                        columns=Si_df.transpose().columns,
-                    )
-                    m_df["Date"] = m_date
-                    m_df.set_index("Date")
-                    m_df["Si"] = s_index
-                    m_df["Variable"] = calc_variable
-
-                    m_conf_df = pd.DataFrame(
-                        data=Si_df[s_index + "_conf"].values.reshape(1, -1),
-                        columns=Si_df.transpose().columns,
-                    )
-                    m_conf_df["Date"] = m_date
-                    m_conf_df.set_index("Date")
-                    m_conf_df["Si"] = s_index + "_conf"
-                    m_conf_df["Variable"] = calc_variable
-                    s_dfs.append(pd.concat([m_df, m_conf_df]))
-
-            else:
-                print(f"Method {method} not implemented")
+                m_conf_df["Date"] = m_date
+                m_conf_df.set_index("Date")
+                m_conf_df["Si"] = s_index + "_conf"
+                m_conf_df["Variable"] = calc_variable
+                s_dfs.append(pd.concat([m_df, m_conf_df]))
 
             a_df = pd.concat(s_dfs)
         Sobol_dfs.append(a_df)
@@ -202,39 +159,27 @@ def compute_sobol_indices(
     Sobol_df = pd.concat(Sobol_dfs)
     Sobol_df.reset_index(inplace=True, drop=True)
     Sobol_df.set_index(Sobol_df["Date"], inplace=True)
-    return Sobol_df, sobol_indices, S2_vars
+    return Sobol_df, sobol_indices
 
 
 # Set up the option parser
 parser = ArgumentParser()
 parser.description = "A"
 parser.add_argument("--ensemble_file", default=None)
-parser.add_argument(
-    "--interpolation_method", default="nearest", choices=["nearest", "linear"]
-)
-parser.add_argument("--second_order", action="store_true", default=False)
-parser.add_argument("--variable", default="grounding_line_flux (Gt year-1)")
-parser.add_argument("--method", choices=["sobol", "delta"], default="delta")
 parser.add_argument("FILE", nargs=1)
 options = parser.parse_args()
-calc_second_order = options.second_order
 ensemble_file = options.ensemble_file
-interp_method = options.interpolation_method
-method = options.method
-m_var = options.variable
 ifile = options.FILE[0]
 m_id = "id"
 
 
 df = prepare_df(ifile)
-Sobol_df, sobol_indices, S2_vars = compute_sobol_indices(
+calc_variables = df.drop(columns=["time", "id"]).columns
+
+Sobol_df, sobol_indices = compute_sobol_indices(
     df,
     ensemble_file=ensemble_file,
-    calc_second_order=calc_second_order,
-    method=method,
 )
-if not calc_second_order:
-    S2_vars = ""
 
 fig, axs = plt.subplots(
     len(sobol_indices),
@@ -244,25 +189,13 @@ fig, axs = plt.subplots(
 )
 
 for k, si in enumerate(sobol_indices):
+    m_df = Sobol_df[Sobol_df["Variable"] == "grounding_line_flux (Gt year-1)")]
     ax = axs[k]
-    p_df = (
-        Sobol_df[Sobol_df["Si"] == si]
-        .drop(columns=S2_vars, errors="ignore")
-        .drop(columns=["Date", "Si"])
-    )
+    p_df = m_df[m_df["Si"] == si].drop(columns=["Date", "Si"])
 
-    p_conf_df = (
-        Sobol_df[Sobol_df["Si"] == si + "_conf"]
-        .drop(columns=S2_vars, errors="ignore")
-        .drop(columns=["Date", "Si"])
-    )
+    p_conf_df = m_df[m_df["Si"] == si + "_conf"].drop(columns=["Date", "Si"])
 
     [ax.errorbar(p_df.index, p_df[v], yerr=p_conf_df[v], label=v) for v in p_df.keys()]
-if "S2" in sobol_indices:
-    ax = axs[-1]
-    p_df = Sobol_df[Sobol_df["Si"] == "S2"].drop(columns=["Date", "Si"])
-    p_conf_df = Sobol_df[Sobol_df["Si"] == "S2_conf"].drop(columns=["Date", "Si"])
-    [ax.errorbar(p_df.index, p_df[v], yerr=p_conf_df[v], label=v) for v in S2_vars]
 
 axs[0].set_title(f"Sobol indices for {m_var}")
 legend = axs[0].legend(loc="upper right")
