@@ -70,7 +70,7 @@ if __name__ == "__main__":
         help="output filename",
         default="test.parquet",
     )
-    parser.add_argument("-n", type=int, default=8)
+    parser.add_argument("-n", type=int, default=2)
     parser.add_argument("--out_format", choices=["csv", "parquet"], default="parquet")
     parser.add_argument("INFILES", nargs="*")
 
@@ -89,7 +89,8 @@ if __name__ == "__main__":
             delayed(process_file)(infile) for infile in infiles
         )
     finish_time = time.perf_counter()
-    print(f"Program finished in {time_elapse:.0f} seconds")
+    time_elapsed = finish_time - start_time
+    print(f"Program finished in {time_elapsed:.0f} seconds")
 
     df = pd.concat(result)
     df.to_csv(outfile, index=False, compression="infer")
