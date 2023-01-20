@@ -18,6 +18,7 @@
 # along with PISM; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
+import matplotlib as mpl
 import numpy as np
 import pylab as plt
 from glob import glob
@@ -100,6 +101,98 @@ def load_imbie():
     return df
 
 
+def resample_ensemble_by_data(
+    observed,
+    simulated,
+    calibration_start=1992,
+    calibration_end=2017,
+    fudge_factor=3,
+    n_samples=100,
+    verbose=False,
+    m_var="Mass (Gt)",
+    m_var_std="Mass uncertainty (Gt)",
+):
+    """
+    Resampling algorithm by Douglas C. Brinkerhoff
+
+
+    Parameters
+    ----------
+    observed : pandas.DataFrame
+        A dataframe with observations
+    simulated : pandas.DataFrame
+        A dataframe with simulations
+    calibration_start : float
+        Start year for calibration
+    calibration_end : float
+        End year for calibration
+    fudge_factor : float
+        Tolerance for simulations. Calculated as fudge_factor * standard deviation of observed
+    n_samples : int
+        Number of samples to draw.
+
+    """
+
+    observed_calib_time = (observed["Year"] >= calibration_start) & (
+        observed["Year"] <= calibration_end
+    )
+    observed_calib_period = observed[observed_calib_time]
+    observed_interp_mean = interp1d(
+        observed_calib_period["Year"], observed_calib_period[m_var]
+    )
+    observed_interp_std = interp1d(
+        observed_calib_period["Year"], observed_calib_period[m_var_std]
+    )
+    simulated_calib_time = (simulated["Year"] >= calibration_start) & (
+        simulated["Year"] <= calibration_end
+    )
+    simulated_calib_period = simulated[simulated_calib_time]
+
+    resampled_list = []
+    log_likes = []
+    experiments = sorted(simulated_calib_period["Experiment"].unique())
+    evals = []
+    for i in experiments:
+        exp_ = simulated_calib_period[(simulated_calib_period["Experiment"] == i)]
+        exp_interp = interp1d(exp_["Year"], exp_[m_var])
+        log_like = 0.0
+        for year, observed_mean, observed_std in zip(
+            observed_calib_period["Year"],
+            observed_calib_period[m_var],
+            observed_calib_period[m_var_std],
+        ):
+            try:
+                observed_std *= fudge_factor
+                exp = exp_interp(year)
+
+                log_like -= 0.5 * (
+                    (exp - observed_mean) / observed_std
+                ) ** 2 + 0.5 * np.log(2 * np.pi * observed_std**2)
+                # print(i, year, f"{observed_mean:.3f}", f"{exp:.3f}")
+            except ValueError:
+                pass
+        if log_like != 0:
+            evals.append(i)
+            log_likes.append(log_like)
+            if verbose:
+                print(f"Experiment {i:.0f}: {log_like:.2f}")
+    experiments = np.array(evals)
+    w = np.array(log_likes)
+    w -= w.mean()
+    weights = np.exp(w)
+    weights /= weights.sum()
+    resampled_experiments = np.random.choice(experiments, n_samples, p=weights)
+    new_frame = []
+    for i in resampled_experiments:
+        new_frame.append(simulated[(simulated["Experiment"] == i)])
+    simulated_resampled = pd.concat(new_frame)
+    resampled_list.append(simulated_resampled)
+
+    simulated_resampled = pd.concat(resampled_list)
+
+    return simulated_resampled
+
+
 def normalize_by_date(ds, varname="limnsw", date="1992-1-1"):
     return (
         ds[varname] - ds.sel(time=pd.to_datetime("1992-1-1"), method="nearest")[varname]
@@ -121,15 +214,20 @@ if __name__ == "__main__":
 
     mass_varname = "limnsw"
     flux_varname = "grounding_line_flux"
-    bg_color = "#216779"
-    imbie_color = "#84cedb"
+
+    mpl.rcParams.update({"text.color": "white", "axes.labelcolor": "white"})
+
+    bg_color = "white"
+    imbie_shade_color = "#9ecae1"
+    sim_line_color = "0.25"
+    sim_line_width = 0.5
 
     imbie = load_imbie()
 
     kg2cmsle = 1 / 1e12 * 1.0 / 362.5 / 10.0
     gt2cmsle = 1 / 362.5 / 10.0
     sigma = 2
-    plt.style.use("dark_background")
+    plt.style.use("default")
 
     fig, axs = plt.subplots(nrows=2, ncols=1, sharex="col", figsize=(12, 8))
     fig.subplots_adjust(wspace=0.0, hspace=0.0)
@@ -161,13 +259,13 @@ if __name__ == "__main__":
                 pass
             df["Experiment"] = m_id
             dfs.append(df)
-            l = sle_var.plot(ax=axs[0], color="w", lw=0.5)[0]
+            l = sle_var.plot(ax=axs[0], color=sim_line_color, lw=sim_line_width)[0]
 
             labels.append(l.get_label())
             flux_var_running = (
                 ds[flux_varname].rolling(time=390, center=True).mean().dropna("time")
             )
-            flux_var_running.plot(ax=axs[1], color="w", lw=0.5)
+            flux_var_running.plot(ax=axs[1], color=sim_line_color, lw=sim_line_width)
 
     axs[0].fill_between(
         imbie["Date"],
@@ -176,7 +274,7 @@ if __name__ == "__main__":
         ls="solid",
         lw=0,
         alpha=1,
-        color=imbie_color,
+        color=imbie_shade_color,
         label="2-$\sigma$ IMBIE",
     )
     axs[1].fill_between(
@@ -186,7 +284,7 @@ if __name__ == "__main__":
         ls="solid",
         lw=0,
         alpha=1,
-        color=imbie_color,
+        color=imbie_shade_color,
     )
 
     fig.set_facecolor(bg_color)
@@ -218,3 +316,7 @@ if __name__ == "__main__":
     max_length = max(lenghts)
     successful_runs = (np.array(lenghts) == max_length).nonzero()[0]
     data_df = data_df[data_df["Experiment"].isin(successful_runs)]
+
+    ragis_calib = resample_ensemble_by_data(imbie, data_df, fudge_factor=5)
+    calib_exps = ragis_calib["Experiment"].unique()
+    print(calib_exps)
