@@ -78,11 +78,9 @@ def prepare_df(ifile):
 def run_analysis(
     df,
     ensemble_file=None,
-    calc_variables=[
-        "grounding_line_flux (Gt year-1)",
-        "tendency_of_ice_mass_due_to_calving (Gt year-1)",
-    ],
+    calc_variables=["grounding_line_flux (Gt year-1)", "limnsw (kg)"],
     n_jobs=4,
+    sobol_indices=["delta", "S1"],
 ):
 
     # remove True/False
@@ -106,20 +104,50 @@ def run_analysis(
     }
 
     df = pd.merge(id_df, df, on="id")
-    Sobol_dfs = []
+    # filter out dates with only 1 experiment, e.g., due to
+    # CDO changing the mid-point time when running averaging
+    df = pd.concat([x for _, x in df.groupby(by="time") if len(x) > 1])
     n_dates = len(df["time"].unique())
-    with tqdm_joblib(tqdm(desc="Processing file", total=n_dates)) as progress_bar:
-        result = Parallel(n_jobs=n_jobs)(
-            delayed(compute_sobol_indices)(m_date, s_df, id_df, calc_variables)
-            for m_date, s_df in df.groupby(by="time")
-        )
+    if n_jobs == 1:
+        Sobol_dfs = []
+        for m_date, s_df in df.groupby(by="time"):
+            Sobol_dfs.append(
+                compute_sobol_indices(
+                    m_date,
+                    s_df,
+                    id_df,
+                    problem,
+                    calc_variables,
+                    sobol_indices=sobol_indices,
+                )
+            )
+    else:
+        with tqdm_joblib(tqdm(desc="Processing file", total=n_dates)) as progress_bar:
+            Sobol_dfs = Parallel(n_jobs=n_jobs)(
+                delayed(compute_sobol_indices)(
+                    m_date,
+                    s_df,
+                    id_df,
+                    problem,
+                    calc_variables,
+                    sobol_indices=sobol_indices,
+                )
+                for m_date, s_df in df.groupby(by="time")
+            )
 
-    Sobol_df = pd.concat(result)
+    Sobol_df = pd.concat(Sobol_dfs)
     Sobol_df.reset_index(inplace=True, drop=True)
     return Sobol_df, sobol_indices
 
 
-def compute_sobol_indices(m_date, s_df, id_df, calc_variables):
+def compute_sobol_indices(
+    m_date,
+    s_df,
+    id_df,
+    problem,
+    calc_variables,
+    sobol_indices=["delta", "S1"],
+):
     print(f"Processing {m_date}")
     missing_ids = list(set(id_df["id"]).difference(s_df["id"]))
     if missing_ids:
@@ -133,33 +161,16 @@ def compute_sobol_indices(m_date, s_df, id_df, calc_variables):
     else:
         params = np.array(id_df.drop(columns="id").values, dtype=np.float32)
         id_df_missing = None
+    Sobol_dfs = []
     for calc_variable in calc_variables:
-        if id_df_missing is not None:
-            if method == "sobol":
-                response = s_df[["id", calc_variable]]
-                X = id_df_missing.drop(columns="id").values
-                data = griddata(params, response.values[:, 1], X, method=interp_method)
-
-                filled = pd.DataFrame(
-                    data=np.transpose([missing_ids, data]),
-                    columns=["id", calc_variable],
-                )
-                response_filled = pd.concat([response, filled])
-                response_filled = response_filled.sort_values(by="id")
-                response_matrix = response_filled[response_filled.columns[-1]].values
-            else:
-                id_df = id_df_missing_removed
-                response_matrix = s_df[calc_variable].values
-        else:
-            response_matrix = s_df[calc_variable].values
+        response_matrix = s_df[calc_variable].values
         Si = delta.analyze(
             problem,
-            id_df.drop(columns=["id"]).values,
+            params,
             response_matrix,
             num_resamples=100,
             print_to_console=False,
         )
-        sobol_indices = ["delta", "S1"]
         Si_df = Si.to_df()
 
         s_dfs = []
@@ -183,42 +194,59 @@ def compute_sobol_indices(m_date, s_df, id_df, calc_variables):
 
         a_df = pd.concat(s_dfs)
         Sobol_dfs.append(a_df)
+    return pd.concat(Sobol_dfs)
 
 
 # Set up the option parser
 parser = ArgumentParser()
 parser.description = "A"
 parser.add_argument("--ensemble_file", default=None)
+parser.add_argument("-n", "--n_jobs", type=int, default=4)
 parser.add_argument("FILE", nargs=1)
 options = parser.parse_args()
 ensemble_file = options.ensemble_file
 ifile = options.FILE[0]
+n_jobs = options.n_jobs
 m_id = "id"
 
 
 df = prepare_df(ifile)
 calc_variables = df.drop(columns=["time", "id"]).columns
 
-Sobol_df, sobol_indices = run_analysis(
-    df,
-    ensemble_file=ensemble_file,
-)
+Sobol_df, sobol_indices = run_analysis(df, ensemble_file=ensemble_file, n_jobs=n_jobs)
+si = "delta"
+
+plt.style.use("fivethirtyeight")
+
 
 fig, axs = plt.subplots(
+    2,
     1,
     sharex="col",
-    figsize=[12, 4],
+    figsize=[12, 10],
 )
+fig.subplots_adjust(bottom=0.16)
+for k, m_var in enumerate(["limnsw (kg)", "grounding_line_flux (Gt year-1)"]):
+    m_df = Sobol_df[Sobol_df["Variable"] == m_var]
+    ax = axs.ravel()[k]
+    p_df = m_df[m_df["Si"] == si].drop(columns=["Si", "Variable"]).set_index("Date")
+    p_conf_df = m_df[m_df["Si"] == si + "_conf"].drop(columns=["Si"])
 
-si = "delta"
-m_var = "grounding_line_flux (Gt year-1)"
-m_df = Sobol_df[Sobol_df["Variable"] == m_var]
-ax = axs
-p_df = m_df[m_df["Si"] == si].drop(columns=["Si", "Variable"]).set_index("Date")
-p_conf_df = m_df[m_df["Si"] == si + "_conf"].drop(columns=["Si"])
+    [
+        ax.errorbar(p_df.index, p_df[v], yerr=p_conf_df[v], lw=2, label=v)
+        for v in [
+            "vcm",
+            "gamma_T",
+            "thickness_calving_threshold",
+            "ocean_file",
+            "sia_e",
+            "ssa_n",
+            "pseudo_plastic_q",
+            "till_effective_fraction_overburden",
+        ]
+    ]
 
-[ax.errorbar(p_df.index, p_df[v], yerr=p_conf_df[v], label=v) for v in p_df.keys()]
-
-ax.set_title(f"Sobol indices for '{m_var}'")
-legend = ax.legend(loc="upper right")
-fig.savefig(f"{method}_{m_var}_indices.pdf")
+    lgd = ax.set_title(f"{si} indices for '{m_var}'")
+legend = axs[-1].legend(loc="lower left", ncols=3, bbox_to_anchor=(0, -0.4))
+fig.tight_layout()
+fig.savefig(f"{si}_indices.pdf")
