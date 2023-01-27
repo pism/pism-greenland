@@ -70,7 +70,7 @@ if __name__ == "__main__":
         help="output filename",
         default="test.parquet",
     )
-    parser.add_argument("-n", type=int, default=2)
+    parser.add_argument("-n", "--n_jobs", type=int, default=4)
     parser.add_argument("--out_format", choices=["csv", "parquet"], default="parquet")
     parser.add_argument("INFILES", nargs="*")
 
@@ -79,7 +79,7 @@ if __name__ == "__main__":
     outfile = options.outfile
     infiles = sorted(options.INFILES)
     out_format = options.out_format
-    n_jobs = options.n
+    n_jobs = options.n_jobs
     idx_norm_years = 0
     n_files = len(infiles)
 

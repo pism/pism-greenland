@@ -200,12 +200,17 @@ def compute_sobol_indices(
 # Set up the option parser
 parser = ArgumentParser()
 parser.description = "A"
+parser.add_argument(
+    "-o", dest="outfile", help="Output filename", default="ragis_scalar_ts.pdf"
+)
 parser.add_argument("--ensemble_file", default=None)
 parser.add_argument("-n", "--n_jobs", type=int, default=4)
 parser.add_argument("FILE", nargs=1)
 options = parser.parse_args()
 ensemble_file = options.ensemble_file
 ifile = options.FILE[0]
+outfile = options.outfile
+
 n_jobs = options.n_jobs
 m_id = "id"
 
@@ -215,8 +220,6 @@ calc_variables = df.drop(columns=["time", "id"]).columns
 
 Sobol_df, sobol_indices = run_analysis(df, ensemble_file=ensemble_file, n_jobs=n_jobs)
 si = "delta"
-
-plt.style.use("fivethirtyeight")
 
 
 fig, axs = plt.subplots(
@@ -249,4 +252,4 @@ for k, m_var in enumerate(["limnsw (kg)", "grounding_line_flux (Gt year-1)"]):
     lgd = ax.set_title(f"{si} indices for '{m_var}'")
 legend = axs[-1].legend(loc="lower left", ncols=3, bbox_to_anchor=(0, -0.4))
 fig.tight_layout()
-fig.savefig(f"{si}_indices.pdf")
+fig.savefig(outfile)

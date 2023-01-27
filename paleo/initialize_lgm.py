@@ -336,7 +336,7 @@ if not os.path.isdir(uq_dir):
     os.makedirs(uq_dir)
 
 # generate the config file *after* creating the output directory
-pism_config = "pism"
+pism_config = "paleo"
 pism_config_nc = join(output_dir, pism_config + ".nc")
 
 cmd = "ncgen -o {output} {input_dir}/config/{config}.cdl".format(
