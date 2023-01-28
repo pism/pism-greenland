@@ -219,116 +219,40 @@ df = prepare_df(ifile)
 calc_variables = df.drop(columns=["time", "id"]).columns
 
 Sobol_df, sobol_indices = run_analysis(df, ensemble_file=ensemble_file, n_jobs=n_jobs)
-si = "delta"
-
 plt.style.use("tableau-colorblind10")
 
-fig, axs = plt.subplots(
-    2,
-    1,
-    sharex="col",
-    figsize=[12, 10],
-)
-fig.subplots_adjust(bottom=0.1)
-for k, m_var in enumerate(["limnsw (kg)", "grounding_line_flux (Gt year-1)"]):
-    m_df = Sobol_df[Sobol_df["Variable"] == m_var]
-    ax = axs.ravel()[k]
-    p_df = m_df[m_df["Si"] == si].drop(columns=["Si", "Variable"]).set_index("Date")
-    p_conf_df = m_df[m_df["Si"] == si + "_conf"].drop(columns=["Si"])
+for si in ["delta", "S1"]:
 
-    [
-        ax.plot(p_df.index, p_df[v], lw=2, label=v)
-        for v in [
-            "vcm",
-            "gamma_T",
-            "thickness_calving_threshold",
-            "ocean_file",
-            "sia_e",
-            "ssa_n",
-            "pseudo_plastic_q",
-            "till_effective_fraction_overburden",
+    fig, axs = plt.subplots(
+        2,
+        1,
+        sharex="col",
+        figsize=[12, 10],
+    )
+    fig.subplots_adjust(bottom=0.0)
+    for k, m_var in enumerate(["limnsw (kg)", "grounding_line_flux (Gt year-1)"]):
+        m_df = Sobol_df[Sobol_df["Variable"] == m_var]
+        ax = axs.ravel()[k]
+        p_df = m_df[m_df["Si"] == si].drop(columns=["Si", "Variable"]).set_index("Date")
+        p_conf_df = m_df[m_df["Si"] == si + "_conf"].drop(columns=["Si"])
+
+        [
+            ax.plot(p_df.index, p_df[v], lw=2, label=v)
+            for v in Sobol_df.drop(columns=["Si", "Variable", "Date"]).keys()
         ]
-    ]
 
-    [
-        ax.fill_between(
-            p_df.index,
-            p_df[v].values - p_conf_df[v].values,
-            p_df[v].values + p_conf_df[v].values,
-            alpha=0.25,
-            lw=0,
-        )
-        for v in [
-            "vcm",
-            "gamma_T",
-            "thickness_calving_threshold",
-            "ocean_file",
-            "sia_e",
-            "ssa_n",
-            "pseudo_plastic_q",
-            "till_effective_fraction_overburden",
+        [
+            ax.fill_between(
+                p_df.index,
+                p_df[v].values - p_conf_df[v].values,
+                p_df[v].values + p_conf_df[v].values,
+                alpha=0.25,
+                lw=0,
+            )
+            for v in Sobol_df.drop(columns=["Si", "Variable", "Date"]).keys()
         ]
-    ]
-    ax.set_ylim(-0.05, 0.5)
-    ax.set_xlim(datetime(1980, 1, 1), datetime(2020, 1, 1))
-    lgd = ax.set_title(f"{si} indices for '{m_var}'")
-legend = axs[-1].legend(loc="lower left", ncols=3, bbox_to_anchor=(0, -0.25))
-fig.tight_layout()
-fig.savefig(f"{si}_{outfile}")
-
-si = "S1"
-
-plt.style.use("tableau-colorblind10")
-
-fig, axs = plt.subplots(
-    2,
-    1,
-    sharex="col",
-    figsize=[12, 10],
-)
-fig.subplots_adjust(bottom=0.1)
-for k, m_var in enumerate(["limnsw (kg)", "grounding_line_flux (Gt year-1)"]):
-    m_df = Sobol_df[Sobol_df["Variable"] == m_var]
-    ax = axs.ravel()[k]
-    p_df = m_df[m_df["Si"] == si].drop(columns=["Si", "Variable"]).set_index("Date")
-    p_conf_df = m_df[m_df["Si"] == si + "_conf"].drop(columns=["Si"])
-
-    [
-        ax.plot(p_df.index, p_df[v], lw=2, label=v)
-        for v in [
-            "vcm",
-            "gamma_T",
-            "thickness_calving_threshold",
-            "ocean_file",
-            "sia_e",
-            "ssa_n",
-            "pseudo_plastic_q",
-            "till_effective_fraction_overburden",
-        ]
-    ]
-
-    [
-        ax.fill_between(
-            p_df.index,
-            p_df[v].values - p_conf_df[v].values,
-            p_df[v].values + p_conf_df[v].values,
-            alpha=0.25,
-            lw=0,
-        )
-        for v in [
-            "vcm",
-            "gamma_T",
-            "thickness_calving_threshold",
-            "ocean_file",
-            "sia_e",
-            "ssa_n",
-            "pseudo_plastic_q",
-            "till_effective_fraction_overburden",
-        ]
-    ]
-    ax.set_ylim(-0.05, 0.5)
-    ax.set_xlim(datetime(1980, 1, 1), datetime(2020, 1, 1))
-    lgd = ax.set_title(f"{si} indices for '{m_var}'")
-legend = axs[-1].legend(loc="lower left", ncols=3, bbox_to_anchor=(0, -0.25))
-fig.tight_layout()
-fig.savefig(f"{si}_{outfile}")
+        ax.set_xlim(datetime(1980, 1, 1), datetime(2020, 1, 1))
+        lgd = ax.set_title(f"{si} indices for '{m_var}'")
+    legend = axs[-1].legend(loc="lower left", ncols=3, bbox_to_anchor=(0, -0.35))
+    fig.tight_layout()
+    fig.savefig(f"{si}_{outfile}")
