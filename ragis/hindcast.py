@@ -506,6 +506,7 @@ for n, row in enumerate(uq_df.iterrows()):
             "output.compression_level": compression_level,
             "config_override": "$config",
             "stress_balance.ice_free_thickness_standard": 5,
+            "input.forcing.time_extrapolation": "true",
         }
 
         if "-regional" in pism and refinement_factor is not None:
