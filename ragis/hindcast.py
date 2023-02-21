@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# Copyright (C) 2019-22 Andy Aschwanden
+# Copyright (C) 2019-23 Andy Aschwanden
 
 # Historical simulations for
 # "A reanalyis of the Greenland Ice Sheet"
@@ -231,9 +231,9 @@ parser.add_argument(
 parser.add_argument(
     "--dataset_version",
     dest="version",
-    choices=["1_RAGIS", "5_RAGIS", "2022_RAGIS"],
+    choices=["1_RAGIS", "5_RAGIS", "2022_RAGIS", "2023_RAGIS"],
     help="input data set version",
-    default="2022_RAGIS",
+    default="2023_RAGIS",
 )
 parser.add_argument(
     "--vertical_velocity_approximation",

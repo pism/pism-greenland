@@ -18,7 +18,7 @@ for (( i=1; i<${nr}+1; i++ )); do
     q=${qs[$i-1]}
     w=${ws[$i-1]}
 
-    python3 calibrate-v2022.py  --o_dir ${odir} --step 20 --duration 20 -s chinook -q ${q} -n ${n} -g ${grid} -w ${w} --ensemble_file ../uncertainty_quantification/ensemble_ctrl.csv ../../best_v1/g${grid}m_const_ctrl_e_1.25_ppq_0.6_tefo_0.02_ssa_n_3.25_philow_5.0_hydro_null_100a.nc 
+    python3 calibrate-v2022.py  --o_dir ${odir} --step 20 --duration 20 -s chinook -q ${q} -n ${n} -g ${grid} -w ${w} --ensemble_file ../uncertainty_quantification/ensemble_gris_ctrl.csv ../../best_v1/g${grid}m_const_ctrl_e_1.25_ppq_0.6_tefo_0.02_ssa_n_3.25_philow_5.0_hydro_null_100a.nc 
 
 done
 
@@ -34,7 +34,7 @@ for (( i=1; i<${nr}+1; i++ )); do
 done
 
 
-odir=2022_11_init_ragis
+odir=2023_02_init_ragis
 
 for (( i=1; i<${nr}+1; i++ )); do
     grid=${grids[$i-1]}
@@ -42,7 +42,7 @@ for (( i=1; i<${nr}+1; i++ )); do
     q=${qs[$i-1]}
     w=${ws[$i-1]}
 
-    python3 calibrate-v2022.py  --o_dir ${odir} --dataset_version 2022_RAGIS --step 20 --duration 20 -s chinook -q ${q} -n ${n} -g ${grid} -w ${w} --ensemble_file ../uncertainty_quantification/ensemble_ctrl.csv ../../best_v1/g${grid}m_const_ctrl_e_1.25_ppq_0.6_tefo_0.02_ssa_n_3.25_philow_5.0_hydro_null_100a.nc 
+    python3 calibrate-v2022.py  --o_dir ${odir} --dataset_version 2023_RAGIS --step 20 --duration 20 -s chinook -q ${q} -n ${n} -g ${grid} -w ${w} --ensemble_file ../uncertainty_quantification/ensemble_gris_ctrl.csv ../../best_v1/g${grid}m_const_ctrl_e_1.25_ppq_0.6_tefo_0.02_ssa_n_3.25_philow_5.0_hydro_null_100a.nc 
 
 done
 
