@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-# Copyright (C) 2021 Andy Aschwanden
+# Copyright (C) 2021-23 Andy Aschwanden
 
 from argparse import ArgumentParser
 import pandas as pd
@@ -11,6 +11,30 @@ from SALib.analyze import sobol, delta
 import numpy as np
 from scipy.interpolate import griddata
 from datetime import datetime
+import pathlib
+from joblib import Parallel, delayed
+
+import contextlib
+import joblib
+from tqdm import tqdm
+
+
+@contextlib.contextmanager
+def tqdm_joblib(tqdm_object):
+    """Context manager to patch joblib to report into tqdm progress bar given as argument"""
+
+    class TqdmBatchCompletionCallback(joblib.parallel.BatchCompletionCallBack):
+        def __call__(self, *args, **kwargs):
+            tqdm_object.update(n=self.batch_size)
+            return super().__call__(*args, **kwargs)
+
+    old_batch_callback = joblib.parallel.BatchCompletionCallBack
+    joblib.parallel.BatchCompletionCallBack = TqdmBatchCompletionCallback
+    try:
+        yield tqdm_object
+    finally:
+        joblib.parallel.BatchCompletionCallBack = old_batch_callback
+        tqdm_object.close()
 
 
 def set_size(w, h, ax=None):
@@ -40,24 +64,30 @@ def to_decimal_year(date):
 
 
 def prepare_df(ifile):
-    df = pd.read_csv(ifile, parse_dates=["time"])
+    suffix = pathlib.Path(ifile).suffix
+    if suffix in (".csv", ".gz"):
+        df = pd.read_csv(ifile, parse_dates=["time"])
+    elif suffix in (".parquet"):
+        df = pd.read_parquet(ifile)
+    else:
+        print(f"{suffix} not recognized")
 
     return df
 
 
-def compute_sobol_indices(
+def run_analysis(
     df,
     ensemble_file=None,
-    calc_second_order=False,
-    calc_variable="total_grounding_line_flux (Gt year-1)",
-    method="delta",
+    calc_variables=["grounding_line_flux (Gt year-1)", "limnsw (kg)"],
+    n_jobs=4,
+    sobol_indices=["delta", "S1"],
 ):
 
     # remove True/False
     id_df = (pd.read_csv(ensemble_file) * 1).replace(np.nan, 0)
 
     param_names = id_df.drop(columns="id").columns.values.tolist()
-    for k, col in id_df.iteritems():
+    for k, col in id_df.items():
         if is_string_dtype(col):
             u = col.unique()
             u.sort()
@@ -74,175 +104,155 @@ def compute_sobol_indices(
     }
 
     df = pd.merge(id_df, df, on="id")
-    Sobol_dfs = []
-    for m_date, s_df in df.groupby(by="time"):
-        print(f"Processing {m_date}")
-        missing_ids = list(set(id_df["id"]).difference(df["id"]))
-        if missing_ids:
-            print(
-                "The following simulation ids are missing:\n   {}".format(missing_ids)
+    # filter out dates with only 1 experiment, e.g., due to
+    # CDO changing the mid-point time when running averaging
+    df = pd.concat([x for _, x in df.groupby(by="time") if len(x) > 1])
+    n_dates = len(df["time"].unique())
+    if n_jobs == 1:
+        Sobol_dfs = []
+        for m_date, s_df in df.groupby(by="time"):
+            Sobol_dfs.append(
+                compute_sobol_indices(
+                    m_date,
+                    s_df,
+                    id_df,
+                    problem,
+                    calc_variables,
+                    sobol_indices=sobol_indices,
+                )
             )
-
-            id_df_missing_removed = id_df[~id_df["id"].isin(missing_ids)]
-            id_df_missing = id_df[id_df["id"].isin(missing_ids)]
-            params = np.array(
-                id_df_missing_removed.drop(columns="id").values, dtype=np.float32
+    else:
+        with tqdm_joblib(tqdm(desc="Processing file", total=n_dates)) as progress_bar:
+            Sobol_dfs = Parallel(n_jobs=n_jobs)(
+                delayed(compute_sobol_indices)(
+                    m_date,
+                    s_df,
+                    id_df,
+                    problem,
+                    calc_variables,
+                    sobol_indices=sobol_indices,
+                )
+                for m_date, s_df in df.groupby(by="time")
             )
-        else:
-            params = np.array(id_df.drop(columns="id").values, dtype=np.float32)
-            id_df_missing = None
-        if id_df_missing is not None:
-            if method == "sobol":
-                response = s_df[["id", m_var]]
-                X = id_df_missing.drop(columns="id").values
-                data = griddata(params, response.values[:, 1], X, method=interp_method)
-
-                filled = pd.DataFrame(
-                    data=np.transpose([missing_ids, data]), columns=["id", m_var]
-                )
-                response_filled = pd.concat([response, filled])
-                response_filled = response_filled.sort_values(by="id")
-                response_matrix = response_filled[response_filled.columns[-1]].values
-            else:
-                id_df = id_df_missing_removed
-                response_matrix = s_df[m_var].values
-        else:
-            response_matrix = s_df[m_var].values
-        S2_vars = None
-        if method == "sobol":
-            Si = sobol.analyze(
-                problem,
-                response_matrix,
-                calc_second_order=calc_second_order,
-                num_resamples=100,
-                print_to_console=False,
-            )
-            sobol_indices = ["ST", "S1"]
-            Si_df = Si.to_df()
-            if calc_second_order:
-                sobol_indices.append("S2")
-                S2_vars = Si_df[2].index
-
-            s_dfs = []
-            for k, s_index in enumerate(sobol_indices):
-                m_df = pd.DataFrame(
-                    data=Si_df[k][s_index].values.reshape(1, -1),
-                    columns=Si_df[k].transpose().columns,
-                )
-                m_df["Date"] = m_date
-                m_df.set_index("Date")
-                m_df["Si"] = s_index
-
-                m_conf_df = pd.DataFrame(
-                    data=Si_df[k][s_index + "_conf"].values.reshape(1, -1),
-                    columns=Si_df[k].transpose().columns,
-                )
-                m_conf_df["Date"] = m_date
-                m_conf_df.set_index("Date")
-                m_conf_df["Si"] = s_index + "_conf"
-                s_dfs.append(pd.concat([m_df, m_conf_df]))
-        elif method == "delta":
-            Si = delta.analyze(
-                problem,
-                id_df.drop(columns=["id"]).values,
-                response_matrix,
-                num_resamples=100,
-                print_to_console=False,
-            )
-            sobol_indices = ["delta", "S1"]
-            Si_df = Si.to_df()
-
-            s_dfs = []
-            for s_index in sobol_indices:
-                m_df = pd.DataFrame(
-                    data=Si_df[s_index].values.reshape(1, -1),
-                    columns=Si_df.transpose().columns,
-                )
-                m_df["Date"] = m_date
-                m_df.set_index("Date")
-                m_df["Si"] = s_index
-
-                m_conf_df = pd.DataFrame(
-                    data=Si_df[s_index + "_conf"].values.reshape(1, -1),
-                    columns=Si_df.transpose().columns,
-                )
-                m_conf_df["Date"] = m_date
-                m_conf_df.set_index("Date")
-                m_conf_df["Si"] = s_index + "_conf"
-                s_dfs.append(pd.concat([m_df, m_conf_df]))
-
-        else:
-            print(f"Method {method} not implemented")
-
-        s_df = pd.concat(s_dfs)
-        Sobol_dfs.append(s_df)
 
     Sobol_df = pd.concat(Sobol_dfs)
     Sobol_df.reset_index(inplace=True, drop=True)
-    Sobol_df.set_index(Sobol_df["Date"], inplace=True)
-    return Sobol_df, sobol_indices, S2_vars
+    return Sobol_df, sobol_indices
+
+
+def compute_sobol_indices(
+    m_date,
+    s_df,
+    id_df,
+    problem,
+    calc_variables,
+    sobol_indices=["delta", "S1"],
+):
+    print(f"Processing {m_date}")
+    missing_ids = list(set(id_df["id"]).difference(s_df["id"]))
+    if missing_ids:
+        print("The following simulation ids are missing:\n   {}".format(missing_ids))
+
+        id_df_missing_removed = id_df[~id_df["id"].isin(missing_ids)]
+        id_df_missing = id_df[id_df["id"].isin(missing_ids)]
+        params = np.array(
+            id_df_missing_removed.drop(columns="id").values, dtype=np.float32
+        )
+    else:
+        params = np.array(id_df.drop(columns="id").values, dtype=np.float32)
+        id_df_missing = None
+    Sobol_dfs = []
+    for calc_variable in calc_variables:
+        response_matrix = s_df[calc_variable].values
+        Si = delta.analyze(
+            problem,
+            params,
+            response_matrix,
+            num_resamples=100,
+            print_to_console=False,
+        )
+        Si_df = Si.to_df()
+
+        s_dfs = []
+        for s_index in sobol_indices:
+            m_df = pd.DataFrame(
+                data=Si_df[s_index].values.reshape(1, -1),
+                columns=Si_df.transpose().columns,
+            )
+            m_df["Date"] = m_date
+            m_df["Si"] = s_index
+            m_df["Variable"] = calc_variable
+
+            m_conf_df = pd.DataFrame(
+                data=Si_df[s_index + "_conf"].values.reshape(1, -1),
+                columns=Si_df.transpose().columns,
+            )
+            m_conf_df["Date"] = m_date
+            m_conf_df["Si"] = s_index + "_conf"
+            m_conf_df["Variable"] = calc_variable
+            s_dfs.append(pd.concat([m_df, m_conf_df]))
+
+        a_df = pd.concat(s_dfs)
+        Sobol_dfs.append(a_df)
+    return pd.concat(Sobol_dfs)
 
 
 # Set up the option parser
 parser = ArgumentParser()
 parser.description = "A"
-parser.add_argument("--ensemble_file", default=None)
 parser.add_argument(
-    "--interpolation_method", default="nearest", choices=["nearest", "linear"]
+    "-o", dest="outfile", help="Output filename", default="ragis_scalar_ts.pdf"
 )
-parser.add_argument("--second_order", action="store_true", default=False)
-parser.add_argument("--variable", default="total_grounding_line_flux (Gt year-1)")
-parser.add_argument("--method", choices=["sobol", "delta"], default="delta")
+parser.add_argument("--ensemble_file", default=None)
+parser.add_argument("-n", "--n_jobs", type=int, default=4)
 parser.add_argument("FILE", nargs=1)
 options = parser.parse_args()
-calc_second_order = options.second_order
 ensemble_file = options.ensemble_file
-interp_method = options.interpolation_method
-method = options.method
-m_var = options.variable
 ifile = options.FILE[0]
+outfile = options.outfile
+
+n_jobs = options.n_jobs
 m_id = "id"
 
 
 df = prepare_df(ifile)
-Sobol_df, sobol_indices, S2_vars = compute_sobol_indices(
-    df,
-    ensemble_file=ensemble_file,
-    calc_variable=m_var,
-    calc_second_order=calc_second_order,
-    method=method,
-)
-if not calc_second_order:
-    S2_vars = ""
+calc_variables = df.drop(columns=["time", "id"]).columns
 
-fig, axs = plt.subplots(
-    len(sobol_indices),
-    1,
-    sharex="col",
-    figsize=[12, 10],
-)
+Sobol_df, sobol_indices = run_analysis(df, ensemble_file=ensemble_file, n_jobs=n_jobs)
+plt.style.use("tableau-colorblind10")
 
-for k, si in enumerate(sobol_indices):
-    ax = axs[k]
-    p_df = (
-        Sobol_df[Sobol_df["Si"] == si]
-        .drop(columns=S2_vars, errors="ignore")
-        .drop(columns=["Date", "Si"])
+for si in ["delta", "S1"]:
+
+    fig, axs = plt.subplots(
+        2,
+        1,
+        sharex="col",
+        figsize=[12, 10],
     )
+    fig.subplots_adjust(bottom=0.0)
+    for k, m_var in enumerate(["limnsw (kg)", "grounding_line_flux (Gt year-1)"]):
+        m_df = Sobol_df[Sobol_df["Variable"] == m_var]
+        ax = axs.ravel()[k]
+        p_df = m_df[m_df["Si"] == si].drop(columns=["Si", "Variable"]).set_index("Date")
+        p_conf_df = m_df[m_df["Si"] == si + "_conf"].drop(columns=["Si"])
 
-    p_conf_df = (
-        Sobol_df[Sobol_df["Si"] == si + "_conf"]
-        .drop(columns=S2_vars, errors="ignore")
-        .drop(columns=["Date", "Si"])
-    )
+        [
+            ax.plot(p_df.index, p_df[v], lw=2, label=v)
+            for v in Sobol_df.drop(columns=["Si", "Variable", "Date"]).keys()
+        ]
 
-    [ax.errorbar(p_df.index, p_df[v], yerr=p_conf_df[v], label=v) for v in p_df.keys()]
-if "S2" in sobol_indices:
-    ax = axs[-1]
-    p_df = Sobol_df[Sobol_df["Si"] == "S2"].drop(columns=["Date", "Si"])
-    p_conf_df = Sobol_df[Sobol_df["Si"] == "S2_conf"].drop(columns=["Date", "Si"])
-    [ax.errorbar(p_df.index, p_df[v], yerr=p_conf_df[v], label=v) for v in S2_vars]
-
-axs[0].set_title(f"Sobol indices for {m_var}")
-legend = axs[0].legend(loc="upper right")
-fig.savefig(f"{method}_indices.pdf")
+        [
+            ax.fill_between(
+                p_df.index,
+                p_df[v].values - p_conf_df[v].values,
+                p_df[v].values + p_conf_df[v].values,
+                alpha=0.25,
+                lw=0,
+            )
+            for v in Sobol_df.drop(columns=["Si", "Variable", "Date"]).keys()
+        ]
+        ax.set_xlim(datetime(1980, 1, 1), datetime(2020, 1, 1))
+        lgd = ax.set_title(f"{si} indices for '{m_var}'")
+    legend = axs[-1].legend(loc="lower left", ncols=3, bbox_to_anchor=(0, -0.35))
+    fig.tight_layout()
+    fig.savefig(f"{si}_{outfile}")
