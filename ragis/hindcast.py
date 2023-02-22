@@ -299,7 +299,7 @@ if options.FILE is None:
 
     sys.exit()
 else:
-    input_file = options.FILE[0]
+    input_file = abspath(options.FILE[0])
 
 pism_dataname = False
 if domain.lower() in ("greenland_ext", "gris_ext"):
