@@ -401,6 +401,9 @@ def generate_grid_description(grid_resolution, domain, restart=False):
     Returns: OrderedDict
     """
 
+    Lz = 4000
+    Lbz = 2000
+
     if domain.lower() in ("greenland_ext", "gris_ext", "greenland", "gris"):
 
         if domain.lower() in ("greenland_ext", "gris_ext"):
@@ -682,8 +685,8 @@ def generate_grid_description(grid_resolution, domain, restart=False):
     horizontal_grid["My"] = my
 
     vertical_grid = OrderedDict()
-    vertical_grid["Lz"] = 4000
-    vertical_grid["Lbz"] = 2000
+    vertical_grid["Lz"] = Lz
+    vertical_grid["Lbz"] = Lbz
     vertical_grid["z_spacing"] = "equal"
     vertical_grid["Mz"] = mz
     vertical_grid["Mbz"] = mzb

@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# Copyright (C) 2019-22 Andy Aschwanden
+# Copyright (C) 2019-23 Andy Aschwanden
 
 # Historical simulations for
 # "A reanalyis of the Greenland Ice Sheet"
@@ -231,9 +231,9 @@ parser.add_argument(
 parser.add_argument(
     "--dataset_version",
     dest="version",
-    choices=["1_RAGIS", "5_RAGIS", "2022_RAGIS"],
+    choices=["1_RAGIS", "5_RAGIS", "2022_RAGIS", "2023_RAGIS"],
     help="input data set version",
-    default="2022_RAGIS",
+    default="2023_RAGIS",
 )
 parser.add_argument(
     "--vertical_velocity_approximation",
@@ -299,7 +299,7 @@ if options.FILE is None:
 
     sys.exit()
 else:
-    input_file = options.FILE[0]
+    input_file = abspath(options.FILE[0])
 
 pism_dataname = False
 if domain.lower() in ("greenland_ext", "gris_ext"):
@@ -506,6 +506,7 @@ for n, row in enumerate(uq_df.iterrows()):
             "output.compression_level": compression_level,
             "config_override": "$config",
             "stress_balance.ice_free_thickness_standard": 5,
+            "input.forcing.time_extrapolation": "true",
         }
 
         if "-regional" in pism and refinement_factor is not None:

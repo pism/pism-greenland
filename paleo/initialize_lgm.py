@@ -470,6 +470,7 @@ for n, row in enumerate(uq_df.iterrows()):
             "output.compression_level": compression_level,
             "config_override": "$config",
             "stress_balance.ice_free_thickness_standard": 5,
+            "bed_def": "lc",
         }
 
         if age:

@@ -193,7 +193,7 @@ parser.add_argument(
 parser.add_argument(
     "--dataset_version",
     dest="version",
-    choices=["2", "3", "3a", "4", "2022", "2022_RAGIS"],
+    choices=["2", "3", "3a", "4", "2022", "2022_RAGIS", "2023_RAGIS"],
     help="Input data set version",
     default="2022",
 )
@@ -283,8 +283,8 @@ else:
         )
     )
 
-climate_file = "$input_dir/data_sets/climate_forcing/DMI-HIRHAM5_GL2_ERAI_2001_2014_YDM_BIL_EPSG3413_{}m.nc".format(
-    grid
+climate_file = (
+    "$input_dir/data_sets/climate/DMI-HIRHAM5_ERA_1980_2020_EPSG3413_4500M_TM.nc"
 )
 
 # regridvars = "litho_temp,enthalpy,age,tillwat,bmelt,ice_area_specific_volume,thk"
@@ -475,6 +475,7 @@ for n, row in enumerate(uq_df.iterrows()):
                     "output.compression_level": compression_level,
                     "config_override": "$config",
                     "energy.ch_warming.enabled": "false",
+                    "energy.bedrock_thermal.file": "$input_dir/data_sets/bheatflux/Geothermal_heatflux_map_v2.1_g450m.nc",
                 }
 
                 if start == simulation_start_year:
@@ -536,10 +537,11 @@ for n, row in enumerate(uq_df.iterrows()):
                     stress_balance, sb_params_dict
                 )
 
-                climate_params_dict = generate_climate(
-                    climate, force_to_thickness_file=pism_dataname
-                )
-
+                climate_params_dict = {
+                    "surface": "given,forcing",
+                    "surface_given_file": climate_file,
+                    "force_to_thickness_file": pism_dataname,
+                }
                 hydro_params_dict = generate_hydrology(hydrology)
 
                 calving_params_dict = generate_calving(
