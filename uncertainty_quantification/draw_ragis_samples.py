@@ -208,6 +208,7 @@ dists = {
             "ssa_n": 3.0,
             "fractures": "false",
             "vcm": 1,
+            "gamma_T": 1e-4,
             "surface.pdd.refreeze": 0.6,
             "till_effective_fraction_overburden": 0.02,
             "sliding_law": "pseudo_plastic",
