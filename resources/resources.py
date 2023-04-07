@@ -170,6 +170,7 @@ spatial_ts_vars["ragis"] = [
     "thk",
     "usurf",
     "velsurf_mag",
+    "flux_divergence",
 ]
 
 spatial_ts_vars["standard"] = [

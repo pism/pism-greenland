@@ -231,7 +231,7 @@ parser.add_argument(
 parser.add_argument(
     "--dataset_version",
     dest="version",
-    choices=["1_RAGIS", "5_RAGIS", "2022_RAGIS", "2023_RAGIS"],
+    choices=["2022", "1_RAGIS", "5_RAGIS", "2022_RAGIS", "2023_RAGIS", "2023_RAGIS_l1e5"],
     help="input data set version",
     default="2023_RAGIS",
 )
