@@ -6,10 +6,8 @@ from argparse import ArgumentParser
 import pandas as pd
 from pandas.api.types import is_string_dtype
 import pylab as plt
-import seaborn as sns
-from SALib.analyze import sobol, delta
+from SALib.analyze import delta
 import numpy as np
-from scipy.interpolate import griddata
 from datetime import datetime
 import pathlib
 from joblib import Parallel, delayed
@@ -63,7 +61,7 @@ def to_decimal_year(date):
     return date.year + fraction
 
 
-def prepare_df(ifile):
+def prepare_df(ifile: str):
     suffix = pathlib.Path(ifile).suffix
     if suffix in (".csv", ".gz"):
         df = pd.read_csv(ifile, parse_dates=["time"])
@@ -76,11 +74,11 @@ def prepare_df(ifile):
 
 
 def run_analysis(
-    df,
-    ensemble_file=None,
-    calc_variables=["grounding_line_flux (Gt year-1)", "limnsw (kg)"],
-    n_jobs=4,
-    sobol_indices=["delta", "S1"],
+    df: pd.DataFrame,
+    ensemble_file: str,
+    calc_variables: list = ["grounding_line_flux (Gt year-1)", "limnsw (kg)"],
+    n_jobs: int = 4,
+    sa_indices: list = ["delta", "S1"],
 ):
 
     # remove True/False
@@ -112,41 +110,41 @@ def run_analysis(
         Sobol_dfs = []
         for m_date, s_df in df.groupby(by="time"):
             Sobol_dfs.append(
-                compute_sobol_indices(
+                compute_sa_indices(
                     m_date,
                     s_df,
                     id_df,
                     problem,
                     calc_variables,
-                    sobol_indices=sobol_indices,
+                    sa_indices=sa_indices,
                 )
             )
     else:
         with tqdm_joblib(tqdm(desc="Processing file", total=n_dates)) as progress_bar:
             Sobol_dfs = Parallel(n_jobs=n_jobs)(
-                delayed(compute_sobol_indices)(
+                delayed(compute_sa_indices)(
                     m_date,
                     s_df,
                     id_df,
                     problem,
                     calc_variables,
-                    sobol_indices=sobol_indices,
+                    sa_indices=sa_indices,
                 )
                 for m_date, s_df in df.groupby(by="time")
             )
 
     Sobol_df = pd.concat(Sobol_dfs)
     Sobol_df.reset_index(inplace=True, drop=True)
-    return Sobol_df, sobol_indices
+    return Sobol_df, sa_indices
 
 
-def compute_sobol_indices(
+def compute_sa_indices(
     m_date,
     s_df,
     id_df,
     problem,
     calc_variables,
-    sobol_indices=["delta", "S1"],
+    sa_indices=["delta", "S1"],
 ):
     print(f"Processing {m_date}")
     missing_ids = list(set(id_df["id"]).difference(s_df["id"]))
@@ -154,13 +152,11 @@ def compute_sobol_indices(
         print("The following simulation ids are missing:\n   {}".format(missing_ids))
 
         id_df_missing_removed = id_df[~id_df["id"].isin(missing_ids)]
-        id_df_missing = id_df[id_df["id"].isin(missing_ids)]
         params = np.array(
             id_df_missing_removed.drop(columns="id").values, dtype=np.float32
         )
     else:
         params = np.array(id_df.drop(columns="id").values, dtype=np.float32)
-        id_df_missing = None
     Sobol_dfs = []
     for calc_variable in calc_variables:
         response_matrix = s_df[calc_variable].values
@@ -174,7 +170,7 @@ def compute_sobol_indices(
         Si_df = Si.to_df()
 
         s_dfs = []
-        for s_index in sobol_indices:
+        for s_index in sa_indices:
             m_df = pd.DataFrame(
                 data=Si_df[s_index].values.reshape(1, -1),
                 columns=Si_df.transpose().columns,
@@ -218,7 +214,7 @@ m_id = "id"
 df = prepare_df(ifile)
 calc_variables = df.drop(columns=["time", "id"]).columns
 
-Sobol_df, sobol_indices = run_analysis(df, ensemble_file=ensemble_file, n_jobs=n_jobs)
+Sobol_df, sa_indices = run_analysis(df, ensemble_file=ensemble_file, n_jobs=n_jobs)
 plt.style.use("tableau-colorblind10")
 
 for si in ["delta", "S1"]:
@@ -237,7 +233,7 @@ for si in ["delta", "S1"]:
         p_conf_df = m_df[m_df["Si"] == si + "_conf"].drop(columns=["Si"])
 
         [
-            ax.plot(p_df.index, p_df[v], lw=2, label=v)
+            ax.plot(p_df.index, p_df[v], lw=2.5, label=v)
             for v in Sobol_df.drop(columns=["Si", "Variable", "Date"]).keys()
         ]
 
@@ -246,7 +242,7 @@ for si in ["delta", "S1"]:
                 p_df.index,
                 p_df[v].values - p_conf_df[v].values,
                 p_df[v].values + p_conf_df[v].values,
-                alpha=0.25,
+                alpha=0.2,
                 lw=0,
             )
             for v in Sobol_df.drop(columns=["Si", "Variable", "Date"]).keys()

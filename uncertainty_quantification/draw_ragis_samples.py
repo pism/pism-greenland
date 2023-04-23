@@ -109,9 +109,8 @@ dists = {
     },
     "ocean": {
         "uq": {
-            "vcm": uniform(loc=0.25, scale=0.75),
+            "vcm": uniform(loc=0.2, scale=0.8),
             "gamma_T": uniform(loc=1e-4, scale=0.5e-4),
-            "thickness_calving_threshold": uniform(loc=100, scale=300),
             "ocean_file": randint(0, len(gcms)),
         },
         "default_values": {
@@ -132,13 +131,13 @@ dists = {
             "phi_min": 5,
             "phi_max": 40,
             "till_effective_fraction_overburden": 0.02,
+            "thickness_calving_threshold": 50,
         },
     },
     "ocean-simple": {
         "uq": {
             "vcm": uniform(loc=0.25, scale=0.75),
             "gamma_T": uniform(loc=1e-4, scale=0.5e-4),
-            "thickness_calving_threshold": uniform(loc=100, scale=300),
             "ocean_file": randint(0, len(gcms)),
         },
         "default_values": {
@@ -159,6 +158,7 @@ dists = {
             "phi_min": 5,
             "phi_max": 40,
             "till_effective_fraction_overburden": 0.02,
+            "thickness_calving_threshold": 50,
         },
     },
     "calving-simple": {

@@ -162,15 +162,16 @@ spatial_ts_vars["paleo_tracer"] = [
 spatial_ts_vars["ragis"] = [
     "dHdt",
     "grounding_line_flux",
-    "bmelt",
     "ice_mass",
     "mask",
     "mass_fluxes",
-    "sftgif",
     "thk",
     "usurf",
     "velsurf_mag",
     "flux_divergence",
+    "frontal_melt_rate",
+    "frontal_melt_retreat_rate",
+    "vonmises_calving_rate",
 ]
 
 spatial_ts_vars["standard"] = [
