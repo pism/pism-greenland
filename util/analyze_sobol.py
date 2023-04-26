@@ -78,7 +78,7 @@ def run_analysis(
     ensemble_file: str,
     calc_variables: list = ["grounding_line_flux (Gt year-1)", "limnsw (kg)"],
     n_jobs: int = 4,
-    sa_indices: list = ["delta", "S1"],
+    sensitivity_indices: list = ["delta", "S1"],
 ):
 
     # remove True/False
@@ -110,41 +110,41 @@ def run_analysis(
         Sobol_dfs = []
         for m_date, s_df in df.groupby(by="time"):
             Sobol_dfs.append(
-                compute_sa_indices(
+                compute_sensitivity_indices(
                     m_date,
                     s_df,
                     id_df,
                     problem,
                     calc_variables,
-                    sa_indices=sa_indices,
+                    sensitivity_indices=sensitivity_indices,
                 )
             )
     else:
         with tqdm_joblib(tqdm(desc="Processing file", total=n_dates)) as progress_bar:
             Sobol_dfs = Parallel(n_jobs=n_jobs)(
-                delayed(compute_sa_indices)(
+                delayed(compute_sensitivity_indices)(
                     m_date,
                     s_df,
                     id_df,
                     problem,
                     calc_variables,
-                    sa_indices=sa_indices,
+                    sensitivity_indices=sensitivity_indices,
                 )
                 for m_date, s_df in df.groupby(by="time")
             )
 
     Sobol_df = pd.concat(Sobol_dfs)
     Sobol_df.reset_index(inplace=True, drop=True)
-    return Sobol_df, sa_indices
+    return Sobol_df, sensitivity_indices
 
 
-def compute_sa_indices(
+def compute_sensitivity_indices(
     m_date,
     s_df,
     id_df,
     problem,
     calc_variables,
-    sa_indices=["delta", "S1"],
+    sensitivity_indices=["delta", "S1"],
 ):
     print(f"Processing {m_date}")
     missing_ids = list(set(id_df["id"]).difference(s_df["id"]))
@@ -170,7 +170,7 @@ def compute_sa_indices(
         Si_df = Si.to_df()
 
         s_dfs = []
-        for s_index in sa_indices:
+        for s_index in sensitivity_indices:
             m_df = pd.DataFrame(
                 data=Si_df[s_index].values.reshape(1, -1),
                 columns=Si_df.transpose().columns,
@@ -214,7 +214,9 @@ m_id = "id"
 df = prepare_df(ifile)
 calc_variables = df.drop(columns=["time", "id"]).columns
 
-Sobol_df, sa_indices = run_analysis(df, ensemble_file=ensemble_file, n_jobs=n_jobs)
+Sobol_df, sensitivity_indices = run_analysis(
+    df, ensemble_file=ensemble_file, n_jobs=n_jobs
+)
 plt.style.use("tableau-colorblind10")
 
 for si in ["delta", "S1"]:
