@@ -107,6 +107,32 @@ dists = {
             "sliding_law": "pseudo_plastic",
         },
     },
+    "ocean-calving": {
+        "uq": {
+            "vcm": uniform(loc=0.2, scale=0.8),
+            "gamma_T": uniform(loc=1e-4, scale=0.5e-4),
+            "ocean_file": randint(0, len(gcms)),
+        },
+        "default_values": {
+            "climate": "surface_given",
+            "hydrology": "routing",
+            "frontal_melt": "discharge_routing",
+            "ocean_file": "MAR3.9_CNRM-ESM2_ssp585_ocean_1960-2100_v4.nc",
+            "climate_file": "DMI-HIRHAM5_ERA_1980_2020_EPSG3413_4500M_MM.nc",
+            "runoff_file": "DMI-HIRHAM5_ERA_1980_2020_EPSG3413_4500M_MM.nc",
+            "pseudo_plastic_q": 0.6,
+            "sia_e": 1.25,
+            "ssa_n": 3.0,
+            "fractures": "false",
+            "sliding_law": "pseudo_plastic",
+            "z_min": -700,
+            "z_max": 700,
+            "phi_min": 5,
+            "phi_max": 40,
+            "till_effective_fraction_overburden": 0.02,
+            "thickness_calving_threshold": 50,
+        },
+    },
     "ocean": {
         "uq": {
             "vcm": uniform(loc=0.2, scale=0.8),
