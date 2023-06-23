@@ -21,7 +21,7 @@ if [ -n "$1" ]; then
     infile=$1
 fi
 
-ver=2022
+ver=2023_GIMP
 if [ -n "$2" ]; then
     ver=$2
 fi
