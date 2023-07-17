@@ -195,7 +195,7 @@ parser.add_argument(
     dest="version",
     choices=[
         "2023_GIMP",
-        "2023_RAGIS",,
+        "2023_RAGIS",
     ],
     help="Input data set version",
     default="2023_GIMP",
