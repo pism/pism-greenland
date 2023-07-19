@@ -233,9 +233,16 @@ parser.add_argument(
 parser.add_argument(
     "--dataset_version",
     dest="version",
-    choices=["2022"],
+    choices=["2023_GIMP"],
     help="input data set version",
-    default="2022",
+    default="2023_GIMP",
+)
+parser.add_argument(
+    "--bed_def",
+    dest="bed_def",
+    choices=["off", "lc"],
+    help="Bedrock deformation model. Default=lc",
+    default="lc",
 )
 parser.add_argument(
     "--age",
@@ -282,7 +289,7 @@ float_kill_calve_near_grounding_line = options.float_kill_calve_near_grounding_l
 grid = grid_resolution = options.grid
 hydrology = options.hydrology
 use_mks = options.use_mks
-
+bed_def = options.bed_def
 stress_balance = options.stress_balance
 version = options.version
 
@@ -294,19 +301,11 @@ pism_exec = generate_domain(domain)
 pism_dataname = False
 if domain.lower() in ("greenland_ext", "gris_ext"):
     pism_dataname = (
-        "$input_dir/data_sets/bed_dem/pism_Greenland_ext_{}m_mcb_jpl_v{}_{}.nc".format(
-            grid, version, bed_type
-        )
-    )
-elif domain.lower() in ("ismip6"):
-    pism_dataname = "$input_dir/data_sets/bed_dem/pism_Greenland_ismip6_{}m_mcb_jpl_v{}_{}.nc".format(
-        grid, version, bed_type
+        f"$input_dir/data_sets/bed_dem/pism_Greenland_ext_{grid}m_v{version}_{bed_type}.nc"
     )
 else:
     pism_dataname = (
-        "$input_dir/data_sets/bed_dem/pism_Greenland_{}m_mcb_jpl_v{}_{}.nc".format(
-            grid, version, bed_type
-        )
+        f"$input_dir/data_sets/bed_dem/pism_Greenland_{grid}m_v{version}_{bed_type}.nc"
     )
 
 regridvars = "litho_temp,enthalpy,tillwat,bmelt,ice_area_specific_volume,thk"
@@ -470,8 +469,10 @@ for n, row in enumerate(uq_df.iterrows()):
             "output.compression_level": compression_level,
             "config_override": "$config",
             "stress_balance.ice_free_thickness_standard": 5,
-            "bed_def": "lc",
         }
+
+        if bed_def != "off":
+            general_params_dict["bed_deformation.model"] = bed_def
 
         if age:
             general_params_dict["age.enabled"] = "true"
@@ -530,7 +531,7 @@ for n, row in enumerate(uq_df.iterrows()):
         tas_paleo_file_p = (
             f"""$input_dir/data_sets/climate/{combination["tas_paleo_file"]}"""
         )
-        atmosphere_given_file_p = "$input_dir/data_sets/climate/DMI-HIRHAM5_GL2_ERAI_1980_2016_EPSG3413_4500M_TM.nc "
+        atmosphere_given_file_p = "$input_dir/data_sets/climate/DMI-HIRHAM5_ERA_1980_2020_EPSG3413_4500M_TM.nc"
         rho_ice = 910.0
 
         climate_parameters = {

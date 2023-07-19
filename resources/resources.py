@@ -1043,7 +1043,7 @@ systems = {}
 systems["debug"] = {
     "mpido": "mpiexec -n {cores}",
     "submit": "echo",
-    "job_id": "PBS_JOBID",
+    "job_id": "USER",
     "queue": {},
 }
 
