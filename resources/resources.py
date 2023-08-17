@@ -396,7 +396,7 @@ def generate_snap_shots(outfile, times, odir=None):
     return params_dict
 
 
-def generate_grid_description(grid_resolution, domain, restart=False):
+def generate_grid_description(grid_resolution, domain, restart=False, paleo=False):
     """
     Generate grid description dict
 
@@ -404,6 +404,8 @@ def generate_grid_description(grid_resolution, domain, restart=False):
     """
 
     Lz = 4000
+    if paleo:
+        Lz = 5000
     Lbz = 2000
 
     if domain.lower() in ("greenland_ext", "gris_ext", "greenland", "gris"):

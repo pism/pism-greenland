@@ -499,7 +499,7 @@ for n, row in enumerate(uq_df.iterrows()):
                 "output.sizes.medium"
             ] = "sftgif,velsurf_mag,mask,usurf,bmelt"
 
-        grid_params_dict = generate_grid_description(grid, domain)
+        grid_params_dict = generate_grid_description(grid, domain, paleo=True)
 
         tlftw = 0.1
 
