@@ -11,6 +11,8 @@ import sys
 import shlex
 from os.path import join, abspath, realpath, dirname
 import pandas as pd
+import xarray as xr
+from typing import Any, Dict, List, Union
 
 try:
     import subprocess32 as sub
@@ -310,6 +312,9 @@ else:
 
 regridvars = "litho_temp,enthalpy,tillwat,bmelt,ice_area_specific_volume,thk"
 
+master_config_file = get_path_to_config()
+
+
 dirs = {"output": "$output_dir", "spatial_tmp": "$spatial_tmp_dir"}
 for d in ["performance", "state", "scalar", "spatial", "jobs", "basins"]:
     dirs[d] = f"$output_dir/{d}"
@@ -408,11 +413,6 @@ post_header = make_batch_post_header(system)
 for n, row in enumerate(uq_df.iterrows()):
     combination = row[1]
     print(combination)
-    phi_min = combination["phi_min"]
-    phi_max = combination["phi_max"]
-    z_min = combination["z_min"]
-    z_max = combination["z_max"]
-    ttphi = "{},{},{},{}".format(phi_min, phi_max, z_min, z_max)
 
     name_options = {}
     try:
@@ -460,12 +460,12 @@ for n, row in enumerate(uq_df.iterrows()):
             "profile": join(
                 dirs["performance"], "profile_${job_id}.py".format(**batch_system)
             ),
-            "ys": start_date,
-            "ye": end_date,
+            "time.start": start_date,
+            "time.end": end_date,
             "time.calendar": "365_day",
             "input.forcing.time_extrapolation": "true",
             "energy.bedrock_thermal.file": "$input_dir/data_sets/bheatflux/Geothermal_heatflux_map_v2.1_g450m.nc",
-            "o_format": oformat,
+            "output.format": oformat,
             "output.compression_level": compression_level,
             "config_override": "$config",
             "stress_balance.ice_free_thickness_standard": 5,
@@ -481,7 +481,7 @@ for n, row in enumerate(uq_df.iterrows()):
 
         outfile = f"{domain}_g{grid_resolution}m_{experiment}.nc"
 
-        general_params_dict["o"] = join(dirs["state"], outfile)
+        general_params_dict["output.file"] = join(dirs["state"], outfile)
 
         if initialstatefile is None:
             general_params_dict["bootstrap"] = ""
@@ -489,11 +489,11 @@ for n, row in enumerate(uq_df.iterrows()):
         else:
             general_params_dict["bootstrap"] = ""
             general_params_dict["i"] = pism_dataname
-            general_params_dict["regrid_file"] = initialstatefile
-            general_params_dict["regrid_vars"] = regridvars
+            general_params_dict["input.regrid.file"] = initialstatefile
+            general_params_dict["input.regrid.vars"] = regridvars
 
         if osize != "custom":
-            general_params_dict["o_size"] = osize
+            general_params_dict["output.size"] = osize
         else:
             general_params_dict[
                 "output.sizes.medium"
@@ -503,20 +503,34 @@ for n, row in enumerate(uq_df.iterrows()):
 
         tlftw = 0.1
 
-        sb_params_dict = {
-            "sia_e": combination["sia_e"],
-            "ssa_e": ssa_e,
-            "ssa_n": ssa_n,
-            "pseudo_plastic_q": combination["pseudo_plastic_q"],
-            "till_effective_fraction_overburden": combination[
+        sb_params_dict: Dict[str, Union[str, int, float]] = {
+            "stress_balance.sia.enhancement_factor": combination["sia_e"],
+            "stress_balance.ssa.enhancement_factor": ssa_e,
+            "stress_balance.ssa.Glen_exponent": ssa_n,
+            "basal_resistance.pseudo_plastic.q": combination["pseudo_plastic_q"],
+            "basal_yield_stress.mohr_coulomb.topg_to_phi.enabled": "yes",
+            "basal_yield_stress.mohr_coulomb.till_effective_fraction_overburden": combination[
                 "till_effective_fraction_overburden"
             ],
-            "vertical_velocity_approximation": "upstream",
             "stress_balance.blatter.enhancement_factor": combination["sia_e"],
-            "basal_yield_stress.add_transportable_water": "yes",
-            "basal_yield_stress.mohr_coulomb.till_log_factor_transportable_water": tlftw,
         }
-        sb_params_dict["topg_to_phi"] = ttphi
+        phi_min = combination["phi_min"]
+        phi_max = combination["phi_max"]
+        z_min = combination["z_min"]
+        z_max = combination["z_max"]
+
+        sb_params_dict[
+            "basal_yield_stress.mohr_coulomb.topg_to_phi.phi_max"
+        ] = phi_max
+        sb_params_dict[
+            "basal_yield_stress.mohr_coulomb.topg_to_phi.phi_min"
+        ] = phi_min
+        sb_params_dict[
+            "basal_yield_stress.mohr_coulomb.topg_to_phi.topg_max"
+        ] = z_max
+        sb_params_dict[
+            "basal_yield_stress.mohr_coulomb.topg_to_phi.topg_min"
+        ] = z_min
 
         stress_balance_params_dict = generate_stress_balance(
             stress_balance, sb_params_dict
@@ -549,28 +563,54 @@ for n, row in enumerate(uq_df.iterrows()):
 
         ocean_delta_SL_file_p = "$input_dir/data_sets/ocean/pism_dSL.nc"
         ocean_parameters = {
-            "sea_level": "constant,delta_sl",
+            "sea_level.models": "constant,delta_sl",
             "ocean.delta_sl.file": ocean_delta_SL_file_p,
         }
 
         ocean_params_dict = generate_ocean("const", **ocean_parameters)
 
-        calving_parameters = {
-            "float_kill_calve_near_grounding_line": float_kill_calve_near_grounding_line,
+        calving_parameters: Dict[str, Union[str, int, float]] = {
+            "calving.float_kill.calve_near_grounding_line": float_kill_calve_near_grounding_line,
             "calving.vonmises_calving.use_custom_flow_law": True,
             "calving.vonmises_calving.Glen_exponent": 3.0,
             "geometry.front_retreat.use_cfl": True,
-            "calving.eigen_calving.K": combination["eigen_calving_K"],
-            "calving.vonmises_calving.sigma_max": combination["vcm"],
-            "calving.thickness_calving.threshold": combination[
-                "thickness_calving_threshold"
-            ],
         }
+        vcm = combination["vcm"]
+
+        try:
+            vcm = float(vcm)
+            calving_parameters["calving.vonmises_calving.sigma_max"] = vcm * 1e6
+        except:
+            vonmises_calving_threshold_file_p = "$data_dir/calving/{vcm}"
+            calving_parameters[
+                "calving.vonmises_calving.threshold_file"
+            ] = vonmises_calving_threshold_file_p
+        if "calving.thickness_calving.threshold" in combination:
+            calving_parameters["calving.thickness_calving.threshold"] = combination[
+                "calving.thickness_calving.threshold"
+            ]
+        if "calving.thickness_calving.file" in combination:
+            calving_parameters[
+                "calving.thickness_calving.file"
+            ] = f"""$data_dir/calving/{combination[
+                "calving.thickness_calving.file"]}"""
+            if "calving.thickness_calving.threshold" in calving_parameters:
+                del calving_parameters["calving.thickness_calving.threshold"]
+
+        if "calving.rate_scaling.file" in combination:
+            calving_parameters[
+                "calving.rate_scaling.file"
+            ] = f"""$data_dir/calving/{combination[
+                "calving.rate_scaling.file"]}"""
+            calving_parameters["calving.rate_scaling.period"] = 0
 
         calving = options.calving
-        calving_params_dict = generate_calving(calving, **calving_parameters)
-
-        scalar_ts_dict = generate_scalar_ts(outfile, tsstep, odir=dirs["scalar"])
+        calving_params_dict = generate_calving(
+            calving, **calving_parameters
+        )
+        
+        scalar_ts_dict = generate_scalar_ts(
+            outfile, tsstep, odir=dirs["scalar"])
         solver_dict = {}
 
         all_params_dict = merge_dicts(
@@ -588,15 +628,21 @@ for n, row in enumerate(uq_df.iterrows()):
         if not spatial_ts == "none":
             exvars = spatial_ts_vars[spatial_ts]
             spatial_ts_dict = generate_spatial_ts(
-                outfile, exvars, exstep, odir=dirs["spatial_tmp"], split=False
+                outfile, exvars, exstep, odir=dirs["spatial_tmp"]
             )
 
             all_params_dict = merge_dicts(all_params_dict, spatial_ts_dict)
 
-        if stress_balance == "blatter":
-            del all_params_dict["skip"]
-            all_params_dict["time_stepping.adaptive_ratio"] = 25
 
+        print("\nChecking parameters")
+        print("------------------------------------------------------------")
+        with xr.open_dataset(master_config_file) as ds:
+            for key in all_params_dict:
+                if hasattr(ds["pism_config"], key) is False:
+                    print(f"  - {key} not found in pism_config")
+        print("------------------------------------------------------------\n")
+
+            
         all_params = " \\\n  ".join(
             ["-{} {}".format(k, v) for k, v in list(all_params_dict.items())]
         )
@@ -638,19 +684,23 @@ for n, row in enumerate(uq_df.iterrows()):
         f.write("\n")
         run_id = combination["id"]
         id_cmd = f"ncatted -a id,global,a,c,{run_id}"
-        for m_file in [scalar_ts_dict["ts_file"], join(dirs["state"], outfile)]:
+        for m_file in [
+            scalar_ts_dict["output.timeseries.filename"],
+            join(dirs["state"], outfile),
+        ]:
             cmd = f"{id_cmd} {m_file}\n"
             f.write(cmd)
         f.write("\n")
         f.write("\n")
         if not spatial_ts == "none":
-            tmpfile = spatial_ts_dict["extra_file"]
+            tmpfile = spatial_ts_dict["output.extra.file"]
             ofile = join(dirs["spatial"], "ex_" + outfile)
             f.write(f"{id_cmd} {tmpfile}\n")
             f.write(
                 f"mv {tmpfile} {ofile}\n",
             )
         f.write("\n")
+        f.write("Moving file done\n")
         f.write(batch_system.get("footer", ""))
 
     scripts.append(script)

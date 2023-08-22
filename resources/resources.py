@@ -14,6 +14,14 @@ import math
 import sys
 import os.path
 
+def get_path_to_config():
+    """
+    Get path to pism_config
+
+    Returns: string
+    """
+
+    return os.path.join(os.environ.get("PISM_PREFIX", ""), "share/pism/pism_config.nc")
 
 def generate_prefix_str(pism_exec):
     """
@@ -317,7 +325,10 @@ spatial_ts_vars["strain"] = [
 
 
 def generate_spatial_ts(
-    outfile, exvars, step, start=None, end=None, split=None, odir=None
+    outfile: str,
+    exvars: str,
+    step: str = "yearly",
+    odir: str = ".",
 ):
     """
     Return dict to generate spatial time series
@@ -326,35 +337,21 @@ def generate_spatial_ts(
     """
 
     # check if list or comma-separated string is given.
-    try:
-        exvars = ",".join(exvars)
-    except:
-        pass
+    exvars = ",".join(exvars)
 
     params_dict = OrderedDict()
-    if split is True:
-        outfile, ext = os.path.splitext(outfile)
-        params_dict["extra_split"] = ""
-    if odir is None:
-        params_dict["extra_file"] = "ex_" + outfile
-    else:
-        params_dict["extra_file"] = os.path.join(odir, "ex_" + outfile)
-    params_dict["extra_vars"] = exvars
-
-    if step is None:
-        step = "yearly"
-
-    if start is not None and end is not None:
-        times = "{start}:{step}:{end}".format(start=start, step=step, end=end)
-    else:
-        times = step
-
-    params_dict["extra_times"] = times
+    params_dict["output.extra.file"] = os.path.join(odir, "ex_" + outfile)
+    params_dict["output.extra.vars"] = exvars
+    params_dict["output.extra.times"] = step
 
     return params_dict
 
 
-def generate_scalar_ts(outfile, step, odir=None, **kwargs):
+def generate_scalar_ts(
+    outfile,
+    step: str = "yearly",
+    odir: str = ".",
+):
     """
     Return dict to create scalar time series
 
@@ -362,16 +359,8 @@ def generate_scalar_ts(outfile, step, odir=None, **kwargs):
     """
 
     params_dict = OrderedDict()
-    if odir is None:
-        params_dict["ts_file"] = "ts_" + outfile
-    else:
-        params_dict["ts_file"] = os.path.join(odir, "ts_" + outfile)
-
-    if step is None:
-        step = "yearly"
-    else:
-        times = step
-    params_dict["ts_times"] = times
+    params_dict["output.timeseries.filename"] = os.path.join(odir, "ts_" + outfile)
+    params_dict["output.timeseries.times"] = step
 
     return params_dict
 
@@ -685,19 +674,19 @@ def generate_grid_description(grid_resolution, domain, restart=False, paleo=Fals
     my = int(my_max / grid_div)
 
     horizontal_grid = OrderedDict()
-    horizontal_grid["Mx"] = mx
-    horizontal_grid["My"] = my
+    horizontal_grid["grid.Mx"] = mx
+    horizontal_grid["grid.My"] = my
 
     vertical_grid = OrderedDict()
-    vertical_grid["Lz"] = Lz
-    vertical_grid["Lbz"] = Lbz
-    vertical_grid["z_spacing"] = "equal"
-    vertical_grid["Mz"] = mz
-    vertical_grid["Mbz"] = mzb
+    vertical_grid["grid.Lz"] = Lz
+    vertical_grid["grid.Lbz"] = Lbz
+    vertical_grid["grid.ice_vertical_spacing"] = "equal"
+    vertical_grid["grid.Mz"] = mz
+    vertical_grid["grid.Mbz"] = mzb
 
     grid_options = {}
-    grid_options["skip"] = ""
-    grid_options["skip_max"] = skip_max
+    grid_options["time_stepping.skip.enabled"] = ""
+    grid_options["time_stepping.skip.max"] = skip_max
 
     grid_dict = merge_dicts(horizontal_grid, vertical_grid, grid_options)
 
@@ -752,24 +741,22 @@ def generate_stress_balance(stress_balance, additional_params_dict):
     accepted_stress_balances = ("sia", "ssa+sia", "blatter")
 
     if stress_balance not in accepted_stress_balances:
-        print(("{} not in {}".format(stress_balance, accepted_stress_balances)))
-        print(
-            ("available stress balance solvers are {}".format(accepted_stress_balances))
-        )
-        import sys
-
-        sys.exit(0)
+        print(f"{stress_balance} not in {accepted_stress_balances}")
+        print(f"available stress balance solvers are {accepted_stress_balances}")
 
     params_dict = OrderedDict()
     params_dict["stress_balance"] = stress_balance
     if stress_balance in ("ssa+sia", "blatter"):
         params_dict["options_left"] = ""
-        params_dict["cfbc"] = ""
-        params_dict["kill_icebergs"] = ""
-        params_dict["part_grid"] = ""
-        params_dict["part_redist"] = ""
-        params_dict["sia_flow_law"] = "gpbld"
-        params_dict["tauc_slippery_grounding_lines"] = ""
+        params_dict["stress_balance.calving_front_stress_bc"] = ""
+        params_dict["geometry.remove_icebergs"] = ""
+        params_dict["geometry.part_grid.enabled"] = ""
+        params_dict["stress_balance.sia.flow_law"] = "gpbld"
+        params_dict["basal_yield_stress.slippery_grounding_lines_option"] = ""
+
+    if stress_balance == "ssa+sia":
+        params_dict["time_stepping.skip.enabled"] = ""
+        params_dict["time_stepping.skip.max"] = 100
 
     if stress_balance == "blatter":
         params_dict["stress_balance.blatter.coarsening_factor"] = 4
@@ -786,6 +773,7 @@ def generate_stress_balance(stress_balance, additional_params_dict):
         params_dict["bp_ksp_view_singularvalues"] = ""
         params_dict["bp_snes_ksp_ew"] = 1
         params_dict["bp_snes_ksp_ew_version"] = 3
+        params_dict["time_stepping.adaptive_ratio"] = 25
 
     return merge_dicts(additional_params_dict, params_dict)
 
@@ -799,21 +787,21 @@ def generate_hydrology(hydro, **kwargs):
 
     params_dict = OrderedDict()
     if hydro in ("null"):
-        params_dict["hydrology"] = "null"
+        params_dict["hydrology.model"] = "null"
     elif hydro in ("diffuse"):
-        params_dict["hydrology"] = "null"
-        params_dict["hydrology_null_diffuse_till_water"] = ""
+        params_dict["hydrology.model"] = "null"
+        params_dict["hydrology.null_diffuse_till_water"] = ""
     elif hydro in ("routing"):
-        params_dict["hydrology"] = "routing"
+        params_dict["hydrology.model"] = "routing"
     elif hydro in ("steady"):
-        params_dict["hydrology"] = "steady"
+        params_dict["hydrology.model"] = "steady"
     elif hydro in ("routing_coupled"):
-        params_dict["hydrology"] = "routing"
+        params_dict["hydrology.model"] = "routing"
     elif hydro in ("distributed"):
-        params_dict["hydrology"] = "distributed"
+        params_dict["hydrology.model"] = "distributed"
         params_dict["basal_yield_stress.add_transportable_water"] = "true"
     elif hydro in ("distributed_coupled"):
-        params_dict["hydrology"] = "distributed"
+        params_dict["hydrology.model"] = "distributed"
         params_dict["basal_yield_stress.add_transportable_water"] = "true"
     else:
         print((f"hydrology {hydro} not recognized, exiting"))
@@ -839,11 +827,11 @@ def generate_calving(calving, **kwargs):
         "vonmises_calving",
         "hayhurst_calving",
     ):
-        params_dict["calving"] = f"{calving},thickness_calving"
+        params_dict["calving.methods"] = f"{calving},thickness_calving"
     elif calving in ("hybrid_calving"):
-        params_dict["calving"] = "eigen_calving,vonmises_calving,thickness_calving"
+        params_dict["calving.methods"] = "eigen_calving,vonmises_calving,thickness_calving"
     elif calving in ("float_kill",):
-        params_dict["calving"] = calving
+        params_dict["calving.methods"] = calving
     else:
         print((f"calving {calving} not recognized, exiting"))
         import sys
@@ -865,15 +853,14 @@ def generate_climate(climate, **kwargs):
 
     params_dict = OrderedDict()
     if climate in ("paleo"):
-        params_dict["atmosphere"] = "searise_greenland,delta_T,paleo_precip"
+        params_dict["atmosphere.models"] = "searise_greenland,delta_T,paleo_precip"
         if "atmosphere_paleo_precip_file" not in kwargs:
             params_dict["atmosphere_paleo_precip_file"] = "pism_dT.nc"
         if "atmosphere_delta_T_file" not in kwargs:
             params_dict["atmosphere_delta_T_file"] = "pism_dT.nc"
-        params_dict["surface"] = "pdd"
-        params_dict["pdd_std_dev_method"] = "quadratic"  # Wake and Marshall (2015)
+        params_dict["surface.models"] = "pdd"
     elif climate in ("abrupt_glacial"):
-        params_dict["atmosphere"] = "searise_greenland,delta_T,paleo_precip"
+        params_dict["atmosphere.models"] = "searise_greenland,delta_T,paleo_precip"
         if "atmosphere_paleo_precip_file" not in kwargs:
             params_dict[
                 "atmosphere_paleo_precip_file"
@@ -882,22 +869,20 @@ def generate_climate(climate, **kwargs):
             params_dict[
                 "atmosphere_delta_T_file"
             ] = "pism_abrupt_glacial_climate_forcing.nc"
-        params_dict["surface"] = "pdd"
-        params_dict["pdd_std_dev_method"] = "quadratic"  # Wake and Marshall (2015)
+        params_dict["surface.models"] = "pdd"
     elif climate in ("lgm"):
-        params_dict["atmosphere"] = "given,delta_T,frac_P"
-        params_dict["surface"] = "pdd"
-        params_dict["pdd_std_dev_method"] = "quadratic"  # Wake and Marshall (2015)
+        params_dict["atmosphere.models"] = "given,delta_T,frac_P"
+        params_dict["surface.models"] = "pdd"
     elif climate in ("warming"):
-        params_dict["atmosphere"] = "given,lapse_rate,delta_T,paleo_precip"
+        params_dict["atmosphere.models"] = "given,lapse_rate,delta_T,paleo_precip"
         if "atmosphere_delta_T_file" not in kwargs:
             params_dict["atmosphere_delta_T_file"] = "pism_warming_climate_forcing.nc"
-        params_dict["surface"] = "pdd"
+        params_dict["surface.models"] = "pdd"
     elif climate in ("given_pdd"):
-        params_dict["atmosphere"] = "given"
-        params_dict["surface"] = "pdd"
+        params_dict["atmosphere.models"] = "given"
+        params_dict["surface.models"] = "pdd"
     elif climate in ("warming_precip"):
-        params_dict["atmosphere"] = "given,lapse_rate,delta_T,paleo_precip"
+        params_dict["atmosphere.models"] = "given,lapse_rate,delta_T,paleo_precip"
         if "atmosphere_paleo_precip_file" not in kwargs:
             params_dict[
                 "atmosphere_paleo_precip_file"
@@ -952,43 +937,43 @@ def generate_ocean(ocean, **kwargs):
 
     params_dict = OrderedDict()
     if ocean == "paleo":
-        params_dict["ocean"] = "given,delta_SL,frac_SMB"
+        params_dict["ocean.models"] = "given,delta_SL,frac_SMB"
         if "ocean_delta_SL_file" not in kwargs:
             params_dict["ocean_delta_SL_file"] = "pism_dSL.nc"
     elif ocean == "abrupt_glacial":
-        params_dict["ocean"] = "given,delta_SL,frac_SMB"
+        params_dict["ocean.models"] = "given,delta_SL,frac_SMB"
         if "ocean_delta_SL_file" not in kwargs:
             params_dict[
                 "ocean_delta_SL_file"
             ] = "pism_abrupt_glacial_climate_forcing.nc"
     elif ocean == "abrupt_glacial_mbp":
-        params_dict["ocean"] = "given,delta_SL,frac_SMB,delta_MBP"
+        params_dict["ocean.models"] = "given,delta_SL,frac_SMB,delta_MBP"
         if "ocean_delta_SL_file" not in kwargs:
             params_dict[
                 "ocean_delta_SL_file"
             ] = "pism_abrupt_glacial_climate_forcing.nc"
     elif ocean == "paleo_mbp":
-        params_dict["ocean"] = "given,delta_SL,frac_SMB,delta_MBP"
+        params_dict["ocean.models"] = "given,delta_SL,frac_SMB,delta_MBP"
         if "ocean_delta_SL_file" not in kwargs:
             params_dict["ocean_delta_SL_file"] = "pism_dSL.nc"
     elif ocean == "warming":
-        params_dict["ocean"] = "given,runoff_SMB"
+        params_dict["ocean.models"] = "given,runoff_SMB"
     elif ocean == "warming_3eqn":
         params_dict["ocean"] = "th,delta_T"
     elif ocean == "paleo_const":
-        params_dict["ocean"] = "given,delta_SL"
+        params_dict["ocean.models"] = "given,delta_SL"
     elif ocean == "paleo_const_mbp":
-        params_dict["ocean"] = "given,delta_SL,frac_MBP"
+        params_dict["ocean.models"] = "given,delta_SL,frac_MBP"
     elif ocean in ("given", "relax"):
-        params_dict["ocean"] = "given"
+        params_dict["ocean.models"] = "given"
     elif ocean in ("given_mbp"):
-        params_dict["ocean"] = "given,frac_MBP"
+        params_dict["ocean.models"] = "given,frac_MBP"
     elif ocean == "const":
-        params_dict["ocean"] = "constant"
+        params_dict["ocean.models"] = "constant"
     elif ocean == "th":
-        params_dict["ocean"] = "th"
+        params_dict["ocean.models"] = "th"
     elif ocean == "th_mbp":
-        params_dict["ocean"] = "th,frac_MBP"
+        params_dict["ocean.models"] = "th,frac_MBP"
     else:
         print((f"ocean {ocean} not recognized, exiting"))
         import sys

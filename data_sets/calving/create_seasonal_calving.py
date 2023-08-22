@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# Copyright (C) 2020-21 Andy Aschwanden
+# Copyright (C) 2020-23 Andy Aschwanden
 
 from argparse import ArgumentParser
 from calendar import isleap
@@ -13,17 +13,29 @@ import cftime
 parser = ArgumentParser()
 parser.add_argument("FILE", nargs="*")
 parser.add_argument(
-    "-s",
-    "--scaling_factor",
-    dest="scaling_factor",
+    "--year_high",
     type=float,
-    help="Scales the calving rate",
-    default=1,
+    help="Start when high values are applied.",
+    default=2001,
+)
+parser.add_argument(
+    "--calving_low",
+    type=float,
+    help="Start when high values are applied.",
+    default=1.0,
+)
+parser.add_argument(
+    "--calving_high",
+    type=float,
+    help="Start when high values are applied.",
+    default=1.5,
 )
 
 options = parser.parse_args()
 args = options.FILE
-scaling_factor = options.scaling_factor
+r_low = options.calving_low
+r_high = options.calving_high
+year_high = options.year_high
 
 if len(args) == 0:
     nc_outfile = "seasonal_calving.nc"
@@ -94,7 +106,6 @@ var = "frac_calving_rate"
 var_out = nc.createVariable(var, "f", dimensions=("time"))
 var_out.units = "1"
 
-frac_calving_rate_max = 1
 
 winter_a = 300
 winter_e = 90
@@ -104,14 +115,7 @@ winter_a = 0
 winter_e = 150
 spring_e = 170
 
-idx = 0
-for year in range(start_year, end_year):
-    print(f"Preparing Year {year}")
-    if isleap(year):
-        year_length = 366
-    else:
-        year_length = 365
-
+def annual_calving(year_length, frac_calving_rate_max):
     frac_calving_rate = np.zeros(year_length)
     for t in range(year_length):
         if (t <= winter_e) and (t >= winter_a):
@@ -127,91 +131,25 @@ for year in range(start_year, end_year):
                 frac_calving_rate_max / np.sqrt(spring_e - winter_e)
             ) * np.sqrt(np.mod(t - winter_e, year_length))
         else:
-            frac_calving_rate[t] = 1
-            if year > 2001:
-                frac_calving_rate[t] = (
-                    frac_calving_rate_max / np.sqrt(spring_e - winter_e)
-                ) * np.sqrt(np.mod(t - winter_e, year_length))
+            frac_calving_rate[t] = frac_calving_rate_max
+    return frac_calving_rate
 
-    frac_calving_rate = np.roll(frac_calving_rate, -90) * scaling_factor
+idx = 0
+for year in range(start_year, end_year):
+    print(f"Preparing Year {year}")
+    if isleap(year):
+        year_length = 366
+    else:
+        year_length = 365
+
+    if year <= year_high:
+        frac_calving_rate = annual_calving(year_length, r_low)
+    else:
+        frac_calving_rate = annual_calving(year_length, r_high)
+
+    frac_calving_rate = np.roll(frac_calving_rate, -90) 
     var_out[idx::] = frac_calving_rate
     idx += year_length
 
 nc.close()
 
-
-import pylab as plt
-import datetime
-
-
-def set_size(w, h, ax=None):
-    """w, h: width, height in inches"""
-
-    if not ax:
-        ax = plt.gca()
-    l = ax.figure.subplotpars.left
-    r = ax.figure.subplotpars.right
-    t = ax.figure.subplotpars.top
-    b = ax.figure.subplotpars.bottom
-    figw = float(w) / (r - l)
-    figh = float(h) / (t - b)
-    ax.figure.set_size_inches(figw, figh)
-
-
-fontsize = 6
-lw = 0.65
-aspect_ratio = 0.35
-markersize = 2
-fig_width = 3.1  # inch
-fig_height = aspect_ratio * fig_width  # inch
-fig_size = [fig_width, fig_height]
-
-params = {
-    "backend": "ps",
-    "axes.linewidth": 0.25,
-    "lines.linewidth": lw,
-    "axes.labelsize": fontsize,
-    "font.size": fontsize,
-    "xtick.direction": "in",
-    "xtick.labelsize": fontsize,
-    "xtick.major.size": 2.5,
-    "xtick.major.width": 0.25,
-    "ytick.direction": "in",
-    "ytick.labelsize": fontsize,
-    "ytick.major.size": 2.5,
-    "ytick.major.width": 0.25,
-    "legend.fontsize": fontsize,
-    "lines.markersize": markersize,
-    "font.size": fontsize,
-    "figure.figsize": fig_size,
-}
-
-plt.rcParams.update(params)
-
-positions = np.cumsum([0, 31, 30, 31, 31, 28, 31, 30, 31, 30, 31, 31, 30])
-labels = [
-    "Oct",
-    "Nov",
-    "Dec",
-    "Jan",
-    "Feb",
-    "Mar",
-    "Apr",
-    "May",
-    "Jun",
-    "Jul",
-    "Aug",
-    "Sep",
-    "Oct",
-]
-fig = plt.figure()
-ax = fig.add_subplot(111)
-ax.plot(range(len(frac_calving_rate)), np.roll(frac_calving_rate, 90))
-ax.set_ylim(-0.01, 3.1)
-ax.set_xlim(0, len(frac_calving_rate))
-plt.xticks(positions, labels)
-plt.yticks([0, frac_calving_rate_max], [0, "Max"])
-ax.set_xlabel("Time [months]")
-ax.set_ylabel("Calving Rate Fraction\n[1]")
-set_size(3.2, 1.0)
-fig.savefig(f"jib_seasonal_calving_{scaling_factor}_{start_year}_{end_year}.pdf")

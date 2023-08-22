@@ -14,7 +14,79 @@ import pandas as pd
 from pyproj import Proj
 
 
-def create_nc(nc_outfile, tct, grid_spacing, time_dict):
+
+
+if __name__ == "__main__":
+    __spec__ = None
+
+    # set up the option parser
+    parser = ArgumentParser()
+    parser.add_argument("FILE", nargs=1)
+    parser.add_argument(
+        "--tct_0", dest="tct_0", type=float, help="southern thickness calving threshold, in m", default=400
+    )
+    parser.add_argument("--tct_1", dest="tct_1", type=float, help="northern thickness calving threshold, in m", default=50)
+    parser.add_argument(
+        "--lat_0", dest="lat_0", type=float, help="latitude to apply southern thickness calving threshold", default=74
+    )
+    parser.add_argument(
+        "--lat_1", dest="lat_1", type=float, help="latitude to apply northern thickness calving threshold", default=76
+    )
+
+    options = parser.parse_args()
+    args = options.FILE
+    ofile = args[0]
+    lat_0 = options.lat_0
+    lat_1 = options.lat_1
+    tct_0 = options.tct_0
+    tct_1 = options.tct_1
+    
+    a_tct = (tct_1 - tct_0) / (lat_1 - lat_0)
+    b_tct = tct_0 - a_tct * lat_0
+
+    grid_spacing = 1200
+
+    # The temporal averaging window
+    freq = "1D"
+
+    start_date = datetime(1980, 1, 1)
+    end_date = datetime(2021, 1, 1)
+    end_date_yearly = datetime(2021, 1, 2)
+
+    calendar = "standard"
+    units = "days since 1980-1-1"
+
+    # create list with dates from start_date until end_date with
+    # periodicity prule for netCDF file
+    # and use data_range for pytorch X_new.
+    sampling_interval = "yearly"
+    dates = pd.date_range(start=start_date, end=end_date, freq="1AS")
+
+    rd = {
+        "daily": rrule.DAILY,
+        "weekly": rrule.WEEKLY,
+        "monthly": rrule.MONTHLY,
+        "yearly": rrule.YEARLY,
+    }
+
+    bnds_datelist = list(
+        rrule.rrule(rd[sampling_interval], dtstart=start_date, until=end_date_yearly)
+    )
+    # calculate the days since refdate, including refdate, with time being the
+    bnds_interval_since_refdate = cftime.date2num(
+        bnds_datelist, units, calendar=calendar
+    )
+    time_interval_since_refdate = (
+        bnds_interval_since_refdate[0:-1] + np.diff(bnds_interval_since_refdate) / 2
+    )
+
+    time_dict = {
+        "calendar": calendar,
+        "units": units,
+        "time": time_interval_since_refdate,
+        "time_bnds": bnds_interval_since_refdate,
+    }
+
     """
     Generate netCDF file
     """
@@ -24,7 +96,7 @@ def create_nc(nc_outfile, tct, grid_spacing, time_dict):
     time = time_dict["time"]
     time_bnds = time_dict["time_bnds"]
 
-    nt = len(tct)
+    nt = len(dates)
     xdim = "x"
     ydim = "y"
 
@@ -95,7 +167,7 @@ def create_nc(nc_outfile, tct, grid_spacing, time_dict):
         # project grid corners from x-y to lat-lon space
         gc_lon[:, :, corner], gc_lat[:, :, corner] = proj(gc_ee, gc_nn, inverse=True)
 
-    nc = NC(nc_outfile, "w", format="NETCDF4", compression_level=2)
+    nc = NC(ofile, "w", format="NETCDF4", compression_level=2)
 
     nc.createDimension(xdim, size=easting.shape[0])
     nc.createDimension(ydim, size=northing.shape[0])
@@ -179,6 +251,11 @@ def create_nc(nc_outfile, tct, grid_spacing, time_dict):
     # Assign values to variable 'lat_bnds'
     var_out[:] = gc_lat
 
+    tct = a_tct * lat + b_tct
+    tct[lat < lat_0] = a_tct * lat_0 + b_tct
+    tct[lat > lat_1] = a_tct * lat_1 + b_tct
+
+    
     var = "thickness_calving_threshold"
     var_out = nc.createVariable(
         var, "f", dimensions=("time", "y", "x"), fill_value=-2e9, zlib=True, complevel=2
@@ -187,7 +264,9 @@ def create_nc(nc_outfile, tct, grid_spacing, time_dict):
     var_out.long_name = "threshold used by the 'calving at threshold' calving method"
     var_out.grid_mapping = "mapping"
     var_out.coordinates = "lon lat"
-    var_out[:] = np.repeat(tct, m * n).reshape(nt, n, m)
+    for k, date in enumerate(dates):
+        print(date)
+        var_out[k, :] = tct
 
     mapping = nc.createVariable("mapping", "c")
     mapping.ellipsoid = "WGS84"
@@ -201,82 +280,3 @@ def create_nc(nc_outfile, tct, grid_spacing, time_dict):
     # writing global attributes
     nc.Conventions = "CF-1.7"
     nc.close()
-
-
-if __name__ == "__main__":
-    __spec__ = None
-
-    # set up the option parser
-    parser = ArgumentParser()
-    parser.add_argument("FILE", nargs=1)
-    parser.add_argument("--threshold_a", type=float, help="Threshold a", default=300)
-    parser.add_argument("--threshold_e", type=float, help="Threshold e", default=500)
-
-    parser.add_argument("--date_a", type=str, help="Date a", default="1998-01-01")
-
-    parser.add_argument("--date_e", type=str, help="Date e", default="2000-01-01")
-
-    options = parser.parse_args()
-    args = options.FILE
-    ofile = args[0]
-
-    grid_spacing = 18000
-
-    # The temporal averaging window
-    freq = "1D"
-
-    start_date = datetime(1980, 1, 1)
-    end_date = datetime(2021, 1, 1)
-    end_date_yearly = datetime(2021, 1, 2)
-
-    calendar = "standard"
-    units = "days since 1980-1-1"
-
-    # create list with dates from start_date until end_date with
-    # periodicity prule for netCDF file
-    # and use data_range for pytorch X_new.
-    sampling_interval = "daily"
-    dates = pd.date_range(start=start_date, end=end_date, freq="1D")
-
-    rd = {
-        "daily": rrule.DAILY,
-        "weekly": rrule.WEEKLY,
-        "monthly": rrule.MONTHLY,
-        "yearly": rrule.YEARLY,
-    }
-
-    bnds_datelist = list(
-        rrule.rrule(rd[sampling_interval], dtstart=start_date, until=end_date_yearly)
-    )
-    # calculate the days since refdate, including refdate, with time being the
-    bnds_interval_since_refdate = cftime.date2num(
-        bnds_datelist, units, calendar=calendar
-    )
-    time_interval_since_refdate = (
-        bnds_interval_since_refdate[0:-1] + np.diff(bnds_interval_since_refdate) / 2
-    )
-
-    time_dict = {
-        "calendar": calendar,
-        "units": units,
-        "time": time_interval_since_refdate,
-        "time_bnds": bnds_interval_since_refdate,
-    }
-
-    tct = np.zeros_like(dates, dtype=float) + options.threshold_a
-    tct[dates >= datetime.fromisoformat(options.date_e)] = options.threshold_e
-
-    idx_a = np.where(dates == datetime.fromisoformat(options.date_a))[0][0]
-    no_idx = len(
-        dates[
-            (dates > datetime.fromisoformat(options.date_a))
-            & (dates < datetime.fromisoformat(options.date_e))
-        ]
-    )
-    a = (options.threshold_e - options.threshold_a) / no_idx
-
-    for k, date in enumerate(dates):
-        if (k > idx_a) and (k <= idx_a + no_idx):
-            tct[k] = options.threshold_a + (k - idx_a) * a
-
-    create_nc(ofile, tct, grid_spacing, time_dict)

@@ -15,13 +15,12 @@ import numpy as np
 import pandas as pd
 import pylab as plt
 from pyproj import Proj
-import pytorch_lightning as pl
+import lightning as pl
 
 import gpytorch
-from pytorch_lightning.callbacks import LearningRateMonitor
-from pytorch_lightning.callbacks.early_stopping import EarlyStopping
+from lightning.pytorch.callbacks import LearningRateMonitor
+from lightning.pytorch.callbacks.early_stopping import EarlyStopping
 from torch.optim.lr_scheduler import ExponentialLR, ReduceLROnPlateau
-from pytorch_lightning.loggers import TensorBoardLogger
 import torch
 from torch.utils.data import DataLoader, TensorDataset
 
@@ -689,7 +688,6 @@ if __name__ == "__main__":
         batch_size = 32
         training_data = DataModule(full_train_x, full_train_y, full_train_i)
 
-        logger = TensorBoardLogger("tb_logs", name="ocean_forcing")
         num_tasks = len(data)
         model = PLMultitaskGPModel(
             full_train_x,
@@ -711,7 +709,6 @@ if __name__ == "__main__":
             args,
             max_epochs=max_epochs,
             callbacks=[lr_monitor, early_stop_callback],
-            logger=logger,
         )
         trainer.fit(model, datamodule=training_data)
 

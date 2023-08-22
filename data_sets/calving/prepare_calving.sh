@@ -3,13 +3,31 @@
 
 set -x -e
 
-python create_seasonal_calving.py seasonal_calving_1_1980_2020.nc
-python create_seasonal_calving.py -s 0 seasonal_calving_0_1980_2020.nc
+for h in 1.25 1.5 3.0; do
+    python create_seasonal_calving.py --calving_high ${h} seasonal_calving_${h}_2001_1980_2020.nc
+done
 
-a=1998-01-01
-e=2000-01-01
+# #####################################
+# Thickness calving threshold forcing
+# #####################################
 
-tct_a=300
-tct_e=500
 
-python create_calving_at_thickness.py --threshold_a ${tct_a} --threshold_e ${tct_e} --date_a $a --date_e $e thickness_calving_threshold_${tct_a}_${tct_e}_${a}_${e}.nc
+lat_0=74
+lat_1=76
+
+tct_0=200
+tct_1=50
+outfile=tct_forcing_${tct_0}myr_${lat_0}n_${tct_1}myr_${lat_1}n.nc
+python create_calving_at_thickness.py --tct_0 ${tct_0} --tct_1 ${tct_1} --lat_0 ${lat_0} --lat_1 ${lat_1} $outfile
+
+tct_0=300
+tct_1=50
+outfile=tct_forcing_${tct_0}myr_${lat_0}n_${tct_1}myr_${lat_1}n.nc
+python create_calving_at_thickness.py --tct_0 ${tct_0} --tct_1 ${tct_1} --lat_0 ${lat_0} --lat_1 ${lat_1} $outfile
+
+tct_0=400
+tct_1=50
+outfile=tct_forcing_${tct_0}myr_${lat_0}n_${tct_1}myr_${lat_1}n.nc
+python create_calving_at_thickness.py --tct_0 ${tct_0} --tct_1 ${tct_1} --lat_0 ${lat_0} --lat_1 ${lat_1} $outfile
+
+
