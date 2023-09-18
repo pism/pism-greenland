@@ -2,6 +2,20 @@
 
 set -x
 
+odir=2023_09_grimp_ctrl
+grid=600
+v=2023_GIMP
+mkdir -p $odir/flux_gates
+
+for id in CTRL BAYES-MEDIAN; do
+
+python ~/base/pism-analysis/pismanalysis/extract_profiles.py  -v velsurf_mag,uvelsurf,vvelsurf -s  --srs epsg:3413  ~/base/gris-analysis/flux-gates/greenland-flux-gates-29-250m.shp ${odir}/state/gris_g${grid}m_v${v}_id_${id}_0_25.nc ${odir}/flux_gates/flux_gate_29_250m_gris_g${grid}m_v${v}_id_${id}_0_25.nc
+
+ncap2 -O -s "velsurf_normal=(uvelsurf*nx + vvelsurf*ny); config[]=\" \"; config@grid_dx_meters=${grid}; config@init=\"${id}\"; config@bed=\"v5\";" ${odir}/flux_gates/flux_gate_29_250m_gris_g${grid}m_v${v}_id_${id}_0_25.nc ${odir}/flux_gates/flux_gate_29_250m_gris_g${grid}m_v${v}_id_${id}_0_25.nc
+
+done
+
+
 odir=2022_11_tillwat
 v=2022
 id=CTRL

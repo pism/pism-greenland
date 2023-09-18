@@ -11,6 +11,7 @@ from pyDOE2 import lhs
 
 short2long = {
     "SIAE": "sia_e",
+    "SIAN": "sia_n",
     "SSAN": "ssa_n",
     "PPQ": "pseudo_plastic_q",
     "TEFO": "till_effective_fraction_overburden",
@@ -27,7 +28,7 @@ dists = {
                 loc=1.0, scale=3.0
             ),  # uniform between 1 and 4    AS16 best value: 1.25
             "sia_n": uniform(
-                loc=2.5, scale=1.5
+                loc=2.0, scale=2.0
             ),  # uniform between 3 and 3.5  AS16 best value: 3.25
             "ssa_n": uniform(
                 loc=3.0, scale=0.5
@@ -54,7 +55,7 @@ dists = {
                 loc=1.0, scale=3.0
             ),  # uniform between 1 and 4    AS16 best value: 1.25
             "sia_n": uniform(
-                loc=3.0, scale=0.5
+                loc=2.0, scale=2.0
             ),  # uniform between 3 and 3.5  AS16 best value: 3.25
             "ssa_n": uniform(
                 loc=3.0, scale=0.5
@@ -107,7 +108,7 @@ parser.add_argument(
     dest="method",
     type=str,
     choices=["lhs", "saltelli"],
-    help="""number of samples to draw. default=saltelli.""",
+    help="""number of samples to draw. default=LHS.""",
     default="lhs",
 )
 parser.add_argument(
