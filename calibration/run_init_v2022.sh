@@ -1,5 +1,15 @@
 #!/bin/bash
 
+grid=1200
+PISM_PREFIX=$HOME/local-rl8/pism/ python calibrate-v2022.py --o_dir 2023_09_pseudo_plastic --dataset_version 2023_GIMP --b wc --spatial_ts basic --exstep 1 --step 25 --duration 25 -s chinook-rl8 -q t2small -n 80 -g $grid -w 48:00:00 --ensemble_file ../uncertainty_quantification/ensemble_gris_speed_calibration_pseudo_plastic_lhs_1000.csv ../../best_v1/g${grid}m_const_ctrl_e_1.25_ppq_0.6_tefo_0.02_ssa_n_3.25_philow_5.0_hydro_null_100a.nc
+
+
+grid=1200
+PISM_PREFIX=$HOME/local-rl8/pism/ python calibrate-v2022.py --o_dir 2023_09_pseudo_plastic_test --dataset_version 2023_GIMP --b wc --spatial_ts basic --exstep 1 --step 25 --duration 25 -s chinook-rl8 -q t2small -n 80 -g $grid -w 36:00:00 --ensemble_file ../uncertainty_quantification/ensemble_gris_speed_calibration_pseudo_plastic_lhs_1000.csv  ../../best_v1/g${grid}m_const_ctrl_e_1.25_ppq_0.6_tefo_0.02_ssa_n_3.25_philow_5.0_hydro_null_100a.nc
+
+grid=1200
+PISM_PREFIX=$HOME/local-rl8/pism/ python calibrate-v2022.py --o_dir 2023_09_pseudo_plastic_test --dataset_version 2023_GIMP --b wc --spatial_ts basic --exstep 1 --step 25 --duration 25 -s chinook-rl8 -q debug -n 40 -g $grid -w 36:00:00 --ensemble_file ../uncertainty_quantification/ensemble_gris_speed_calibration_pseudo_plastic_lhs_1000.csv  ../../best_v1/g${grid}m_const_ctrl_e_1.25_ppq_0.6_tefo_0.02_ssa_n_3.25_philow_5.0_hydro_null_100a.nc
+
 # Two steps:
 # 1. Update to v2022 bed/ice thickness
 # 2. Update tillwat

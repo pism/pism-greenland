@@ -551,12 +551,7 @@ for n, row in enumerate(uq_df.iterrows()):
                     "vonmises_calving", front_retreat_file=pism_dataname
                 )
                 scalar_ts_dict = generate_scalar_ts(
-                    outfile,
-                    tsstep,
-                    start=simulation_start_year,
-                    end=simulation_end_year,
-                    odir=dirs["scalar"],
-                )
+                    outfile, tsstep, odir=dirs["scalar"])
 
                 all_params_dict = merge_dicts(
                     general_params_dict,
@@ -571,8 +566,9 @@ for n, row in enumerate(uq_df.iterrows()):
                 if not spatial_ts == "none":
                     exvars = spatial_ts_vars[spatial_ts]
                     spatial_ts_dict = generate_spatial_ts(
-                        outfile, exvars, exstep, odir=dirs["spatial_tmp"], split=False
+                        outfile, exvars, exstep, odir=dirs["spatial_tmp"], 
                     )
+                    spatial_ts_dict["output.extra.stop_missing"] = "no"
 
                     all_params_dict = merge_dicts(all_params_dict, spatial_ts_dict)
                 if stress_balance == "blatter":
@@ -617,7 +613,7 @@ for n, row in enumerate(uq_df.iterrows()):
                 if not spatial_ts == "none":
                     f_combined.write(
                         "mv {tmpfile} {ofile}\n".format(
-                            tmpfile=spatial_ts_dict["extra_file"],
+                            tmpfile=spatial_ts_dict["output.extra.file"],
                             ofile=join(dirs["spatial"], "ex_" + outfile),
                         )
                     )
