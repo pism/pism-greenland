@@ -572,7 +572,7 @@ for n, row in enumerate(uq_df.iterrows()):
         print("------------------------------------------------------------")
         for key, m_f in all_params_dict.items():
             if key.split(".")[-1] == "file":
-                m_f_abs = m_f.replace("$data_dir", options.data_dir)
+                m_f_abs = abspath(m_f.replace("$data_dir", options.data_dir))
                 print(f"  - {m_f_abs}: {os.path.isfile(m_f_abs)}")
         print("------------------------------------------------------------\n")
 
