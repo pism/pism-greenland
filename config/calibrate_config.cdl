@@ -2,7 +2,7 @@ netcdf pism_overrides {
     variables:
     byte pism_overrides;
 
-    pism_overrides:output.backup_interval = 48.0;
+    pism_overrides:output.checkpoint.interval = 48.0;
     
     pism_overrides:stress_balance.sia.max_diffusivity = 1000000.0;
 
