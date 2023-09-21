@@ -343,39 +343,32 @@ if not os.path.isdir(uq_dir):
 pism_config = "paleo"
 pism_config_nc = join(output_dir, pism_config + ".nc")
 
-cmd = "ncgen -o {output} {input_dir}/config/{config}.cdl".format(
-    output=pism_config_nc, input_dir=input_dir, config=pism_config
-)
+cmd = f"ncgen -o {pism_config_nc} {input_dir}/config/{pism_config}.cdl"
 sub.call(shlex.split(cmd))
 
 # these Bash commands are added to the beginning of the run scrips
-run_header = """# stop if a variable is not defined
+run_header = f"""# stop if a variable is not defined
 set -u
 # stop on errors
 set -e
 
 # path to the config file
-config="{config}"
+config="{pism_config_nc}"
 # path to the input directory (input data sets are contained in this directory)
 input_dir="{input_dir}"
+# path to data directory
+data_dir="{data_dir}"
 # output directory
 output_dir="{output_dir}"
 # temporary directory for spatial files
 spatial_tmp_dir="{spatial_tmp_dir}"
 
 # create required output directories
-for each in {dirs};
-do
-  mkdir -p $each
-done
-
-""".format(
-    input_dir=input_dir,
-    output_dir=output_dir,
-    spatial_tmp_dir=spatial_tmp_dir,
-    config=pism_config_nc,
-    dirs=" ".join(list(dirs.values())),
-)
+for each in {m_dirs};
+    do
+      mkdir -p $each
+done\n\n
+"""
 
 
 ensemble_infile = os.path.split(ensemble_file)[-1]
@@ -464,7 +457,7 @@ for n, row in enumerate(uq_df.iterrows()):
             "time.end": end_date,
             "time.calendar": "365_day",
             "input.forcing.time_extrapolation": "true",
-            "energy.bedrock_thermal.file": "$input_dir/data_sets/bheatflux/Geothermal_heatflux_map_v2.1_g450m.nc",
+            "energy.bedrock_thermal.file": "$data_dir/bheatflux/Geothermal_heatflux_map_v2.1_g450m.nc",
             "output.format": oformat,
             "output.compression_level": compression_level,
             "config_override": "$config",
@@ -561,7 +554,7 @@ for n, row in enumerate(uq_df.iterrows()):
         hydrology_parameters = {}
         hydro_params_dict = generate_hydrology(hydrology, **hydrology_parameters)
 
-        ocean_delta_SL_file_p = "$input_dir/data_sets/ocean/pism_dSL.nc"
+        ocean_delta_SL_file_p = "$data_dir/ocean/pism_dSL.nc"
         ocean_parameters = {
             "sea_level.models": "constant,delta_sl",
             "ocean.delta_sl.file": ocean_delta_SL_file_p,
