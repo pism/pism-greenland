@@ -134,6 +134,7 @@ spatial_ts_vars["paleo"] = [
     "effective_precipitation",
     "dHdt",
     "ice_mass",
+    "isochrone_depth",
     "mask",
     "thk",
     "usurf",
@@ -432,23 +433,10 @@ def generate_grid_description(grid_resolution, domain, restart=False, paleo=Fals
         except:
             print(("grid resolution {}m not recognized".format(grid_resolution)))
 
-        if grid_resolution < 1200:
-            skip_max = 200
-            mz = 201
-            mzb = 21
-        elif (grid_resolution >= 1200) and (grid_resolution < 4500):
-            skip_max = 100
-            mz = 201
-            mzb = 21
-        elif (grid_resolution >= 4500) and (grid_resolution < 18000):
-            skip_max = 50
-            mz = 201
-            mzb = 21
-        else:
-            skip_max = 20
-            mz = 101
-            mzb = 11
-
+        skip_max = 100
+        mz = 401
+        mzb = 21
+            
     elif domain.lower() in ("ismip6"):
 
         mx_max = 1681
@@ -612,22 +600,17 @@ def generate_grid_description(grid_resolution, domain, restart=False, paleo=Fals
         except:
             print(("grid resolution {}m not recognized".format(grid_resolution)))
 
+        mz = 401
+        mzb = 21
+
         if grid_resolution < 1200:
             skip_max = 200
-            mz = 401
-            mzb = 21
         elif (grid_resolution >= 1200) and (grid_resolution < 4500):
             skip_max = 100
-            mz = 201
-            mzb = 21
         elif (grid_resolution >= 4500) and (grid_resolution < 18000):
             skip_max = 50
-            mz = 201
-            mzb = 21
         else:
             skip_max = 20
-            mz = 201
-            mzb = 11
 
     elif domain.lower() in ("synth_ellps"):
 
@@ -679,7 +662,6 @@ def generate_grid_description(grid_resolution, domain, restart=False, paleo=Fals
     vertical_grid = OrderedDict()
     vertical_grid["grid.Lz"] = Lz
     vertical_grid["grid.Lbz"] = Lbz
-    vertical_grid["grid.ice_vertical_spacing"] = "equal"
     vertical_grid["grid.Mz"] = mz
     vertical_grid["grid.Mbz"] = mzb
 

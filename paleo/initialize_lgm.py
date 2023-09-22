@@ -262,6 +262,13 @@ parser.add_argument(
     default=None,
 )
 
+parser.add_argument(
+    "--data_dir",
+    dest="data_dir",
+    help="data directory",
+    default=abspath(join(script_directory, "../data_sets/")),
+)
+
 options = parser.parse_args()
 commandline_options = options.commandline_options
 
@@ -270,6 +277,7 @@ end_date = options.end
 
 nn = options.n
 input_dir = abspath(options.input_dir)
+data_dir = abspath(options.data_dir)
 output_dir = abspath(options.output_dir)
 spatial_tmp_dir = abspath(options.output_dir + "_tmp")
 
@@ -345,6 +353,8 @@ pism_config_nc = join(output_dir, pism_config + ".nc")
 
 cmd = f"ncgen -o {pism_config_nc} {input_dir}/config/{pism_config}.cdl"
 sub.call(shlex.split(cmd))
+
+m_dirs = " ".join(list(dirs.values()))
 
 # these Bash commands are added to the beginning of the run scrips
 run_header = f"""# stop if a variable is not defined
@@ -469,6 +479,7 @@ for n, row in enumerate(uq_df.iterrows()):
 
         if age:
             general_params_dict["age.enabled"] = "true"
+            general_params_dict["isochrones.deposition_times"] = 1000
         if use_mks:
             general_params_dict["output.use_MKS"] = "true"
 
