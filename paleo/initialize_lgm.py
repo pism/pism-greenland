@@ -123,7 +123,7 @@ parser.add_argument(
 )
 parser.add_argument(
     "-L",
-    "--comp_level",
+    "--compression_level",
     dest="compression_level",
     type=int,
     help="Compression level for output file.",
