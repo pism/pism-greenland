@@ -111,7 +111,7 @@ parser.add_argument(
     "--tsstep",
     dest="tsstep",
     help="Writing interval for scalar time series",
-    default="daily",
+    default="yearly",
 )
 parser.add_argument(
     "-f",
@@ -182,7 +182,7 @@ parser.add_argument(
     dest="spatial_ts",
     choices=["basic", "paleo", "paleo_tracer"],
     help="output size type",
-    default="basic",
+    default="paleo",
 )
 parser.add_argument(
     "--hydrology",
@@ -318,7 +318,7 @@ else:
         f"$input_dir/data_sets/bed_dem/pism_Greenland_{grid}m_v{version}_{bed_type}.nc"
     )
 
-regridvars = "litho_temp,enthalpy,tillwat,bmelt,ice_area_specific_volume,thk"
+regridvars = "litho_temp,enthalpy,tillwat,bmelt,ice_area_specific_volume,thk,isochrone_depth,isochronal_layer_thickness"
 
 master_config_file = get_path_to_config()
 
@@ -479,7 +479,7 @@ for n, row in enumerate(uq_df.iterrows()):
 
         if age:
             general_params_dict["age.enabled"] = "true"
-            general_params_dict["isochrones.deposition_times"] = 1000
+            general_params_dict["isochrones.deposition_times"] = 5000
         if use_mks:
             general_params_dict["output.use_MKS"] = "true"
 
@@ -536,6 +536,10 @@ for n, row in enumerate(uq_df.iterrows()):
             "basal_yield_stress.mohr_coulomb.topg_to_phi.topg_min"
         ] = z_min
 
+        sliding_law = "pseudo_plastic"
+        if hasattr(combination, "sliding_law"):
+            sliding_law = combination["sliding_law"]
+        sb_params_dict[f"basal_resistance.{sliding_law}.enabled"] = "yes"
         stress_balance_params_dict = generate_stress_balance(
             stress_balance, sb_params_dict
         )

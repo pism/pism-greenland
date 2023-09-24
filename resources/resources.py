@@ -135,6 +135,7 @@ spatial_ts_vars["paleo"] = [
     "dHdt",
     "ice_mass",
     "isochrone_depth",
+    "isochronal_layer_thickness",
     "mask",
     "thk",
     "usurf",
