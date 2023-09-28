@@ -835,11 +835,7 @@ def generate_climate(climate, **kwargs):
 
     params_dict = OrderedDict()
     if climate in ("paleo"):
-        params_dict["atmosphere.models"] = "searise_greenland,delta_T,paleo_precip"
-        if "atmosphere_paleo_precip_file" not in kwargs:
-            params_dict["atmosphere_paleo_precip_file"] = "pism_dT.nc"
-        if "atmosphere_delta_T_file" not in kwargs:
-            params_dict["atmosphere_delta_T_file"] = "pism_dT.nc"
+        params_dict["atmosphere.models"] = "given,delta_T,precip_scaling"
         params_dict["surface.models"] = "pdd"
     elif climate in ("abrupt_glacial"):
         params_dict["atmosphere.models"] = "searise_greenland,delta_T,paleo_precip"

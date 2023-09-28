@@ -71,6 +71,7 @@ dists = {
             "tas_paleo_file": "tas_Badgeley_etal_2020_id_main-mean.nc",
             "thickness_calving_threshold": 200,
             "eigen_calving_K": 1e19,
+            "climate": "lgm",
         },
     },
     "calving": {
@@ -92,6 +93,7 @@ dists = {
             "tas_paleo_file": "tas_Badgeley_etal_2020_id_main-mean.nc",
             "thickness_calving_threshold": 200,
             "eigen_calving_K": 1e19,
+            "climate": "lgm",
         },
     },
     "climate": {
@@ -113,6 +115,7 @@ dists = {
             "thickness_calving_threshold": 200,
             "eigen_calving_K": 1e19,
             "vcm": 400000,
+            "climate": "lgm",
         },
     },
 }

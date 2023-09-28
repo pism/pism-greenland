@@ -560,11 +560,12 @@ for n, row in enumerate(uq_df.iterrows()):
             "atmosphere.given.file": atmosphere_given_file_p,
             "atmosphere.frac_P.file": pr_paleo_file_p,
             "atmosphere.delta_T.file": tas_paleo_file_p,
+            "atmosphere.precip_scaling.file": pr_paleo_file_p,
             "surface.pdd.factor_ice": combination["f_ice"] / rho_ice,
             "surface.pdd.factor_snow": combination["f_snow"] / rho_ice,
         }
 
-        climate_params_dict = generate_climate("lgm", **climate_parameters)
+        climate_params_dict = generate_climate(combination["climate"], **climate_parameters)
 
         hydrology_parameters = {}
         hydro_params_dict = generate_hydrology(hydrology, **hydrology_parameters)
