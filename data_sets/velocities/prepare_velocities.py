@@ -1,18 +1,18 @@
 from netCDF4 import Dataset as NC
 from cdo import Cdo
 from datetime import datetime, timedelta
-import gdal
+from osgeo import gdal
 from glob import glob
 from os.path import join, split
 cdo = Cdo()
 reftime = "2008-1-1"
 
-components = ["vx", "vy", "vv"]
+components = ["vx", "vy", "vv", "ex", "ey"]
 
 download_dir = "data"
 
 for glacier in ["W69.10N"]:
-    f_tiffs = glob(f"{download_dir}/TSX_{glacier}_*_v02.0.tif")
+    f_tiffs = glob(f"{download_dir}/TSX_{glacier}_*_v0*.0.tif")
     
     for f_tiff in f_tiffs:
         f_nc = f_tiff.replace(".tif", ".nc")
@@ -35,7 +35,7 @@ for glacier in ["W69.10N"]:
 
 # Merge the indiviual compontents and sort by time using "mergetime"
 for v in components:
-    fs = glob(f"{download_dir}/cdo_TSX_{glacier}_*_{v}_v02.0.nc")
+    fs = glob(f"{download_dir}/cdo_TSX_{glacier}_*_{v}_v0*.0.nc")
     cdo.mergetime(input=fs, output=f"TSX_{glacier}_{v}_merged.nc", options="-f nc4 -z zip_2")
 
 # Create the final merged file
