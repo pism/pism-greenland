@@ -553,7 +553,7 @@ for n, row in enumerate(uq_df.iterrows()):
         tas_paleo_file_p = (
             f"""$input_dir/data_sets/climate/{combination["tas_paleo_file"]}"""
         )
-        atmosphere_given_file_p = "$input_dir/data_sets/climate/DMI-HIRHAM5_ERA_1980_2020_EPSG3413_4500M_TM.nc"
+        atmosphere_given_file_p = "$input_dir/data_sets/climate/pism_SeaRISE_SMB_ext_4500m.nc"
         rho_ice = 910.0
 
         climate_parameters = {
@@ -594,6 +594,10 @@ for n, row in enumerate(uq_df.iterrows()):
             calving_parameters[
                 "calving.vonmises_calving.threshold_file"
             ] = vonmises_calving_threshold_file_p
+        if "calving.eigen_calving.K" in combination:
+            calving_parameters["calving.eigen_calving.K"] = combination[
+                "calving.eigen_calving.K"
+            ]
         if "calving.thickness_calving.threshold" in combination:
             calving_parameters["calving.thickness_calving.threshold"] = combination[
                 "calving.thickness_calving.threshold"
