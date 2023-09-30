@@ -21,7 +21,7 @@ if [ -n "$1" ]; then
     infile=$1
 fi
 
-ver=2023_GIMP
+ver=2023_GRIMP
 if [ -n "$2" ]; then
     ver=$2
 fi
@@ -43,7 +43,7 @@ ymin=$((-3349600 - $buffer_y -480000))
 xmax=$((864700 + $buffer_x + 180000))
 ymax=$((-657600 + $buffer_y + 180000))
 
-for GRID in 18000 9000 6000 4500 3600 3000 2400 1800 1500 1200 900 600 450 300 150; do
+for GRID in 18000 15000 12000 9000 6000 4500 3600 3000 2400 1800 1500 1200 900 600 450 300 150; do
     outfile_prefix=pism_Greenland_ext_${GRID}m_v${ver}
     outfile=${outfile_prefix}.nc
     outfile_ctrl=${outfile_prefix}_ctrl.nc
@@ -52,62 +52,62 @@ for GRID in 18000 9000 6000 4500 3600 3000 2400 1800 1500 1200 900 600 450 300 1
     outfile_sm_ctrl=${outfile_sm_prefix}_ctrl.nc
     outfile_sm_nb=${outfile_sm_prefix}_wc.nc
     
-    # for var in "bed"; do
-    #     rm -f g${GRID}m_${var}_v${ver}.tif g${GRID}m_${var}_v${ver}.nc
-    #     gdalwarp $CUT -overwrite  -r average -s_srs EPSG:3413 -t_srs EPSG:3413 -te $xmin $ymin $xmax $ymax -tr $GRID $GRID -of GTiff NETCDF:$infile:$var g${GRID}m_${var}_v${ver}.tif
-    #     gdal_translate -co "FORMAT=NC4" -of netCDF g${GRID}m_${var}_v${ver}.tif g${GRID}m_${var}_v${ver}.nc 
-    #     ncatted -a nx,global,d,, -a ny,global,d,, -a xmin,global,d,, -a ymax,global,d,, -a spacing,global,d,, g${GRID}m_${var}_v${ver}.nc
+    for var in "bed"; do
+        rm -f g${GRID}m_${var}_v${ver}.tif g${GRID}m_${var}_v${ver}.nc
+        gdalwarp $CUT -overwrite  -r average -s_srs EPSG:3413 -t_srs EPSG:3413 -te $xmin $ymin $xmax $ymax -tr $GRID $GRID -of GTiff NETCDF:$infile:$var g${GRID}m_${var}_v${ver}.tif
+        gdal_translate -co "FORMAT=NC4" -of netCDF g${GRID}m_${var}_v${ver}.tif g${GRID}m_${var}_v${ver}.nc 
+        ncatted -a nx,global,d,, -a ny,global,d,, -a xmin,global,d,, -a ymax,global,d,, -a spacing,global,d,, g${GRID}m_${var}_v${ver}.nc
         
-    # done
-    # for var in "surface" "thickness"; do
-    #     rm -f g${GRID}m_${var}_v${ver}.tif g${GRID}m_${var}_v${ver}.nc
-    #     gdalwarp -overwrite -r average -te $xmin $ymin $xmax $ymax -tr $GRID $GRID -of GTiff NETCDF:$infile:$var g${GRID}m_${var}_v${ver}.tif
-    #     gdal_translate -a_srs epsg:3413 -co "FORMAT=NC4" -of netCDF g${GRID}m_${var}_v${ver}.tif g${GRID}m_${var}_v${ver}.nc
-    #     ncatted -a _FillValue,$var,d,, g${GRID}m_${var}_v${ver}.nc
-    #     ncap2 -O -s "where(${var}<=0) ${var}=0.;" g${GRID}m_${var}_v${ver}.nc g${GRID}m_${var}_v${ver}.nc
-    # done
-    # for var in "mask"; do
-    #     rm -f g${GRID}m_${var}_v${ver}.tif g${GRID}m_${var}_v${ver}.nc
-    #     gdalwarp -overwrite -r near -te $xmin $ymin $xmax $ymax -tr $GRID $GRID -of GTiff NETCDF:$infile:$var g${GRID}m_${var}_v${ver}.tif
-    #     gdal_translate -co "FORMAT=NC4" -of netCDF g${GRID}m_${var}_v${ver}.tif g${GRID}m_${var}_v${ver}.nc 
-    # done
+    done
+    for var in "surface" "thickness"; do
+        rm -f g${GRID}m_${var}_v${ver}.tif g${GRID}m_${var}_v${ver}.nc
+        gdalwarp -overwrite -r average -te $xmin $ymin $xmax $ymax -tr $GRID $GRID -of GTiff NETCDF:$infile:$var g${GRID}m_${var}_v${ver}.tif
+        gdal_translate -a_srs epsg:3413 -co "FORMAT=NC4" -of netCDF g${GRID}m_${var}_v${ver}.tif g${GRID}m_${var}_v${ver}.nc
+        ncatted -a _FillValue,$var,d,, g${GRID}m_${var}_v${ver}.nc
+        ncap2 -O -s "where(${var}<=0) ${var}=0.;" g${GRID}m_${var}_v${ver}.nc g${GRID}m_${var}_v${ver}.nc
+    done
+    for var in "mask"; do
+        rm -f g${GRID}m_${var}_v${ver}.tif g${GRID}m_${var}_v${ver}.nc
+        gdalwarp -overwrite -r near -te $xmin $ymin $xmax $ymax -tr $GRID $GRID -of GTiff NETCDF:$infile:$var g${GRID}m_${var}_v${ver}.tif
+        gdal_translate -co "FORMAT=NC4" -of netCDF g${GRID}m_${var}_v${ver}.tif g${GRID}m_${var}_v${ver}.nc 
+    done
 
-    # for var in "elevation"; do
-    #     rm -f g${GRID}m_${var}_v${ver}.tif g${GRID}m_${var}_v${ver}.nc
-    #     gdalwarp -overwrite -s_srs EPSG:4326 -t_srs EPSG:3413 -r average -te $xmin $ymin $xmax $ymax -tr $GRID $GRID -of GTiff NETCDF:$gebco:$var g${GRID}m_${var}_v${ver}.tif
-    #     gdal_translate -co "FORMAT=NC4" -of netCDF g${GRID}m_${var}_v${ver}.tif g${GRID}m_${var}_v${ver}.nc 
-    # done
+    for var in "elevation"; do
+        rm -f g${GRID}m_${var}_v${ver}.tif g${GRID}m_${var}_v${ver}.nc
+        gdalwarp -overwrite -s_srs EPSG:4326 -t_srs EPSG:3413 -r average -te $xmin $ymin $xmax $ymax -tr $GRID $GRID -of GTiff NETCDF:$gebco:$var g${GRID}m_${var}_v${ver}.tif
+        gdal_translate -co "FORMAT=NC4" -of netCDF g${GRID}m_${var}_v${ver}.tif g${GRID}m_${var}_v${ver}.nc 
+    done
 
-    # ncks -O g${GRID}m_bed_v${ver}.nc $outfile
-    # ncatted -a _FillValue,bed,d,, $outfile
-    # for var in "surface" "thickness" "mask" "elevation"; do
-    #     ncks -A g${GRID}m_${var}_v${ver}.nc $outfile
-    # done
-    # ncap2 -O -s "where(bed==-9999) bed=elevation;" $outfile $outfile 
-    # # This is not needed, but it can be used by PISM to calculate correct cell volumes, and for remapping scripts"
-    # ncatted -a proj,global,o,c,"epsg:3413" $outfile
+    ncks -O g${GRID}m_bed_v${ver}.nc $outfile
+    ncatted -a _FillValue,bed,d,, $outfile
+    for var in "surface" "thickness" "mask" "elevation"; do
+        ncks -A g${GRID}m_${var}_v${ver}.nc $outfile
+    done
+    ncap2 -O -s "where(bed==-9999) bed=elevation;" $outfile $outfile 
+    # This is not needed, but it can be used by PISM to calculate correct cell volumes, and for remapping scripts"
+    ncatted -a proj,global,o,c,"epsg:3413" $outfile
 
-    # # Instead of Ocean Kill we now use "land area fraction"
-    # ncap2 -O -s "where(mask==2) thickness=surface-bed; where(thickness<0) thickness=0; ftt_mask[\$y,\$x]=0b; where(mask==0) {thickness=0.; surface=0.;}; where(mask!=2) ftt_mask=1; where(mask!=3) ftt_mask=1;" $outfile $outfile
-    # ncap2 -O -s 'land_ice_area_fraction_retreat = thickness; where(thickness > 0 || thickness + bed >= (1 - 910.0/1028.0) * thickness + 0) land_ice_area_fraction_retreat = 1;land_ice_area_fraction_retreat@units="1";land_ice_area_fraction_retreat@long_name="maximum ice extent mask";land_ice_area_fraction_retreat@standard_name="";' $outfile $outfile
+    # Instead of Ocean Kill we now use "land area fraction"
+    ncap2 -O -s "where(mask==2) thickness=surface-bed; where(thickness<0) thickness=0; ftt_mask[\$y,\$x]=0b; where(mask==0) {thickness=0.; surface=0.;}; where(mask!=2) ftt_mask=1; where(mask!=3) ftt_mask=1;" $outfile $outfile
+    ncap2 -O -s 'land_ice_area_fraction_retreat = thickness; where(thickness > 0 || thickness + bed >= (1 - 910.0/1028.0) * thickness + 0) land_ice_area_fraction_retreat = 1;land_ice_area_fraction_retreat@units="1";land_ice_area_fraction_retreat@long_name="maximum ice extent mask";land_ice_area_fraction_retreat@standard_name="";' $outfile $outfile
 
-    # ncks -h -O -4 -L 2 -v elevation -x $outfile $outfile
-    # ncks -h -O  $outfile $outfile_ctrl
-    # ncks -h -O  $outfile $outfile_nb
+    ncks -h -O -4 -L 2 -v elevation -x $outfile $outfile
+    ncks -h -O  $outfile $outfile_ctrl
+    ncks -h -O  $outfile $outfile_nb
 
-    # ncks -O -4 -L 2 -v elevation -x $outfile $outfile
+    ncks -O -4 -L 2 -v elevation -x $outfile $outfile
     
-    # # Here we cut out the topography of the Canadian Archipelago
-    # var=thickness
-    # gdalwarp -overwrite -dstnodata 0 -cutline  ../shape_files/gris-domain-paleo.shp NETCDF:$outfile_nb:$var g${GRID}m_nb_${var}_v${ver}.tif
-    # gdal_translate -of netCDF -co "FORMAT=NC4" g${GRID}m_nb_${var}_v${ver}.tif g${GRID}m_nb_${var}_v${ver}.nc
-    # ncks -A -v $var g${GRID}m_nb_${var}_v${ver}.nc $outfile_nb
-    # var=bed
-    # gdalwarp -overwrite -dstnodata -9999 -cutline  ../shape_files/gris-domain-paleo.shp NETCDF:$outfile_nb:$var g${GRID}m_nb_${var}_v${ver}.tif
-    # gdal_translate -of netCDF -co "FORMAT=NC4" g${GRID}m_nb_${var}_v${ver}.tif g${GRID}m_nb_${var}_v${ver}.nc
-    # ncks -A -C -v $var g${GRID}m_nb_${var}_v${ver}.nc $outfile_nb
-    # ncatted -a _FillValue,bed,d,, -a _FillValue,thickness,d,, $outfile_nb
-    # ncap2 -O -s "where(bed==-9999) {mask=0; surface=0; thickness=0; bed=-1500;};"  $outfile_nb  $outfile_nb
+    # Here we cut out the topography of the Canadian Archipelago
+    var=thickness
+    gdalwarp -overwrite -dstnodata 0 -cutline  ../shape_files/gris-domain-paleo.shp NETCDF:$outfile_nb:$var g${GRID}m_nb_${var}_v${ver}.tif
+    gdal_translate -of netCDF -co "FORMAT=NC4" g${GRID}m_nb_${var}_v${ver}.tif g${GRID}m_nb_${var}_v${ver}.nc
+    ncks -A -v $var g${GRID}m_nb_${var}_v${ver}.nc $outfile_nb
+    var=bed
+    gdalwarp -overwrite -dstnodata -9999 -cutline  ../shape_files/gris-domain-paleo.shp NETCDF:$outfile_nb:$var g${GRID}m_nb_${var}_v${ver}.tif
+    gdal_translate -of netCDF -co "FORMAT=NC4" g${GRID}m_nb_${var}_v${ver}.tif g${GRID}m_nb_${var}_v${ver}.nc
+    ncks -A -C -v $var g${GRID}m_nb_${var}_v${ver}.nc $outfile_nb
+    ncatted -a _FillValue,bed,d,, -a _FillValue,thickness,d,, $outfile_nb
+    ncap2 -O -s "where(bed==-9999) {mask=0; surface=0; thickness=0; bed=-1500;};"  $outfile_nb  $outfile_nb
 
     
     # Cut out smaller domain used for projections
@@ -132,7 +132,7 @@ for GRID in 18000 9000 6000 4500 3600 3000 2400 1800 1500 1200 900 600 450 300 1
     ncks -O -d x,$e0.,$e1. -d y,$n0.,$n1.  $outfile_ctrl  $outfile_sm_ctrl
     ncks -O -d x,$e0.,$e1. -d y,$n0.,$n1.  $outfile_nb  $outfile_sm_nb
 
-    # rm -f  g${GRID}m_*_v${ver}.nc
+    rm -f  g${GRID}m_*_v${ver}.nc g${GRID}m_*_v${ver}.tif
    
 done
 

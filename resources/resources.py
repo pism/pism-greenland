@@ -366,7 +366,10 @@ def generate_scalar_ts(
     return params_dict
 
 
-def generate_snap_shots(outfile, times, odir=None):
+def generate_snap_shots(    outfile,
+    times: str = "-20000",
+    odir: str = ".",
+):
     """
     Return dict to generate snap shots
 
@@ -374,13 +377,11 @@ def generate_snap_shots(outfile, times, odir=None):
     """
 
     params_dict = OrderedDict()
-    if odir is None:
-        params_dict["save_file"] = "save_" + outfile.split(".nc")[0]
-    else:
-        params_dict["save_file"] = os.path.join(odir, "save_" + outfile.split(".nc")[0])
+    params_dict["output.snapshot.file"] = os.path.join(odir, "save_" + outfile.split(".nc")[0])
 
-    params_dict["save_times"] = ",".join(str(e) for e in times)
-    params_dict["save_split"] = ""
+    params_dict["output.snapshot.times"] = times
+    params_dict["output.snapshot.size"] = "big_2d"
+    params_dict["output.snapshot.split"] = ""
     params_dict["save_force_output_times"] = ""
 
     return params_dict
@@ -835,8 +836,13 @@ def generate_climate(climate, **kwargs):
 
     params_dict = OrderedDict()
     if climate in ("paleo"):
-        params_dict["atmosphere.models"] = "given,delta_T,precip_scaling"
+        params_dict["atmosphere.models"] = "given,delta_T,precip_scaling,elevation_change"
         params_dict["surface.models"] = "pdd"
+    elif climate in ("debm"):
+        params_dict["atmosphere.models"] = "given,delta_T,precip_scaling,elevation_change"
+        params_dict["surface.models"] = "debm_simple"
+        params_dict["surface.debm_simple.std_dev_param.enabled"] = "yes"
+        params_dict["surface.debm_simple.paleo.enabled"] = "true"
     elif climate in ("abrupt_glacial"):
         params_dict["atmosphere.models"] = "searise_greenland,delta_T,paleo_precip"
         if "atmosphere_paleo_precip_file" not in kwargs:

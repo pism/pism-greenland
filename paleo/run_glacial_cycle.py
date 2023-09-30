@@ -45,6 +45,8 @@ def map_dict(val, mdict):
 
 grid_choices = [
     18000,
+    15000,
+    12000,
     9000,
     6000,
     4500,
@@ -235,9 +237,9 @@ parser.add_argument(
 parser.add_argument(
     "--dataset_version",
     dest="version",
-    choices=["2023_GIMP"],
+    choices=["2023_GRIMP"],
     help="input data set version",
-    default="2023_GIMP",
+    default="2023_GRIMP",
 )
 parser.add_argument(
     "--bed_def",
@@ -252,8 +254,8 @@ parser.add_argument(
     help="Calculate age field. Default=False",
     default=False,
 )
-parser.add_argument("--start", help="Simulation start year", default=-100001)
-parser.add_argument("--end", help="Simulation end year", default=-20000)
+parser.add_argument("--start", help="Simulation start year", default=-125001)
+parser.add_argument("--end", help="Simulation end year", default=0)
 parser.add_argument(
     "-e",
     "--ensemble_file",
@@ -319,12 +321,13 @@ else:
     )
 
 regridvars = "litho_temp,enthalpy,tillwat,bmelt,ice_area_specific_volume,thk,isochrone_depth,isochronal_layer_thickness"
+regridvars = "litho_temp,enthalpy,tillwat,bmelt,ice_area_specific_volume,thk,topg,isochrone_depth,isochronal_layer_thickness"
 
 master_config_file = get_path_to_config()
 
 
 dirs = {"output": "$output_dir", "spatial_tmp": "$spatial_tmp_dir"}
-for d in ["performance", "state", "scalar", "spatial", "jobs", "basins"]:
+for d in ["performance", "state", "scalar", "snap", "spatial", "jobs", "basins"]:
     dirs[d] = f"$output_dir/{d}"
 
 if spatial_ts == "none":
@@ -563,8 +566,13 @@ for n, row in enumerate(uq_df.iterrows()):
             "atmosphere.precip_scaling.file": pr_paleo_file_p,
             "surface.pdd.factor_ice": combination["f_ice"] / rho_ice,
             "surface.pdd.factor_snow": combination["f_snow"] / rho_ice,
+            "surface.pdd.std_dev.value": combination["std_dev"],
         }
 
+       
+        if "atmosphere.elevation_change.temperature_lapse_rate" in combination:
+            climate_parameters["atmosphere.elevation_change.temperature_lapse_rate"] = combination["atmosphere.elevation_change.temperature_lapse_rate"]
+            climate_parameters["atmosphere.elevation_change.file"] = pism_dataname
         climate_params_dict = generate_climate(combination["climate"], **climate_parameters)
 
         hydrology_parameters = {}
@@ -624,7 +632,10 @@ for n, row in enumerate(uq_df.iterrows()):
         
         scalar_ts_dict = generate_scalar_ts(
             outfile, tsstep, odir=dirs["scalar"])
+        snap_shot_dict = generate_snap_shots(outfile, "-25000,-20000", odir=dirs["snap"])
+
         solver_dict = {}
+
 
         all_params_dict = merge_dicts(
             general_params_dict,
@@ -635,6 +646,7 @@ for n, row in enumerate(uq_df.iterrows()):
             hydro_params_dict,
             calving_params_dict,
             scalar_ts_dict,
+            snap_shot_dict,
             solver_dict,
         )
 
