@@ -561,12 +561,14 @@ for n, row in enumerate(uq_df.iterrows()):
 
         climate_parameters = {
             "atmosphere.given.file": atmosphere_given_file_p,
+            "atmosphere.searise_greenland.file": atmosphere_given_file_p,
             "atmosphere.frac_P.file": pr_paleo_file_p,
             "atmosphere.delta_T.file": tas_paleo_file_p,
             "atmosphere.precip_scaling.file": pr_paleo_file_p,
             "surface.pdd.factor_ice": combination["f_ice"] / rho_ice,
             "surface.pdd.factor_snow": combination["f_snow"] / rho_ice,
             "surface.pdd.std_dev.value": combination["std_dev"],
+            "surface.pdd.refreeze": combination["refreeze"]
         }
 
        
