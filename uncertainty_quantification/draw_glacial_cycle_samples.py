@@ -70,6 +70,37 @@ dists = {
             "atmosphere.elevation_change.temperature_lapse_rate": 6
         },
     },
+    "climate-calving": {
+        "uq": { "f_ice": uniform(6, 6),
+                "f_snow": uniform(2, 3),
+                "std_dev": uniform(3, 4),
+                "refreeze": uniform(0.4, 0.4),
+                "vcm": uniform(0.45, 0.35),
+                "calving.eigen_calving.K": uniform(1e17, 0.99e19)
+        },
+        "default_values": {
+            "sia_e": 2.608046,
+            "sia_n": 3.0,
+            "ssa_n": 3.309718,
+            "pseudo_plastic_q": 0.7508221,
+            "pseudo_plastic_uthreshold": 100,
+            "till_effective_fraction_overburden": 0.01845403,
+            "phi_min": 7.193718,
+            "z_min": -369.6359,
+            "z_max": 243.8239,
+            "phi_max": 42.79528,
+            "sliding_law": "pseudo_plastic",
+            "climate": "paleo_searise",
+            "calving.eigen_calving.K": 2.5e18,
+            "f_ice": 8,
+            "f_snow": 3,
+            "pr_paleo_file": "pism_dT.nc",
+            "tas_paleo_file": "pism_dT.nc",
+            "calving.thickness_calving.threshold": 100,
+            "vcm": 0.5,
+            "atmosphere.elevation_change.temperature_lapse_rate": 6
+        },
+    },
 }
 parser = ArgumentParser()
 parser.description = "Draw samples using the Saltelli methods"
