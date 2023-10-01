@@ -313,11 +313,11 @@ pism_exec = generate_domain(domain)
 pism_dataname = False
 if domain.lower() in ("greenland_ext", "gris_ext"):
     pism_dataname = (
-        f"$input_dir/data_sets/bed_dem/pism_Greenland_ext_{grid}m_v{version}_{bed_type}.nc"
+        f"$data_dir/bed_dem/pism_Greenland_ext_{grid}m_v{version}_{bed_type}.nc"
     )
 else:
     pism_dataname = (
-        f"$input_dir/data_sets/bed_dem/pism_Greenland_{grid}m_v{version}_{bed_type}.nc"
+        f"$data_dir/bed_dem/pism_Greenland_{grid}m_v{version}_{bed_type}.nc"
     )
 
 regridvars = "litho_temp,enthalpy,tillwat,bmelt,ice_area_specific_volume,thk,isochrone_depth,isochronal_layer_thickness"
@@ -551,12 +551,12 @@ for n, row in enumerate(uq_df.iterrows()):
         tas_paleo_file_p = False
         atmosphere_given_file_p = False
         pr_paleo_file_p = (
-            f"""$input_dir/data_sets/climate/{combination["pr_paleo_file"]}"""
+            f"""$data_dir/climate/{combination["pr_paleo_file"]}"""
         )
         tas_paleo_file_p = (
-            f"""$input_dir/data_sets/climate/{combination["tas_paleo_file"]}"""
+            f"""$data_dir/climate/{combination["tas_paleo_file"]}"""
         )
-        atmosphere_given_file_p = "$input_dir/data_sets/climate/pism_SeaRISE_SMB_ext_4500m.nc"
+        atmosphere_given_file_p = "$data_dir/climate/pism_SeaRISE_SMB_ext_4500m.nc"
         rho_ice = 910.0
 
         climate_parameters = {
@@ -692,7 +692,11 @@ for n, row in enumerate(uq_df.iterrows()):
             check_files.append(tas_paleo_file_p)
 
         for m_f in check_files:
-            m_f_abs = m_f.replace("$input_dir", options.input_dir)
+            if "$input_dir" in m_f:
+                m_f_abs = m_f.replace("$input_dir", options.input_dir)
+            if "$data_dir" in m_f:
+                m_f_abs = m_f.replace("$data_dir", options.data_dir)
+                
             print(f"{m_f_abs}: {os.path.isfile(m_f_abs)}")
         print("\n")
 
