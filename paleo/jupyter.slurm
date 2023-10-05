@@ -1,6 +1,6 @@
 #!/bin/bash
 
-#SBATCH --job-name="Jupyter Debug"
+#SBATCH --job-name="Jupyter Data Analysis"
 #SBATCH --partition=t2small
 #SBATCH --ntasks=40
 #SBATCH --tasks-per-node=40
