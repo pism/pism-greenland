@@ -4,7 +4,7 @@
 #SBATCH --partition=t2small
 #SBATCH --ntasks=40
 #SBATCH --tasks-per-node=40
-#SBATCH --time=08:00:00
+#SBATCH --time=28:00:00
 #SBATCH --output="Jupyter.%j"
 
 . ~/base/pism-builds/chinook-rl8/profile
