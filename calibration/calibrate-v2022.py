@@ -602,6 +602,7 @@ for n, row in enumerate(uq_df.iterrows()):
                     ofile=join(dirs["spatial"], "ex_" + outfile),
                 )
             )
+
             f.write("\n")
 
         regridfile = join(dirs["state"], outfile)
