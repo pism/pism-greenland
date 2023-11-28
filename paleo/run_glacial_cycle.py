@@ -225,7 +225,7 @@ parser.add_argument(
     dest="gid",
     choices=["s2457", "s2524"],
     help="Choose GID for Pleiades",
-    default="s2457",
+    default="s2524",
 )
 parser.add_argument(
     "--stress_balance",
