@@ -88,7 +88,7 @@ for GRID in 18000 15000 12000 9000 6000 4500 3600 3000 2400 1800 1500 1200 900 6
     ncatted -a proj,global,o,c,"epsg:3413" $outfile
 
     # Instead of Ocean Kill we now use "land area fraction"
-    ncap2 -O -s "where(mask==2) thickness=surface-bed; where(thickness<0) thickness=0; ftt_mask[\$y,\$x]=0b; where(mask==0) {thickness=0.; surface=0.;}; where(mask!=2) ftt_mask=1; where(mask!=3) ftt_mask=1;" $outfile $outfile
+    ncap2 -O -s "where(thickness<0) thickness=0; ftt_mask[\$y,\$x]=0b; where(mask==0) {thickness=0.; surface=0.;}; where(mask!=2) ftt_mask=1; where(mask!=3) ftt_mask=1;" $outfile $outfile
     ncap2 -O -s 'land_ice_area_fraction_retreat = thickness; where(thickness > 0 || thickness + bed >= (1 - 910.0/1028.0) * thickness + 0) land_ice_area_fraction_retreat = 1;land_ice_area_fraction_retreat@units="1";land_ice_area_fraction_retreat@long_name="maximum ice extent mask";land_ice_area_fraction_retreat@standard_name="";' $outfile $outfile
 
     ncks -h -O -4 -L 2 -v elevation -x $outfile $outfile
