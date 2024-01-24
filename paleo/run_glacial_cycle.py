@@ -199,6 +199,7 @@ parser.add_argument(
     choices=[
         "float_kill",
         "vonmises_calving",
+        "eigen_calving",
         "hayhurst_calving",
         "hybrid_calving",
         "thickness_calving",

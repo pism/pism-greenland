@@ -381,7 +381,6 @@ def generate_snap_shots(    outfile,
 
     params_dict["output.snapshot.times"] = times
     params_dict["output.snapshot.size"] = "big_2d"
-    params_dict["output.snapshot.split"] = ""
     params_dict["save_force_output_times"] = ""
 
     return params_dict
