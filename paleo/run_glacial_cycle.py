@@ -321,8 +321,8 @@ else:
         f"$data_dir/bed_dem/pism_Greenland_{grid}m_v{version}_{bed_type}.nc"
     )
 
-regridvars = "litho_temp,enthalpy,tillwat,bmelt,ice_area_specific_volume,thk,isochrone_depth,isochronal_layer_thickness"
-regridvars = "litho_temp,enthalpy,tillwat,bmelt,ice_area_specific_volume,thk,topg,isochrone_depth,isochronal_layer_thickness"
+#regridvars = "litho_temp,enthalpy,tillwat,bmelt,ice_area_specific_volume,thk,topg,isochrone_depth,isochronal_layer_thickness"
+regridvars = "litho_temp,enthalpy,tillwat,bmelt,ice_area_specific_volume,thk,topg"
 
 master_config_file = get_path_to_config()
 
@@ -635,7 +635,7 @@ for n, row in enumerate(uq_df.iterrows()):
         
         scalar_ts_dict = generate_scalar_ts(
             outfile, tsstep, odir=dirs["scalar"])
-        snap_shot_dict = generate_snap_shots(outfile, "-25000,-20000", odir=dirs["snap"])
+        snap_shot_dict = generate_snap_shots(outfile, "-25000,-20000,-15000,-10000,-5000,0", odir=dirs["snap"])
 
         solver_dict = {}
 
