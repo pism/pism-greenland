@@ -132,7 +132,7 @@ for GRID in 18000 15000 12000 9000 6000 4500 3600 3000 2400 1800 1500 1200 900 6
     ncks -O -d x,$e0.,$e1. -d y,$n0.,$n1.  $outfile_ctrl  $outfile_sm_ctrl
     ncks -O -d x,$e0.,$e1. -d y,$n0.,$n1.  $outfile_nb  $outfile_sm_nb
 
-    rm -f  g${GRID}m_*_v${ver}.nc g${GRID}m_*_v${ver}.tif
+    rm -f  g${GRID}m_*_v${ver}*.nc g${GRID}m_*_v${ver}*.tif
    
 done
 

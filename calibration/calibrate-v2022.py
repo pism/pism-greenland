@@ -195,8 +195,10 @@ parser.add_argument(
     choices=[
         "2023_GIMP",
         "2023_GRIMP",
+        "2024_KRIG",
         "2023_RAGIS",
         "2023-12_RAGIS",
+        "2024-02_RAGIS",
     ],
     help="Input data set version",
     default="2023_GIMP",
@@ -480,7 +482,7 @@ for n, row in enumerate(uq_df.iterrows()):
         else:
             general_params_dict[
                 "output.sizes.medium"
-            ] = "sftgif,velsurf_mag,tempicethk_basal,velsurf,velbase_mag"
+            ] = "sftgif,velsurf_mag,tempicethk_basal,flux,velsurf,velbase_mag"
 
         grid_params_dict = generate_grid_description(grid, domain)
 
