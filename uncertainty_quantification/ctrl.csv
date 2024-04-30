@@ -1,2 +1,0 @@
-id,climate,climate_file,hydrology,runoff_file,frontal_melt,frontal_melt_file,gamma_T,vcm,thickness_calving_threshold,sia_e,pseudo_plastic_q
-CTRL,given,DMI-HIRHAM5_GL2_ERAI_1980_2016_EPSG3413_4500M_MM.nc,diffuse,DMI-HIRHAM5_GL2_ERAI_1980_2016_MRROS_EPSG3413_4500M_MM.nc,discharge_given,MAR3.9_MIROC-ESM-CHEM_rcp26_ocean_1960-2100_v4.nc,0.000125,400e3,200,1.25,0.6

@@ -1,5 +1,0 @@
-id,sia_e,sia_n,ssa_n,pseudo_plastic_q,pseudo_plastic_uthreshold,till_effective_fraction_overburden,phi_min,z_min,z_max,phi_max,sliding_law
-CTRL,1.25,3.0,3.25,0.6,100.0,0.02,5,-700,700,40,pseudo_plastic
-CTRL-REG,1.25,3.0,3.25,0.6,100.0,0.02,5,-700,700,40,regularized_coulomb
-BAYES-MEDIAN,2.608046,3.0,3.309718,0.7508221,100.0,0.01845403,7.193718,-369.6359,243.8239,42.79528,pseudo_plastic
-BAYES-REG-MEDIAN,2.608046,3.0,3.309718,0.7508221,100.0,0.01845403,7.193718,-369.6359,243.8239,42.79528,regularized_coulomb

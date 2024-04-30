@@ -1,6 +1,0 @@
-id,sia_e,ssa_n,pseudo_plastic_q,till_effective_fraction_overburden,phi_min,phi_max,z_min,z_max,u_threshold,sliding_law
-0,1.25,3.25,0.6,0.02,5,40,-700,700,100,pseudo_plastic
-1,1.25,3.25,0.5,0.02,5,40,-700,700,100,pseudo_plastic
-2,3.0,3.25,0.5,0.02,5,40,-700,700,100,pseudo_plastic
-3,2.0,3.25,0.5,0.015,5,40,-700,700,100,pseudo_plastic
-4,2.0,3.00,0.6,0.02,5,40,-700,700,100,pseudo_plastic
