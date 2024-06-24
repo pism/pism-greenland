@@ -6,7 +6,6 @@ import numpy as np
 import pandas as pd
 from scipy.stats.distributions import uniform, randint, truncnorm, gamma
 
-from SALib.sample import saltelli
 from pyDOE2 import lhs
 
 short2long = {
@@ -28,7 +27,7 @@ dists = {
                 loc=1.0, scale=3.0
             ),  # uniform between 1 and 4    AS16 best value: 1.25
             "sia_n": uniform(
-                loc=2.0, scale=2.0
+                loc=1.0, scale=3.0
             ),  # uniform between 3 and 3.5  AS16 best value: 3.25
             "ssa_n": uniform(
                 loc=3.0, scale=0.5
@@ -38,14 +37,14 @@ dists = {
             ),  # uniform between 0.25 and 0.95
             "pseudo_plastic_uthreshold": uniform(loc=50.0, scale=150.0),
             "till_effective_fraction_overburden": uniform(
-                loc=0.01, scale=0.02
-            ),  # uniform between 0.015 and 0.030
-            "phi_min": uniform(loc=5.0, scale=15.0),  # uniform between  5 and 20
+                loc=0.01, scale=0.03
+            ),  # uniform between 0.015 and 0.040
+            "phi_min": uniform(loc=5.0, scale=30.0),  # uniform between  5 and 35
+            "phi_max": uniform(loc=40.0, scale=20.0),  # uniform between  40 and 60
             "z_min": uniform(loc=-1000, scale=1000),  # uniform between -1000 and 0
-            "z_max": uniform(loc=0, scale=1000),  # uniform between 0 and 1000
+            "z_max": uniform(loc=0, scale=1500),  # uniform between 0 and 1000
         },
         "default_values": {
-            "phi_max": 40,
             "sliding_law": "pseudo_plastic",
         },
     },
@@ -55,7 +54,7 @@ dists = {
                 loc=1.0, scale=3.0
             ),  # uniform between 1 and 4    AS16 best value: 1.25
             "sia_n": uniform(
-                loc=2.0, scale=2.0
+                loc=1.0, scale=3.0
             ),  # uniform between 3 and 3.5  AS16 best value: 3.25
             "ssa_n": uniform(
                 loc=3.0, scale=0.5
@@ -67,12 +66,12 @@ dists = {
             "till_effective_fraction_overburden": uniform(
                 loc=0.01, scale=0.02
             ),  # uniform between 0.015 and 0.030
-            "phi_min": uniform(loc=5.0, scale=15.0),  # uniform between  5 and 20
+            "phi_min": uniform(loc=5.0, scale=30.0),  # uniform between  5 and 20
+            "phi_max": uniform(loc=40.0, scale=50.0),  # uniform between  5 and 20
             "z_min": uniform(loc=-1000, scale=1000),  # uniform between -1000 and 0
-            "z_max": uniform(loc=0, scale=1000),  # uniform between 0 and 1000
+            "z_max": uniform(loc=0, scale=1500),  # uniform between 0 and 1000
         },
         "default_values": {
-            "phi_max": 40,
             "sliding_law": "regularized_coulomb",
         },
     },
@@ -86,7 +85,7 @@ parser.add_argument(
     dest="n_samples",
     type=int,
     help="""number of samples to draw. default=10.""",
-    default=10,
+    default=1000,
 )
 parser.add_argument(
     "-d",
@@ -97,21 +96,6 @@ parser.add_argument(
     default="gris_pseudo_plastic",
 )
 parser.add_argument(
-    "--calc_second_order",
-    action="store_true",
-    help="""Second order interactions.""",
-    default=False,
-)
-parser.add_argument(
-    "-m",
-    "--method",
-    dest="method",
-    type=str,
-    choices=["lhs", "saltelli"],
-    help="""number of samples to draw. default=LHS.""",
-    default="lhs",
-)
-parser.add_argument(
     "OUTFILE",
     nargs=1,
     help="Ouput file (CSV)",
@@ -119,8 +103,6 @@ parser.add_argument(
 )
 options = parser.parse_args()
 n_draw_samples = options.n_samples
-calc_second_order = options.calc_second_order
-method = options.method
 outfile = options.OUTFILE[-1]
 distribution_name = options.distribution
 
@@ -136,14 +118,7 @@ problem = {
 keys_prior = list(distributions.keys())
 
 # Generate uniform samples (i.e. one unit hypercube)
-if method == "saltelli":
-    unif_sample = saltelli.sample(
-        problem, n_draw_samples, calc_second_order=calc_second_order
-    )
-elif method == "lhs":
-    unif_sample = lhs(len(keys_prior), n_draw_samples, random_state=2)
-else:
-    print(f"Method {method} not available")
+unif_sample = lhs(len(keys_prior), n_draw_samples, random_state=2)
 
 n_samples = unif_sample.shape[0]
 # To hold the transformed variables

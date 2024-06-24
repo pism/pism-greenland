@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# Copyright (C) 2016-21 Andy Aschwanden
+# Copyright (C) 2016-24 Andy Aschwanden
 
 from collections import OrderedDict
 import numpy as np
@@ -488,7 +488,9 @@ for n, row in enumerate(uq_df.iterrows()):
         sb_params_dict: Dict[str, Union[str, int, float]] = {
             "stress_balance.sia.enhancement_factor": combination["sia_e"],
             "stress_balance.ssa.enhancement_factor": 1.0,
+            "stress_balance.sia.Glen_exponent": combination["sia_n"],
             "stress_balance.ssa.Glen_exponent": combination["ssa_n"],
+            "basal_resistance.pseudo_plastic.u_threshold": combination["u_threshold"],
             "basal_resistance.pseudo_plastic.q": combination["pseudo_plastic_q"],
             "basal_yield_stress.mohr_coulomb.topg_to_phi.enabled": "yes",
             "basal_yield_stress.mohr_coulomb.till_effective_fraction_overburden": combination[
