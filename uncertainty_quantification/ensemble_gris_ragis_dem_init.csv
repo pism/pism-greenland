@@ -1,0 +1,2 @@
+id,vcm,gamma_T,thickness_calving_threshold,surface.pdd.factor_ice,surface.pdd.factor_snow,surface.pdd.std_dev.value,climate,hydrology,frontal_melt,ocean_file,climate_file,runoff_file,salinity,pseudo_plastic_q,sia_e,ssa_n,fractures,surface.pdd.refreeze,till_effective_fraction_overburden,sliding_law,phi_min,phi_max,z_min,z_max
+0,1.0,1e-04,100,8,3,4,given_pdd,diffuse,off,MAR3.9_CNRM-ESM2_ssp585_ocean_1960-2100_v4.nc,DMI-HIRHAM5_ERA_1980_2020_EPSG3413_4500M_MM.nc,DMI-HIRHAM5_ERA_1980_2020_EPSG3413_4500M_MM.nc,34,0.6,1.25,3.0,false,0.6,0.02,pseudo_plastic,5,40,-700,700

@@ -1,0 +1,3 @@
+id,sia_e,sia_n,ssa_n,pseudo_plastic_q,pseudo_plastic_uthreshold,till_effective_fraction_overburden,phi_min,z_min,z_max,phi_max,sliding_law,climate,calving.eigen_calving.K,f_ice,f_snow,pr_paleo_file,tas_paleo_file,calving.thickness_calving.threshold,vcm,atmosphere.elevation_change.temperature_lapse_rate,std_dev,refreeze
+PDD-BAYES-MEDIAN,2.608046,3.0,3.309718,0.7508221,100.0,0.01845403,7.193718,-369.6359,243.8239,42.79528,pseudo_plastic,paleo,2.5e18,8,3,pism_dT.nc,pism_dT.nc,100,0.4,6,5,0.6
+DEBM-BAYES-MEDIAN,2.608046,3.0,3.309718,0.7508221,100.0,0.01845403,7.193718,-369.6359,243.8239,42.79528,pseudo_plastic,debm,2.5e18,8,3,pism_dT.nc,pism_dT.nc,100,0.4,6,5,0.6
