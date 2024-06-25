@@ -280,17 +280,12 @@ else:
     input_file = options.FILE[0]
 
 if domain.lower() in ("greenland_ext", "gris_ext"):
-    pism_dataname = (
-        f"$data_dir/bed_dem/pism_Greenland_ext_{grid}m_v{version}_{bed_type}.nc"
-    )
+    pism_dataname =  f"$data_dir/bed_dem/pism_Greenland_ext_{grid}m_v{version}_{bed_type}.nc"
 else:
-    pism_dataname = (
-        f"$data_dir/bed_dem/pism_Greenland_{grid}m_v{version}_{bed_type}.nc"
-    )
+    pism_dataname = f"$data_dir/bed_dem/pism_Greenland_{grid}m_v{version}_{bed_type}.nc"
 
-climate_file = (
-    "$data_dir/climate/DMI-HIRHAM5_ERA_1980_2020_EPSG3413_4500M_TM.nc"
-)
+climate_file = "$data_dir/climate/DMI-HIRHAM5_ERA_1980_2020_EPSG3413_4500M_TM.nc"
+
 
 regridvars = "litho_temp,enthalpy,age,tillwat,bmelt,ice_area_specific_volume"
 
