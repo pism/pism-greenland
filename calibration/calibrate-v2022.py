@@ -486,7 +486,7 @@ for n, row in enumerate(uq_df.iterrows()):
             "stress_balance.ssa.enhancement_factor": 1.0,
             "stress_balance.sia.Glen_exponent": combination["sia_n"],
             "stress_balance.ssa.Glen_exponent": combination["ssa_n"],
-            "basal_resistance.pseudo_plastic.u_threshold": combination["pseudo_plastic_threshold"],
+            "basal_resistance.pseudo_plastic.u_threshold": combination["pseudo_plastic_uthreshold"],
             "basal_resistance.pseudo_plastic.q": combination["pseudo_plastic_q"],
             "basal_yield_stress.mohr_coulomb.topg_to_phi.enabled": "yes",
             "basal_yield_stress.mohr_coulomb.till_effective_fraction_overburden": combination[
