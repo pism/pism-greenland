@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# Copyright (C) 2016-21 Andy Aschwanden
+# Copyright (C) 2016-24 Andy Aschwanden
 
 from collections import OrderedDict
 import numpy as np
@@ -280,17 +280,12 @@ else:
     input_file = options.FILE[0]
 
 if domain.lower() in ("greenland_ext", "gris_ext"):
-    pism_dataname = (
-        f"$data_dir/bed_dem/pism_Greenland_ext_{grid}m_v{version}_{bed_type}.nc"
-    )
+    pism_dataname =  f"$data_dir/bed_dem/pism_Greenland_ext_{grid}m_v{version}_{bed_type}.nc"
 else:
-    pism_dataname = (
-        f"$data_dir/bed_dem/pism_Greenland_{grid}m_v{version}_{bed_type}.nc"
-    )
+    pism_dataname = f"$data_dir/bed_dem/pism_Greenland_{grid}m_v{version}_{bed_type}.nc"
 
-climate_file = (
-    "$data_dir/climate/DMI-HIRHAM5_ERA_1980_2020_EPSG3413_4500M_TM.nc"
-)
+climate_file = "$data_dir/climate/DMI-HIRHAM5_ERA_1980_2020_EPSG3413_4500M_TM.nc"
+
 
 regridvars = "litho_temp,enthalpy,age,tillwat,bmelt,ice_area_specific_volume"
 
@@ -489,7 +484,9 @@ for n, row in enumerate(uq_df.iterrows()):
         sb_params_dict: Dict[str, Union[str, int, float]] = {
             "stress_balance.sia.enhancement_factor": combination["sia_e"],
             "stress_balance.ssa.enhancement_factor": 1.0,
+            "stress_balance.sia.Glen_exponent": combination["sia_n"],
             "stress_balance.ssa.Glen_exponent": combination["ssa_n"],
+            "basal_resistance.pseudo_plastic.u_threshold": combination["pseudo_plastic_uthreshold"],
             "basal_resistance.pseudo_plastic.q": combination["pseudo_plastic_q"],
             "basal_yield_stress.mohr_coulomb.topg_to_phi.enabled": "yes",
             "basal_yield_stress.mohr_coulomb.till_effective_fraction_overburden": combination[
