@@ -48,7 +48,7 @@ else:
 
     sys.exit(0)
 
-start_year = 1980
+start_year = 1975
 end_year = 2021
 start_date = datetime(start_year, 1, 1)
 end_date = datetime(end_year, 1, 1)

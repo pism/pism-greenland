@@ -3,8 +3,11 @@
 
 set -x -e
 
-for h in 1.25 1.5 3.0; do
-    python create_seasonal_calving.py --calving_high ${h} seasonal_calving_${h}_2001_1980_2020.nc
+for h in 1.0 1.1 1.25 1.5 3.0; do
+	year=2001
+    python create_seasonal_calving.py --year_high ${year} --calving_high ${h} seasonal_calving_${h}_${year}_1975_2020.nc
+        year=2000
+    python create_seasonal_calving.py --year_high ${year} --calving_high ${h} seasonal_calving_${h}_${year}_1975_2020.nc
 done
 
 # #####################################
