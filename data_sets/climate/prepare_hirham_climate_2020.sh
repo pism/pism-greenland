@@ -6,12 +6,14 @@ mkdir -p $hh5_dir
 mkdir -p $hh5_nc_dir
 
 start_year=1980
-end_year=2020
+end_year=2021
 for year in $(seq $start_year $end_year); do
-    wget -nc -P $hh5_dir http://ensemblesrt3.dmi.dk/data/prudence/temp/nichan/Daily2D_GrIS/${year}.zip
-    # unzip -u ${hh5_dir}/${year}.zip
+    wget -nc --no-check-certificate -P $hh5_dir http://ensemblesrt3.dmi.dk/data/prudence/temp/nichan/Daily2D_GrIS/${year}.zip
+    unzip -u ${hh5_dir}/${year}.zip
     cdo -O -f nc4 -z zip_2 -r settbounds,day -setattribute,gld@units="kg m-2 day-1",rfrz@units="kg m-2 day-1",snmel@units="kg m-2 day-1",rogl@units="kg m-2 day-1",snfall@units="kg m-2 day-1",rainfall@units="kg m-2 day-1" -selvar,gld,tas,rogl,snfall,rainfall,rfrz,sn,snmel -setmissval,1e19 -setgrid,../../grids/rotated_grid.txt -mergetime ${year}/Daily2D_*.nc ${hh5_nc_dir}/${year}.nc
+    rm -rf ${year}/Daily2D_*.nc
 done
+
 cdo -O -f nc4 -z zip_2 mergetime ${hh5_nc_dir}/*.nc DMI-HIRHAM5_${start_year}_${end_year}.nc
 cdo -f nc4 -z zip_2 ydaymean DMI-HIRHAM5_${start_year}_${end_year}.nc  DMI-HIRHAM5_${start_year}_${end_year}_YDM.nc
 
