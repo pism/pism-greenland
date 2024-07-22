@@ -10,9 +10,9 @@ for year in $(seq $start_year $end_year); do
     wget -nc --no-check-certificate -P $mar_dir http://ftp.climato.be/fettweis/MARv3.14/Greenland/ERA5-1km-monthly/MARv3.14-monthly-ERA5-${year}.nc
 done
 
-cdo -P 6 -f nc4 -z zip_2 chname,SMBcorr,climatic_mass_balance,STcorr,ice_surface_temp,T2Mcorr,air_temp,RUcorr,water_input_rate -setattribute,SMBcorr@units="kg m-2 month-1",RUcorr@units="kg m-2 month-1" -setmisstodis -setgrid,../../grids/mar_ismip_1km.txt -selvar,SMBcorr,T2Mcorr,STcorr,RUcorr -mergetime $mar_dir/MARv3.14-monthly-ERA5-*.nc MARv3.14-monthly-ERA5-${start_year}_${end_year}.nc
+cdo -O -P 6 -f nc4 -z zip_2 chname,SMBcorr,climatic_mass_balance,STcorr,ice_surface_temp,T2Mcorr,air_temp,RUcorr,water_input_rate -setattribute,SMBcorr@units="kg m-2 month-1",RUcorr@units="kg m-2 month-1" -setmisstodis -setgrid,../../grids/mar_ismip_1km.txt -selvar,SMBcorr,T2Mcorr,STcorr,RUcorr -mergetime $mar_dir/MARv3.14-monthly-ERA5-*.nc MARv3.14-monthly-ERA5-${start_year}_${end_year}.nc
 
-adjust_timeline.py -p monthly -a ${start_year}-01-01 -d ${start_year}-01-01 MARv3.14-monthly-ERA5-${start_year}_${end_year}.nc
+~/pism/sources//util/adjust_timeline.py -p monthly -a ${start_year}-01-01 -d ${start_year}-01-01 MARv3.14-monthly-ERA5-${start_year}_${end_year}.nc
 
 exit
 

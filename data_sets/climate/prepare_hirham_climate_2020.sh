@@ -19,9 +19,9 @@ cdo -O -f nc4 -z zip_2 mergetime ${hh5_nc_dir}/*.nc DMI-HIRHAM5_${start_year}_${
 cdo -O -P 6 -f nc4  selvar,climatic_mass_balance,air_temp,ice_surface_temp,precipitation,water_input_rate -setattribute,precipitation@units="kg m-2 day-1" -aexpr,"precipitation=snfall+rainfall;air_temp=ice_surface_temp" -chname,rogl,water_input_rate -chname,gld,climatic_mass_balance -chname,tas,ice_surface_temp -remapycon,../../grids/gris_ext_g4500m.txt -setmisstodis -setgrid,../../grids/rotated_grid.txt DMI-HIRHAM5_${start_year}_${end_year}.nc DMI-HIRHAM5_ERA_${start_year}_${end_year}_EPSG3413_4500M_DM.nc
 
 cdo -f nc4 -z zip_2 -O selyear,1980/1984 DMI-HIRHAM5_ERA_${start_year}_${end_year}_EPSG3413_4500M_DM.nc DMI-HIRHAM5_ERA_1975_1979_EPSG3413_4500M_DM.nc
-~/pism/sources/util/adjust_timeline.py -p monthly -a 1975-01-01 -d ${start_year}-01-01 DMI-HIRHAM5_ERA_1975_1979_EPSG3413_4500M_DM.nc
+~/pism/sources/util/adjust_timeline.py -p daily -a 1975-01-01 -d ${start_year}-01-01 DMI-HIRHAM5_ERA_1975_1979_EPSG3413_4500M_DM.nc
 
-cdo -f nc4 -z zip_2 -O mergetime DMI-HIRHAM5_ERA_1975_1979_EPSG3413_4500M_DM.nc  DMI-HIRHAM5_ERA_${start_year}_${end_year}_EPSG3413_4500M_DM.nc  DMI-HIRHAM5_ERA_1975_${end_year}_EPSG3413_4500M_DM.nc
+cdo -f nc4 -z zip_2 -O mergetime -selyear,1975/1979 DMI-HIRHAM5_ERA_1975_1979_EPSG3413_4500M_DM.nc  DMI-HIRHAM5_ERA_${start_year}_${end_year}_EPSG3413_4500M_DM.nc  DMI-HIRHAM5_ERA_1975_${end_year}_EPSG3413_4500M_DM.nc
 
 cdo -O -f nc4 -z zip_2 monmean DMI-HIRHAM5_ERA_1975_${end_year}_EPSG3413_4500M_DM.nc DMI-HIRHAM5_ERA_1975_${end_year}_EPSG3413_4500M_MM.nc
 cdo -O -f nc4 -z zip_2 ymonmean DMI-HIRHAM5_ERA_1975_${end_year}_EPSG3413_4500M_DM.nc DMI-HIRHAM5_ERA_1975_${end_year}_EPSG3413_4500M_YMM.nc
