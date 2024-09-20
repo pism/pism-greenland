@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# Copyright (C) 2019-22 Andy Aschwanden
+# Copyright (C) 2019-24 Andy Aschwanden
 
 # Initialize Greenland LGM
 
@@ -215,13 +215,6 @@ parser.add_argument(
     default=True,
 )
 parser.add_argument(
-    "--use_mks",
-    dest="use_mks",
-    action="store_true",
-    help="Use MKS units",
-    default=False,
-)
-parser.add_argument(
     "--gid",
     dest="gid",
     choices=["s2457", "s2524"],
@@ -301,7 +294,6 @@ tsstep = options.tsstep
 float_kill_calve_near_grounding_line = options.float_kill_calve_near_grounding_line
 grid = grid_resolution = options.grid
 hydrology = options.hydrology
-use_mks = options.use_mks
 bed_def = options.bed_def
 stress_balance = options.stress_balance
 version = options.version
@@ -477,15 +469,14 @@ for n, row in enumerate(uq_df.iterrows()):
             "config_override": "$config",
             "stress_balance.ice_free_thickness_standard": 5,
         }
-
+        
         if bed_def != "off":
             general_params_dict["bed_deformation.model"] = bed_def
 
         if age:
             general_params_dict["age.enabled"] = "true"
-            general_params_dict["isochrones.deposition_times"] = 5000
-        if use_mks:
-            general_params_dict["output.use_MKS"] = "true"
+            general_params_dict["isochrones.deposition_times"] = 1000
+            general_params_dict["isochrones.max_n_layers"] = 250
 
         outfile = f"{domain}_g{grid_resolution}m_{experiment}.nc"
 
@@ -635,7 +626,7 @@ for n, row in enumerate(uq_df.iterrows()):
         
         scalar_ts_dict = generate_scalar_ts(
             outfile, tsstep, odir=dirs["scalar"])
-        snap_shot_dict = generate_snap_shots(outfile, "-25000,-20000,-15000,-10000,-5000,0", odir=dirs["snap"])
+        snap_shot_dict = generate_snap_shots(outfile, "-100000, -75000, -50000, -25000,-20000,-15000,-10000,-5000,0", odir=dirs["snap"])
 
         solver_dict = {}
 

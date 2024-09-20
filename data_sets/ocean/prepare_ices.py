@@ -59,6 +59,7 @@ if __name__ == "__main__":
     df["Year"] = time
 
     df.to_csv(f"{odir}/ices_all.csv.gz", compression="gzip")
+    df.to_csv(f"{odir}/ices_all.csv")
 
     lon_min = -52.75
     lon_max = -51.05

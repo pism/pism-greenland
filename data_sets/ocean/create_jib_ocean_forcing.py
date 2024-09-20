@@ -427,7 +427,6 @@ if __name__ == "__main__":
         default=True,
     )
     parser = PLMultitaskGPModel.add_model_specific_args(parser)
-    parser = pl.Trainer.add_argparse_args(parser)
     args = parser.parse_args()
     hparams = vars(args)
 
