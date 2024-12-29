@@ -474,8 +474,11 @@ for n, row in enumerate(uq_df.iterrows()):
             general_params_dict["bed_deformation.model"] = bed_def
 
         if age:
+            equally_spaced_layers = np.arange(start, end, 5000)
+            select_layers = -np.array([3, 8, 9, 11.7, 12.8, 14.7, 19, 29, 57, 115]) * 1_000
+            all_layers = np.hstack([equally_spaced_layers, select_layers])
             general_params_dict["age.enabled"] = "true"
-            general_params_dict["isochrones.deposition_times"] = 1000
+            general_params_dict["isochrones.deposition_times"] = all_layers
             general_params_dict["isochrones.max_n_layers"] = 250
 
         outfile = f"{domain}_g{grid_resolution}m_{experiment}.nc"
