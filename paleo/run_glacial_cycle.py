@@ -248,7 +248,7 @@ parser.add_argument(
     help="Calculate age field. Default=False",
     default=False,
 )
-parser.add_argument("--start", help="Simulation start year", default=-125001)
+parser.add_argument("--start", help="Simulation start year", default=-125000)
 parser.add_argument("--end", help="Simulation end year", default=0)
 parser.add_argument(
     "-e",
@@ -474,10 +474,11 @@ for n, row in enumerate(uq_df.iterrows()):
             general_params_dict["bed_deformation.model"] = bed_def
 
         if age:
-            equally_spaced_layers = np.arange(start, end, 5000)
-            select_layers = -np.array([3, 8, 9, 11.7, 12.8, 14.7, 19, 29, 57, 115]) * 1_000
-            all_layers = np.hstack([equally_spaced_layers, select_layers])
+            equally_spaced_layers = -np.arange(start_date + 5000, end_date, 5000)
+            select_layers = -start_date - np.array([3, 8, 9, 11.7, 12.8, 14.7, 19, 29, 57]) * 1_000
+            all_layers = " ".join([str(x) for x in np.sort(np.hstack([equally_spaced_layers, select_layers]))])
             general_params_dict["age.enabled"] = "true"
+            general_params_dict["age.initial_value"] = start_date
             general_params_dict["isochrones.deposition_times"] = all_layers
             general_params_dict["isochrones.max_n_layers"] = 250
 
