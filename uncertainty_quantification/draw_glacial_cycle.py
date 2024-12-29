@@ -75,12 +75,12 @@ dists = {
                 "f_snow": uniform(2, 3),
                 "std_dev": uniform(3, 4),
                 "refreeze": uniform(0.4, 0.4),
-                "vcm": uniform(0.45, 0.35),
-                "calving.eigen_calving.K": uniform(1e16, 9.99e18)
+                "vcm": uniform(0.4, 0.4),
+                "calving.eigen_calving.K": uniform(1e16, 9.99e18),
+                "sia_n": uniform(3, 1),
         },
         "default_values": {
             "sia_e": 2.608046,
-            "sia_n": 3.0,
             "ssa_n": 3.309718,
             "pseudo_plastic_q": 0.7508221,
             "pseudo_plastic_uthreshold": 100,
