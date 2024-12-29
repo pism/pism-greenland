@@ -1,5 +1,31 @@
 #!/bin/bash
 
+grid=1800
+ for v in {1..5}; do PISM_PREFIX=~/local/pism-dev/ python calibrate-v2022.py --spatial_ts none --o_dir 2024_05_init_bedmachine --dataset_version ${v}_GrIMP --b wc --duration 20 -s pleiades_haswell -q long -n 120 -g $grid -w 24:00:00 --ensemble_file ../uncertainty_quantification/ensemble_gris_ctrl.csv  ../../best_v1/g${grid}m_const_ctrl_e_1.25_ppq_0.6_tefo_0.02_ssa_n_3.25_philow_5.0_hydro_null_100a.nc; qsub /nobackupp17/aaschwan/pism-greenland/calibration/2024_05_init_bedmachine/run_scripts/cc_g${grid}m_v${v}_GrIMP_id_BAYES-MEDIAN_0_20.sh; qsub /nobackupp17/aaschwan/pism-greenland/calibration/2024_05_init_bedmachine/run_scripts/cc_g${grid}m_v${v}_GrIMP_id_CTRL_0_20.sh; done
+
+grid=900
+ for v in {1..5}; do PISM_PREFIX=~/local/pism-dev/ python calibrate-v2022.py --spatial_ts none --o_dir 2024_05_init_bedmachine --dataset_version ${v}_GrIMP --b wc --duration 20 -s pleiades_haswell -q long -n 240 -g $grid -w 24:00:00 --ensemble_file ../uncertainty_quantification/ensemble_gris_ctrl.csv  ../../best_v1/g${grid}m_const_ctrl_e_1.25_ppq_0.6_tefo_0.02_ssa_n_3.25_philow_5.0_hydro_null_100a.nc; qsub /nobackupp17/aaschwan/pism-greenland/calibration/2024_05_init_bedmachine/run_scripts/cc_g${grid}m_v${v}_GrIMP_id_BAYES-MEDIAN_0_20.sh; qsub /nobackupp17/aaschwan/pism-greenland/calibration/2024_05_init_bedmachine/run_scripts/cc_g${grid}m_v${v}_GrIMP_id_CTRL_0_20.sh; done
+
+
+grid=900
+for e in CTRL BAYES-MEDIAN; do
+for v in {1..5}; do PISM_PREFIX=~/local/pism-dev/ python calibrate-v2022.py --spatial_ts none --o_dir 2024_05_init_bedmachine_tw --dataset_version ${v}_GrIMP --b wc --duration 20 -s pleiades_haswell -q long -n 240 -g $grid -w 16:00:00 --ensemble_file ../uncertainty_quantification/ensemble_gris_ctrl.csv   /nobackupp17/aaschwan/pism-greenland/calibration/2024_05_init_bedmachine/state/gris_g${grid}m_v${v}_GrIMP_id_${e}_0_20_tillwat.nc; qsub /nobackupp17/aaschwan/pism-greenland/calibration/2024_05_init_bedmachine_tw/run_scripts/cc_g${grid}m_v${v}_GrIMP_id_${e}_0_20.sh;
+done
+done
+
+grid=1800
+for e in CTRL BAYES-MEDIAN; do
+for v in {1..5}; do PISM_PREFIX=~/local/pism-dev/ python calibrate-v2022.py --spatial_ts none --o_dir 2024_05_init_bedmachine_tw --dataset_version ${v}_GrIMP --b wc --duration 20 -s pleiades_haswell -q long -n 120 -g $grid -w 12:00:00 --ensemble_file ../uncertainty_quantification/ensemble_gris_ctrl.csv   /nobackupp17/aaschwan/pism-greenland/calibration/2024_05_init_bedmachine/state/gris_g${grid}m_v${v}_GrIMP_id_${e}_0_20_tillwat.nc; qsub /nobackupp17/aaschwan/pism-greenland/calibration/2024_05_init_bedmachine_tw/run_scripts/cc_g${grid}m_v${v}_GrIMP_id_${e}_0_20.sh;
+done
+done
+
+
+
+
+PISM_PREFIX=~/local/pism-dev python calibrate-v2022.py --spatial_ts basic --o_dir 2024_04_init_krig_tw --dataset_version 2024_KRIG --b wc --duration 20 -s pleiades_haswell -n 240 -q long  -g 900 -w 24:00:00 --ensemble_file ../uncertainty_quantification/ensemble_gris_ctrl.csv  2024_04_init_krig/state/gris_g900m_v2024_KRIG_id_CTRL_0_20_tillwat.nc
+
+
+
 PISM_PREFIX=$HOME/local-rl8/pism python calibrate-v2022.py --o_dir 2023_10_init_grimp --dataset_version 2023_GIMP --b wc --duration 25 -s chinook-rl8 -q t2standard -n 200 -g 600 -w 48:00:00 --ensemble_file ../uncertainty_quantification/ensemble_gris_ctrl.csv ../../best_v1/g600m_const_ctrl_e_1.25_ppq_0.6_tefo_0.02_ssa_n_3.25_philow_5.0_hydro_null_100a.nc
 
 PISM_PREFIX=$HOME/local-rl8/pism python calibrate-v2022.py --o_dir 2023_10_init_ragis --dataset_version 2023_RAGIS --b wc --duration 25 -s chinook-rl8 -q t2standard -n 200 -g 600 -w 48:00:00 --ensemble_file ../uncertainty_quantification/ensemble_gris_ctrl.csv ../../best_v1/g600m_const_ctrl_e_1.25_ppq_0.6_tefo_0.02_ssa_n_3.25_philow_5.0_hydro_null_100a.nc

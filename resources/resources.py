@@ -40,15 +40,15 @@ def generate_domain(domain):
     """
 
     if domain.lower() in ("greenland", "gris", "gris_ext", "ismip6"):
-        pism_exec = "pismr"
+        pism_exec = "pism"
     elif domain.lower() in ("synth_jib", "synth_ellps"):
-        pism_exec = "pismr -regional -calving_wrap_around -ssa_dirichelt_bc"
+        pism_exec = "pism -regional -calving_wrap_around -ssa_dirichelt_bc"
     elif domain.lower() in ("hia"):
         x_min = -652200.0
         x_max = -232600.0
         y_min = -1263900.0
         y_max = -943500.0
-        pism_exec = """pismr -x_range {x_min},{x_max} -y_range {y_min},{y_max} -bootstrap""".format(
+        pism_exec = """pism -x_range {x_min},{x_max} -y_range {y_min},{y_max} -bootstrap""".format(
             x_min=x_min, x_max=x_max, y_min=y_min, y_max=y_max
         )
 
@@ -57,7 +57,7 @@ def generate_domain(domain):
         x_max = 293350.0
         y_min = -2417600.0
         y_max = -2021600.0
-        pism_exec = """pismr -regional -x_range {x_min},{x_max} -y_range {y_min},{y_max}  -bootstrap -regional.zero_gradient true -regional.no_model_strip 4.5""".format(
+        pism_exec = """pism -regional -x_range {x_min},{x_max} -y_range {y_min},{y_max}  -bootstrap -regional.zero_gradient true -regional.no_model_strip 4.5""".format(
             x_min=x_min, x_max=x_max, y_min=y_min, y_max=y_max
         )
     elif domain.lower() in ("qaanaaq"):
@@ -65,7 +65,7 @@ def generate_domain(domain):
         x_max = -363650.0
         y_min = -1310600.0
         y_max = -1157600.0
-        pism_exec = """pismr -regional -x_range {x_min},{x_max} -y_range {y_min},{y_max}  -bootstrap -regional.zero_gradient true -regional.no_model_strip 4.5""".format(
+        pism_exec = """pism -regional -x_range {x_min},{x_max} -y_range {y_min},{y_max}  -bootstrap -regional.zero_gradient true -regional.no_model_strip 4.5""".format(
             x_min=x_min, x_max=x_max, y_min=y_min, y_max=y_max
         )
     elif domain.lower() in ("qaamerujup"):
@@ -73,7 +73,7 @@ def generate_domain(domain):
         x_max = -153000.0
         y_min = -2075000.0
         y_max = -2021000.0
-        pism_exec = """pismr -regional -x_range {x_min},{x_max} -y_range {y_min},{y_max}  -bootstrap -regional.zero_gradient true -regional.no_model_strip 4.5""".format(
+        pism_exec = """pism -regional -x_range {x_min},{x_max} -y_range {y_min},{y_max}  -bootstrap -regional.zero_gradient true -regional.no_model_strip 4.5""".format(
             x_min=x_min, x_max=x_max, y_min=y_min, y_max=y_max
         )
     elif domain.lower() in ("nw"):
@@ -81,7 +81,7 @@ def generate_domain(domain):
         x_max = 320000.0
         y_min = -2022000.0
         y_max = -1500000.0
-        pism_exec = """pismr -regional -x_range {x_min},{x_max} -y_range {y_min},{y_max}  -bootstrap -regional.zero_gradient true -regional.no_model_strip 4.5""".format(
+        pism_exec = """pism -regional -x_range {x_min},{x_max} -y_range {y_min},{y_max}  -bootstrap -regional.zero_gradient true -regional.no_model_strip 4.5""".format(
             x_min=x_min, x_max=x_max, y_min=y_min, y_max=y_max
         )
     else:
