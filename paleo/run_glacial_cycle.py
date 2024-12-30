@@ -480,7 +480,7 @@ for n, row in enumerate(uq_df.iterrows()):
             general_params_dict["age.enabled"] = "true"
             general_params_dict["age.initial_value"] = start_date
             general_params_dict["isochrones.deposition_times"] = all_layers
-            general_params_dict["isochrones.max_n_layers"] = 250
+            general_params_dict["isochrones.max_n_layers"] = 500
 
         outfile = f"{domain}_g{grid_resolution}m_{experiment}.nc"
 
@@ -507,6 +507,7 @@ for n, row in enumerate(uq_df.iterrows()):
         tlftw = 0.1
 
         sb_params_dict: Dict[str, Union[str, int, float]] = {
+            "stress_balance.sia.bed_smoother.range": grid,
             "stress_balance.sia.enhancement_factor": combination["sia_e"],
             "stress_balance.sia.Glen_exponent": combination["sia_n"],
             "stress_balance.ssa.enhancement_factor": ssa_e,
