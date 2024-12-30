@@ -275,7 +275,6 @@ nn = options.n
 input_dir = abspath(options.input_dir)
 data_dir = abspath(options.data_dir)
 output_dir = abspath(options.output_dir)
-spatial_tmp_dir = abspath(options.output_dir + "_tmp")
 
 compression_level = options.compression_level
 oformat = options.oformat
@@ -319,7 +318,7 @@ regridvars = "litho_temp,enthalpy,tillwat,bmelt,ice_area_specific_volume,thk,top
 master_config_file = get_path_to_config()
 
 
-dirs = {"output": "$output_dir", "spatial_tmp": "$spatial_tmp_dir"}
+dirs = {"output": "$output_dir"}
 for d in ["performance", "state", "scalar", "snap", "spatial", "jobs", "basins"]:
     dirs[d] = f"$output_dir/{d}"
 
@@ -366,8 +365,6 @@ input_dir="{input_dir}"
 data_dir="{data_dir}"
 # output directory
 output_dir="{output_dir}"
-# temporary directory for spatial files
-spatial_tmp_dir="{spatial_tmp_dir}"
 
 # create required output directories
 for each in {m_dirs};
@@ -653,7 +650,7 @@ for n, row in enumerate(uq_df.iterrows()):
         if not spatial_ts == "none":
             exvars = spatial_ts_vars[spatial_ts]
             spatial_ts_dict = generate_spatial_ts(
-                outfile, exvars, exstep, odir=dirs["spatial_tmp"]
+                outfile, exvars, exstep, odir=dirs["spatial"]
             )
 
             all_params_dict = merge_dicts(all_params_dict, spatial_ts_dict)
@@ -709,27 +706,7 @@ for n, row in enumerate(uq_df.iterrows()):
         cmd = template.format(**context)
         f.write(cmd)
         f.write("\n")
-
         f.write("\n")
-        run_id = combination["id"]
-        id_cmd = f"ncatted -a id,global,a,c,{run_id}"
-        for m_file in [
-            scalar_ts_dict["output.timeseries.filename"],
-            join(dirs["state"], outfile),
-        ]:
-            cmd = f"{id_cmd} {m_file}\n"
-            f.write(cmd)
-        f.write("\n")
-        f.write("\n")
-        if not spatial_ts == "none":
-            tmpfile = spatial_ts_dict["output.extra.file"]
-            ofile = join(dirs["spatial"], "ex_" + outfile)
-            f.write(f"{id_cmd} {tmpfile}\n")
-            f.write(
-                f"mv {tmpfile} {ofile}\n",
-            )
-        f.write("\n")
-        f.write("Moving file done\n")
         f.write(batch_system.get("footer", ""))
 
     scripts.append(script)
