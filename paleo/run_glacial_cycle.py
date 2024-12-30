@@ -248,8 +248,8 @@ parser.add_argument(
     help="Calculate age field. Default=False",
     default=False,
 )
-parser.add_argument("--start", help="Simulation start year", default=-125000)
-parser.add_argument("--end", help="Simulation end year", default=0)
+parser.add_argument("--start", help="Simulation start year", type=int, default=-125000)
+parser.add_argument("--end", help="Simulation end year", type=int, default=0)
 parser.add_argument(
     "-e",
     "--ensemble_file",
@@ -629,7 +629,7 @@ for n, row in enumerate(uq_df.iterrows()):
         
         scalar_ts_dict = generate_scalar_ts(
             outfile, tsstep, odir=dirs["scalar"])
-        snap_shot_dict = generate_snap_shots(outfile, "-100000, -75000, -50000, -25000,-20000,-15000,-10000,-5000,0", odir=dirs["snap"])
+        snap_shot_dict = generate_snap_shots(outfile, "-120000, -100000, -75000, -50000, -25000,-20000,-15000,-10000,-5000,0", odir=dirs["snap"])
 
         solver_dict = {}
 
