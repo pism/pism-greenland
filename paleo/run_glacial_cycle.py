@@ -668,7 +668,7 @@ for n, row in enumerate(uq_df.iterrows()):
 
             
         all_params = " \\\n  ".join(
-            ["-{} {}".format(k, v) for k, v in list(all_params_dict.items())]
+            ["-{} {}".format(k, v) for k, v in sorted(list(all_params_dict.items()))]
         )
 
         if commandline_options is not None:
