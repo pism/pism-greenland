@@ -79,8 +79,8 @@ parser.add_argument(
     "-w",
     "--wall_time",
     dest="walltime",
-    help="""walltime. default: 100:00:00.""",
-    default="100:00:00",
+    help="""walltime. default: 96:00:00.""",
+    default="96:00:00",
 )
 parser.add_argument(
     "-q",
@@ -88,7 +88,7 @@ parser.add_argument(
     dest="queue",
     choices=list_queues(),
     help="""queue. default=long.""",
-    default="t2small",
+    default="long",
 )
 parser.add_argument(
     "--options",
@@ -101,7 +101,7 @@ parser.add_argument(
     dest="domain",
     choices=["gris", "gris_ext"],
     help="sets the modeling domain",
-    default="gris_ext",
+    default="gris",
 )
 parser.add_argument(
     "--exstep",
@@ -205,7 +205,7 @@ parser.add_argument(
         "thickness_calving",
     ],
     help="Choose calving law",
-    default="hybrid_calving",
+    default="float_kill",
 )
 parser.add_argument(
     "--stable_gl",
@@ -473,7 +473,7 @@ for n, row in enumerate(uq_df.iterrows()):
         if age:
             equally_spaced_layers = -np.arange(start_date + 5000, end_date, 5000)
             select_layers = -start_date - np.array([3, 8, 9, 11.7, 12.8, 14.7, 19, 29, 57]) * 1_000
-            all_layers = " ".join([str(x) for x in np.sort(np.hstack([equally_spaced_layers, select_layers]))])
+            all_layers = ", ".join([str(x) for x in np.sort(np.hstack([equally_spaced_layers, select_layers]))])
             general_params_dict["age.enabled"] = "true"
             general_params_dict["age.initial_value"] = start_date
             general_params_dict["isochrones.deposition_times"] = all_layers
@@ -506,15 +506,15 @@ for n, row in enumerate(uq_df.iterrows()):
         sb_params_dict: Dict[str, Union[str, int, float]] = {
             "stress_balance.sia.bed_smoother.range": grid,
             "stress_balance.sia.enhancement_factor": combination["sia_e"],
-            "stress_balance.sia.Glen_exponent": combination["sia_n"],
             "stress_balance.ssa.enhancement_factor": ssa_e,
+            "stress_balance.blatter.enhancement_factor": combination["sia_e"],
+            "stress_balance.sia.Glen_exponent": combination["sia_n"],
             "stress_balance.ssa.Glen_exponent": combination["ssa_n"],
             "basal_resistance.pseudo_plastic.q": combination["pseudo_plastic_q"],
             "basal_yield_stress.mohr_coulomb.topg_to_phi.enabled": "yes",
             "basal_yield_stress.mohr_coulomb.till_effective_fraction_overburden": combination[
                 "till_effective_fraction_overburden"
             ],
-            "stress_balance.blatter.enhancement_factor": combination["sia_e"],
         }
         phi_min = combination["phi_min"]
         phi_max = combination["phi_max"]

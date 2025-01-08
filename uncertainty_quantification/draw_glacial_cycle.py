@@ -45,11 +45,11 @@ dists = {
                 "std_dev": uniform(3, 4),
                 "refreeze": uniform(0.4, 0.4),
                 "atmosphere.elevation_change.temperature_lapse_rate": uniform(5, 2),
-                
+                "atmosphere.precip_exponential_factor_for_temperature": uniform(0.05, 0.03),
+                "sia_n": uniform(1, 3),                
         },
         "default_values": {
             "sia_e": 2.608046,
-            "sia_n": 3.0,
             "ssa_n": 3.309718,
             "pseudo_plastic_q": 0.7508221,
             "pseudo_plastic_uthreshold": 100,
@@ -67,7 +67,6 @@ dists = {
             "tas_paleo_file": "pism_dT.nc",
             "calving.thickness_calving.threshold": 100,
             "vcm": 0.5,
-            "atmosphere.elevation_change.temperature_lapse_rate": 6
         },
     },
     "climate-calving": {
@@ -77,7 +76,7 @@ dists = {
                 "refreeze": uniform(0.4, 0.4),
                 "vcm": uniform(0.4, 0.4),
                 "calving.eigen_calving.K": uniform(1e16, 9.99e18),
-                "sia_n": uniform(3, 1),
+                "sia_n": uniform(1, 3),
         },
         "default_values": {
             "sia_e": 2.608046,
@@ -118,7 +117,7 @@ parser.add_argument(
     dest="distribution",
     choices=dists.keys(),
     help="""Choose set.""",
-    default="calving",
+    default="climate",
 )
 parser.add_argument(
     "--calc_second_order",
