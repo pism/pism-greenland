@@ -128,8 +128,8 @@ spatial_ts_vars["calib"] = [
 
 
 spatial_ts_vars["paleo"] = [
-    "bmelt",
     "climatic_mass_balance",
+    "diffusivity",
     "effective_air_temp",
     "effective_precipitation",
     "dHdt",
@@ -138,6 +138,7 @@ spatial_ts_vars["paleo"] = [
     "isochronal_layer_thickness",
     "mask",
     "thk",
+    "topg",
     "usurf",
     "velbase_mag",
     "velsurf_mag",
@@ -435,7 +436,10 @@ def generate_grid_description(grid_resolution, domain, restart=False, paleo=Fals
             print(("grid resolution {}m not recognized".format(grid_resolution)))
 
         skip_max = 100
-        mz = 401
+        if paleo:
+            mz = 501
+        else:
+            mz = 401
         mzb = 21
             
     elif domain.lower() in ("ismip6"):
@@ -840,6 +844,9 @@ def generate_climate(climate, **kwargs):
     elif climate in ("paleo_searise"):
         params_dict["atmosphere.models"] = "searise_greenland,delta_T,precip_scaling"
         params_dict["surface.models"] = "pdd"
+    elif climate in ("forcing_searise"):
+        params_dict["atmosphere.models"] = "searise_greenland"
+        params_dict["surface.models"] = "pdd,forcing"
     elif climate in ("debm"):
         params_dict["atmosphere.models"] = "given,delta_T,precip_scaling,elevation_change"
         params_dict["surface.models"] = "debm_simple"

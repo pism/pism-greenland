@@ -172,6 +172,12 @@ parser.add_argument(
     default="pleiades_broadwell",
 )
 parser.add_argument(
+    "--climate",
+    choices=["paleo_searise", "forcing_searise"],
+    help="Climate.",
+    default="paleo_searise",
+)
+parser.add_argument(
     "-b",
     "--bed_type",
     dest="bed_type",
@@ -285,6 +291,7 @@ system = options.system
 gid = options.gid
 
 age = options.age
+climate = options.climate
 initialstatefile = options.initialstatefile
 spatial_ts = options.spatial_ts
 bed_type = options.bed_type
@@ -572,7 +579,7 @@ for n, row in enumerate(uq_df.iterrows()):
         if "atmosphere.elevation_change.temperature_lapse_rate" in combination:
             climate_parameters["atmosphere.elevation_change.temperature_lapse_rate"] = combination["atmosphere.elevation_change.temperature_lapse_rate"]
             climate_parameters["atmosphere.elevation_change.file"] = pism_dataname
-        climate_params_dict = generate_climate(combination["climate"], **climate_parameters)
+        climate_params_dict = generate_climate(climate, **climate_parameters)
 
         hydrology_parameters = {}
         hydro_params_dict = generate_hydrology(hydrology, **hydrology_parameters)
