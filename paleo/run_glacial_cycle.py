@@ -472,8 +472,10 @@ for n, row in enumerate(uq_df.iterrows()):
 
         if age:
             equally_spaced_layers = -np.arange(start_date + 5000, end_date, 5000)
-            select_layers = -start_date - np.array([3, 8, 9, 11.7, 12.8, 14.7, 19, 29, 57]) * 1_000
-            all_layers = ", ".join([str(x) for x in np.sort(np.hstack([equally_spaced_layers, select_layers]))])
+            select_layers = -start_date -np.array([3, 8, 9, 11.7, 12.8, 14.7, 19, 29, 57, 122]) * 1_000
+            arr = np.sort(np.hstack([equally_spaced_layers, select_layers]))
+            filtered_arr = arr[(arr <= -start_date) & (arr >= -end_date)]
+            all_layers = ", ".join([str(x) for x in filtered_arr])
             general_params_dict["age.enabled"] = "true"
             general_params_dict["age.initial_value"] = start_date
             general_params_dict["isochrones.deposition_times"] = all_layers
