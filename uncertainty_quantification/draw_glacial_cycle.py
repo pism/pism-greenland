@@ -71,10 +71,10 @@ dists = {
         "uq": { "f_ice": uniform(6, 6),
                 "f_snow": uniform(2, 3),
                 "std_dev": uniform(3, 4),
-                "refreeze": uniform(0.4, 0.4),
+                "refreeze": uniform(0.4, 0.3),
                 "vcm": uniform(0.4, 0.4),
                 "calving.eigen_calving.K": uniform(1e16, 9.99e18),
-                "sia_n": uniform(1, 3),
+                "sia_n": uniform(3, 1),
         },
         "default_values": {
             "sia_e": 2.608046,

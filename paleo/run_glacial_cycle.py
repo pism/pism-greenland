@@ -483,10 +483,11 @@ for n, row in enumerate(uq_df.iterrows()):
             arr = np.sort(np.hstack([equally_spaced_layers, select_layers]))
             filtered_arr = arr[(arr <= -start_date) & (arr >= -end_date)]
             all_layers = ", ".join([str(x) for x in filtered_arr])
+            all_layers = "200"
             general_params_dict["age.enabled"] = "true"
             general_params_dict["age.initial_value"] = start_date
             general_params_dict["isochrones.deposition_times"] = all_layers
-            general_params_dict["isochrones.max_n_layers"] = 500
+            general_params_dict["isochrones.max_n_layers"] = 1000
 
         outfile = f"{domain}_g{grid_resolution}m_{experiment}.nc"
 
