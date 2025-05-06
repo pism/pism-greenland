@@ -221,12 +221,6 @@ parser.add_argument(
     default=True,
 )
 parser.add_argument(
-    "--no_mass",
-    action="store_true",
-    help="-no_mass option",
-    default=True,
-)
-parser.add_argument(
     "--gid",
     dest="gid",
     choices=["s2457", "s2524"],
@@ -309,7 +303,6 @@ hydrology = options.hydrology
 bed_def = options.bed_def
 stress_balance = options.stress_balance
 version = options.version
-no_mass = options.no_mass
 
 ensemble_file = options.ensemble_file
 
@@ -480,9 +473,6 @@ for n, row in enumerate(uq_df.iterrows()):
             "config_override": "$config",
             "stress_balance.ice_free_thickness_standard": 5,
         }
-
-        if no_mass:
-            general_params_dict["no_mass"] = ""
         
         if bed_def != "off":
             general_params_dict["bed_deformation.model"] = bed_def

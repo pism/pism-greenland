@@ -426,8 +426,12 @@ if __name__ == "__main__":
         action="store_false",
         default=True,
     )
+    parser.add_argument("--accelerator", type=str, default="auto")
+    parser.add_argument("--devices", default="auto")
     parser = PLMultitaskGPModel.add_model_specific_args(parser)
     args = parser.parse_args()
+    accelerator = args.accelerator
+    devices = args.devices
     hparams = vars(args)
 
     options = parser.parse_args()
@@ -494,7 +498,7 @@ if __name__ == "__main__":
     ginr = pd.read_csv("ginr/ginr_disko_bay_250m.csv", parse_dates=["Date"])
     ginr = ginr.set_index("Date").drop(columns=["Unnamed: 0"])
     ginr = (
-        ginr.groupby(pd.Grouper(freq=freq))
+        ginr[["Year", "Temperature [Celsius]", "Salinity [g/kg]"]].groupby(pd.Grouper(freq=freq))
         .mean()
         .dropna(subset=["Temperature [Celsius]", "Salinity [g/kg]"])
     )
@@ -704,8 +708,10 @@ if __name__ == "__main__":
             mode="min",
             strict=True,
         )
-        trainer = pl.Trainer.from_argparse_args(
-            args,
+        trainer = pl.Trainer(
+            deterministic=True,
+            accelerator=accelerator,
+            devices=devices,
             max_epochs=max_epochs,
             callbacks=[lr_monitor, early_stop_callback],
         )
