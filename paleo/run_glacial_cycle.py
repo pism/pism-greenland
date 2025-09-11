@@ -514,7 +514,6 @@ for n, row in enumerate(uq_df.iterrows()):
         tlftw = 0.1
 
         sb_params_dict: Dict[str, Union[str, int, float]] = {
-            "stress_balance.sia.bed_smoother.range": grid,
             "stress_balance.sia.enhancement_factor": combination["sia_e"],
             "stress_balance.ssa.enhancement_factor": ssa_e,
             "stress_balance.blatter.enhancement_factor": combination["sia_e"],

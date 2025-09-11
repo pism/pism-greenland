@@ -7,7 +7,7 @@ import pandas as pd
 from scipy.stats.distributions import uniform, randint, truncnorm, gamma
 
 from SALib.sample import saltelli
-from pyDOE2 import lhs
+from pyDOE3 import lhs
 
 
 dists = {
@@ -74,7 +74,7 @@ dists = {
                 "refreeze": uniform(0.4, 0.3),
                 "vcm": uniform(0.4, 0.4),
                 "calving.eigen_calving.K": uniform(1e16, 9.99e18),
-                "sia_n": uniform(3, 1),
+                "sia_n": uniform(1, 3),
         },
         "default_values": {
             "sia_e": 2.608046,
