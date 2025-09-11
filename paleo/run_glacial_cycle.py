@@ -173,7 +173,7 @@ parser.add_argument(
 )
 parser.add_argument(
     "--climate",
-    choices=["paleo_searise", "forcing_searise"],
+    choices=["paleo_searise", "forcing_searise", "const"],
     help="Climate.",
     default="paleo_searise",
 )
@@ -181,9 +181,8 @@ parser.add_argument(
     "-b",
     "--bed_type",
     dest="bed_type",
-    choices=list_bed_types(),
     help="output size type",
-    default="wc",
+    default="wc_noice",
 )
 parser.add_argument(
     "--spatial_ts",

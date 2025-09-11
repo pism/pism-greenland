@@ -844,6 +844,9 @@ def generate_climate(climate, **kwargs):
     elif climate in ("paleo_searise"):
         params_dict["atmosphere.models"] = "searise_greenland,delta_T,precip_scaling"
         params_dict["surface.models"] = "pdd"
+    elif climate in ("const"):
+        params_dict["atmosphere.models"] = "searise_greenland"
+        params_dict["surface.models"] = "pdd"
     elif climate in ("forcing_searise"):
         params_dict["atmosphere.models"] = "searise_greenland"
         params_dict["surface.models"] = "pdd,forcing"
